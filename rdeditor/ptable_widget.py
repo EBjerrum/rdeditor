@@ -1,0 +1,77 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+from __future__ import print_function
+import sys
+from PySide import QtGui, QtCore
+
+from ptable import ptable
+
+class PTable(QtGui.QWidget):
+	
+	def __init__(self):
+		super(PTable, self).__init__()
+		self.ptable = ptable
+		self.initUI()
+		
+	def initUI(self):
+		grid = QtGui.QGridLayout()
+		#Create actions dictionary and group dictionary
+		self.atomActionGroup = QtGui.QActionGroup(self, exclusive=True)
+		self.atomActions = {}								   
+		#for atomname in self.editor.atomtypes.keys(): Gives unsorted list
+		for key in self.ptable.keys():
+			atomname = self.ptable[key]["Symbol"]
+			action = QtGui.QAction( '%s'%atomname,
+								   self, 
+								   statusTip="Set atomtype to %s"%atomname,
+								   triggered=self.atomtypePush, objectName=atomname,
+								   checkable=True)
+			self.atomActionGroup.addAction(action)
+			self.atomActions[atomname] = action
+			if action.objectName() == "C":
+				action.setChecked(True)		
+		
+			button = QtGui.QToolButton()
+			button.setDefaultAction(action)
+			button.setFocusPolicy(QtCore.Qt.NoFocus)
+			button.setMaximumWidth(40)
+			
+			if self.ptable[key]["Group"] != None:
+				grid.addWidget(button, self.ptable[key]["Period"], self.ptable[key]["Group"])
+			else:
+				if key <72:
+					grid.addWidget(button, 9, key-54)
+				else:
+					grid.addWidget(button, 10, key-86)
+		#Ensure spacing between main table and actinides/lathanides			
+		grid.addWidget(QtGui.QLabel(''), 8,1)
+
+		self.setLayout(grid)   
+		
+		self.move(300, 150)
+		self.setWindowTitle('Periodic Table')
+		
+	atomtypeChanged = QtCore.Signal( str, name="atomtypeChanged")
+	def atomtypePush(self):
+		sender = self.sender()
+		#print(sender.objectName())
+		self.atomtypeChanged.emit(sender.objectName())
+
+	#For setting the new atomtype		
+	def selectAtomtype(self, atomname):
+		if atomname in self.atomActions.keys():
+			self.atomActions[atomname].setChecked(True)
+		else:
+			print("Unknown atomtype or key error")
+				
+		
+def main():
+	app = QtGui.QApplication(sys.argv)
+	pt = PTable()
+	pt.selectAtomtype("N")
+	pt.show()
+	sys.exit(app.exec_())
+
+
+if __name__ == '__main__':
+	main()
