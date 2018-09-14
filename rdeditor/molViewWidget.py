@@ -4,6 +4,7 @@ from __future__ import print_function
 from PySide import QtCore, QtGui, QtSvg
 import sys
 from types import *
+import logging
 
 import numpy as np
 from rdkit import Chem
@@ -17,6 +18,12 @@ class MolWidget(QtSvg.QSvgWidget):
 	def __init__(self, mol = None, parent=None):
 		#Also init the super class
 		super(MolWidget, self).__init__(parent)
+
+		#logging
+		logging.basicConfig()
+		self.logger = logging.getLogger()
+		self.loglevel = logging.WARNING
+
 		#This sets the window to delete itself when its closed, so it doesn't keep lingering in the background
 		self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 		#Private Properties
@@ -31,8 +38,20 @@ class MolWidget(QtSvg.QSvgWidget):
 		
 		#Initialize class with the mol passed
 		self.mol = mol
+
 		
-	##Properties and their wrappers		
+	##Properties and their wrappers	
+	@property
+	def loglevel(self):
+		return self.logger.level
+
+	@loglevel.setter
+	def loglevel(self, loglvl):
+		self.logger.setLevel(loglvl)
+
+	
+
+	
 	#Getter and setter for mol
 	molChanged = QtCore.Signal(name="molChanged")
 	@property
@@ -108,18 +127,18 @@ class MolWidget(QtSvg.QSvgWidget):
 			self.sanitizeSignal.emit("Sanitizable")
 		except:
 			self.sanitizeSignal.emit("UNSANITIZABLE")
-			print("Unsanitizable")
+			self.logger.warning("Unsanitizable")
 			try:
 				self._drawmol.UpdatePropertyCache(strict=False)
 			except:
 				self.sanitizeSignal.emit("UpdatePropertyCache FAIL")
-				print("Update Property Cache failed")
+				self.logger.error("Update Property Cache failed")
 		#Kekulize
 		if kekulize:
 			try:
 				Chem.Kekulize(self._drawmol)
 			except:
-				print("Unkekulizable")
+				self.logger.warning("Unkekulizable")
 				
 		try: 
 			self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=kekulize) 
@@ -129,9 +148,9 @@ class MolWidget(QtSvg.QSvgWidget):
 		#Generate 2D coords if none present
 		if not self._drawmol.GetNumConformers():
 			rdDepictor.Compute2DCoords(self._drawmol)
-			print("No Conformers")
+			self.logger.debug("No Conformers found, computing 2D coords")
 		else: #TODO match to already drawed
-			print("Conformers", self._drawmol.GetNumConformers())
+			self.logger.debug("%i Conformers in molecule"%self._drawmol.GetNumConformers())
 #			try:
 #				rdDepictor.GenerateDepictionMatching2DStructure(self._drawmol, self._prevmol)#, acceptFailure=True)
 #			except:

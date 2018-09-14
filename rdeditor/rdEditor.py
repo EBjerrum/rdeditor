@@ -18,16 +18,16 @@ from rdkit import Chem
 # The main window class
 class MainWindow(QMainWindow):
 	# Constructor function
-	def __init__(self, fileName=None):
+	def __init__(self, fileName=None, loglevel="WARNING"):
 		super(MainWindow,self).__init__()
 		self.pixmappath = os.path.abspath(os.path.dirname(__file__)) + '/pixmaps/'
-		print(self.pixmappath)
+		self.loglevels = ["Critical","Error","Warning","Info","Debug","Notset"]
 		self.editor = MolEditWidget()
 		self.ptable = PTable()
 		self._fileName = None
 		self.initGUI(fileName = fileName)
 		self.ptable.atomtypeChanged.connect(self.setAtomTypeName)
-		
+		self.editor.logger.setLevel(loglevel)
 
 	#Properties
 	@property
@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
 		self.myStatusBar.addPermanentWidget(self.infobar, 0)
 		
 		if self.fileName is not None:
-			print("set Filename")
+			self.logger.info("Loading model from %s"%self.fileName)
 			self.loadMolFile(fileName)
 
 		self.editor.sanitizeSignal.connect(self.infobar.setText)
@@ -108,7 +108,6 @@ class MainWindow(QMainWindow):
 		self.specialatommenu = self.atomtypeMenu.addMenu("All Atoms")
 		for atomnumber in self.ptable.ptable.keys():
 			atomname = self.ptable.ptable[atomnumber]["Symbol"]
-			print(atomname) #This is a mess translating back and forth
 			self.specialatommenu.addAction(self.ptable.atomActions[atomname])
 
 		#Bondtype Menu
@@ -120,10 +119,14 @@ class MainWindow(QMainWindow):
 		self.specialbondMenu = self.bondtypeMenu.addMenu("Special Bonds")
 		for key in self.bondActions.keys():
 			self.specialbondMenu.addAction(self.bondActions[key])
-
+		#Help menu
 		self.helpMenu.addAction(self.aboutAction)
 		self.helpMenu.addSeparator()
 		self.helpMenu.addAction(self.aboutQtAction)
+		#Debug level sub menu
+		self.loglevelMenu = self.helpMenu.addMenu("Logging Level")
+		for loglevel in self.loglevels:
+			self.loglevelMenu.addAction(self.loglevelactions[loglevel])
 
 	def CreateToolBars(self):
 		self.mainToolBar = self.addToolBar('Main')
@@ -193,15 +196,18 @@ class MainWindow(QMainWindow):
 		self.statusBar().showMessage("Canvas Cleared")
 
 	def closeEvent(self, event):
+		self.editor.logger.debug("closeEvent triggered")
 		self.exitFile()
+		event.ignore()
 
 	def exitFile(self):
-		response = self.msgApp("Confirmation","This will quit the application. Do you want to Continue?")		
+		response = self.msgApp("Confirmation","This will quit the application. Do you want to Continue?")
 		if response == "Y":
 			self.ptable.close()
 			exit(0) #TODO, how to exit qapplication from within class instance?
 		else:
-			pass
+			self.editor.logger.debug("Abort closing")
+			
 
 	# Function to show Diaglog box with provided Title and Message
 	def msgApp(self,title,msg):
@@ -215,7 +221,7 @@ class MainWindow(QMainWindow):
 	
 	def aboutHelp(self):
 		QMessageBox.about(self, "About Simple Molecule Editor",
-				"""A Simple Molecule Editor where you can edit molecules\nBased on RDKit! http://www.rdkit.org/ \nSome icons from http://icons8.com""")
+				"""A Simple Molecule Editor where you can edit molecules\nBased on RDKit! http://www.rdkit.org/ \nSome icons from http://icons8.com\n\nSource code: https://github.com/EBjerrum/rdeditor""")
 				
 	def setAction(self):
 		sender = self.sender()
@@ -233,12 +239,16 @@ class MainWindow(QMainWindow):
 		self.myStatusBar.showMessage("Atomtype %s selected"%sender.objectName())
 
 	def setAtomTypeName(self, atomname):
-		print(type(atomname))
 		self.editor.setAtomType(str(atomname))
 		self.myStatusBar.showMessage("Atomtype %s selected"%atomname)
 		
 	def openPtable(self):
 		self.ptable.show()
+
+	def setLogLevel(self):
+		loglevel = self.sender().objectName().split(':')[-1].upper()
+		self.editor.logger.setLevel(loglevel)
+	
 
 
 	# Function to create actions for menus
@@ -406,16 +416,22 @@ class MainWindow(QMainWindow):
 				action.setChecked(True)		
 			self.atomActions.append(action)
 
-def launch():
+		self.loglevelactions = {}
+		for key in self.loglevels:
+			self.loglevelactions[key] = QAction(key,
+								   self,
+								   statusTip="Set logging level to %s"%key,
+								   triggered=self.setLogLevel, objectName="loglevel:%s"%key)
+
+def launch(loglevel="WARNING"):
 	"Function that launches the mainWindow Application"
 	# Exception Handling
-	print("First argument %s"%sys.argv[1])
 	try:
 		myApp = QApplication(sys.argv)
 		try:
-			mainWindow = MainWindow(fileName = sys.argv[1])
+			mainWindow = MainWindow(fileName = sys.argv[1], loglevel=loglevel)
 		except:
-			mainWindow = MainWindow()
+			mainWindow = MainWindow(loglevel=loglevel)
 		myApp.exec_()
 		sys.exit(0)
 	except NameError:
@@ -427,5 +443,5 @@ def launch():
 		
 		
 if __name__ == '__main__':
-	launch()
+	launch(loglevel="DEBUG")
 

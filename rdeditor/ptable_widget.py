@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 import sys
+import logging
+
 from PySide import QtGui, QtCore
 
 from ptable import ptable
@@ -12,6 +14,8 @@ class PTable(QtGui.QWidget):
 		super(PTable, self).__init__()
 		self.ptable = ptable
 		self.initUI()
+		#logging
+		self.logger = logging.getLogger()
 		
 	def initUI(self):
 		grid = QtGui.QGridLayout()
@@ -54,7 +58,6 @@ class PTable(QtGui.QWidget):
 	atomtypeChanged = QtCore.Signal( str, name="atomtypeChanged")
 	def atomtypePush(self):
 		sender = self.sender()
-		#print(sender.objectName())
 		self.atomtypeChanged.emit(sender.objectName())
 
 	#For setting the new atomtype		
@@ -62,7 +65,7 @@ class PTable(QtGui.QWidget):
 		if atomname in self.atomActions.keys():
 			self.atomActions[atomname].setChecked(True)
 		else:
-			print("Unknown atomtype or key error")
+			self.debug.error("Unknown atomtype or key error: %s"%atomname)
 				
 		
 def main():
