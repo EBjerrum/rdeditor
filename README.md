@@ -1,5 +1,6 @@
 # rdeditor
 Simple RDKit molecule editor GUI using PySide
+![rdeditor, the RDKit molecule editor](./Screenshots/Main_window.png)
 
 ## Installation
 * requirements
@@ -24,6 +25,8 @@ Can be started with `rdEditor` or `rdEditor your_molecule.mol` to start edit an 
 Interactiions with the molecule is done via clicking on the canvas, atoms or bonds. A choice of tools are available.
 
 #### Top Menu: 
+![top menu of rdeditor, the RDKit molecule editor](./Screenshots/Top_Menu.png)
+
 From left to right
 * Open: Open a molfile
 * Save: Save current molecule
@@ -42,6 +45,8 @@ From left to right
 * Undo.
 
 #### Side Bar:
+![top menu of rdeditor, the RDKit molecule editor](./Screenshots/Side_bar.png)
+
 Most commonly used bond types, and atom types can be selected. A Periodic table is accessible for exotic atom types.
 
 #### Dropdown menus
