@@ -4,11 +4,11 @@ from __future__ import print_function
 import sys
 import logging
 
-from PySide import QtGui, QtCore
+from PySide2 import QtGui, QtCore, QtWidgets
 
 from ptable import ptable
 
-class PTable(QtGui.QWidget):
+class PTable(QtWidgets.QWidget):
 	
 	def __init__(self):
 		super(PTable, self).__init__()
@@ -18,14 +18,14 @@ class PTable(QtGui.QWidget):
 		self.logger = logging.getLogger()
 		
 	def initUI(self):
-		grid = QtGui.QGridLayout()
+		grid = QtWidgets.QGridLayout()
 		#Create actions dictionary and group dictionary
-		self.atomActionGroup = QtGui.QActionGroup(self, exclusive=True)
+		self.atomActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
 		self.atomActions = {}								   
 		#for atomname in self.editor.atomtypes.keys(): Gives unsorted list
 		for key in self.ptable.keys():
 			atomname = self.ptable[key]["Symbol"]
-			action = QtGui.QAction( '%s'%atomname,
+			action = QtWidgets.QAction( '%s'%atomname,
 								   self, 
 								   statusTip="Set atomtype to %s"%atomname,
 								   triggered=self.atomtypePush, objectName=atomname,
@@ -35,7 +35,7 @@ class PTable(QtGui.QWidget):
 			if action.objectName() == "C":
 				action.setChecked(True)		
 		
-			button = QtGui.QToolButton()
+			button = QtWidgets.QToolButton()
 			button.setDefaultAction(action)
 			button.setFocusPolicy(QtCore.Qt.NoFocus)
 			button.setMaximumWidth(40)
@@ -48,7 +48,7 @@ class PTable(QtGui.QWidget):
 				else:
 					grid.addWidget(button, 10, key-86)
 		#Ensure spacing between main table and actinides/lathanides			
-		grid.addWidget(QtGui.QLabel(''), 8,1)
+		grid.addWidget(QtWidgets.QLabel(''), 8,1)
 
 		self.setLayout(grid)   
 		
@@ -69,7 +69,7 @@ class PTable(QtGui.QWidget):
 				
 		
 def main():
-	app = QtGui.QApplication(sys.argv)
+	app = QtWidgets.QApplication(sys.argv)
 	pt = PTable()
 	pt.selectAtomtype("N")
 	pt.show()

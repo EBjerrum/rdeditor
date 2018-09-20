@@ -12,7 +12,7 @@ setup(name='rdeditor',
       packages=['rdeditor'],
       package_data = {'rdeditor': ['pixmaps/*'] },
       install_requires=[
-	'PySide',
+	'PySide22',
 	'numpy'
       ],
       entry_points = {

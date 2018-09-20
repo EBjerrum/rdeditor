@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #Import required modules
 from __future__ import print_function
-from PySide import QtCore, QtGui, QtSvg
+from PySide2 import QtCore, QtGui, QtSvg, QtWidgets
 import sys
 from types import *
 import logging
@@ -178,7 +178,7 @@ if __name__ == "__main__":
 #	model.loadSDfile('dhfr_3d.sd')
 	mol = Chem.MolFromSmiles('CCN(C)c1ccccc1S')
 	#rdDepictor.Compute2DCoords(mol)
-	myApp = QtGui.QApplication(sys.argv)
+	myApp = QtWidgets.QApplication(sys.argv)
 	molview = MolWidget(mol)
 	molview.selectAtom(1)
 	molview.selectedAtoms = [1,2,3]

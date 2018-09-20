@@ -4,10 +4,11 @@ from __future__ import print_function
 
 # Import required modules
 import sys, time, os
-from PySide.QtGui import *
-from PySide.QtCore import QByteArray
-from PySide import QtCore, QtGui
-from PySide import QtSvg
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
+from PySide2.QtCore import QByteArray
+from PySide2 import QtCore, QtGui, QtWidgets
+from PySide2 import QtSvg
 
 #Import model
 from molEditWidget import MolEditWidget
@@ -16,7 +17,7 @@ from ptable_widget import PTable
 from rdkit import Chem
 
 # The main window class
-class MainWindow(QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
 	# Constructor function
 	def __init__(self, fileName=None, loglevel="WARNING"):
 		super(MainWindow,self).__init__()
@@ -151,7 +152,7 @@ class MainWindow(QMainWindow):
 		self.mainToolBar.addSeparator()
 		self.mainToolBar.addAction(self.undoAction)
 		#Side Toolbar
-		self.sideToolBar = QtGui.QToolBar(self)
+		self.sideToolBar = QtWidgets.QToolBar(self)
 		self.addToolBar(QtCore.Qt.LeftToolBarArea, self.sideToolBar)
 		self.sideToolBar.addAction(self.singleBondAction)
 		self.sideToolBar.addAction(self.doubleBondAction)
@@ -289,7 +290,7 @@ class MainWindow(QMainWindow):
 								  triggered=self.openPtable)
 		
 		#Edit actions
-		self.actionActionGroup = QtGui.QActionGroup(self, exclusive=True)
+		self.actionActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
 		self.selectAction = QAction( QIcon(self.pixmappath + 'icons8-Cursor.png'), 'S&elect',
 								   self, shortcut="Ctrl+S",
 								   statusTip="Select Atoms",
@@ -357,7 +358,7 @@ class MainWindow(QMainWindow):
 		
 		
 		#BondTypeActions
-		self.bondtypeActionGroup = QtGui.QActionGroup(self, exclusive=True)
+		self.bondtypeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
 		
 		self.singleBondAction = QAction( QIcon(self.pixmappath + 'icons8-Single.png'), 'S&ingle Bond',
 								   self, shortcut="Ctrl+S",

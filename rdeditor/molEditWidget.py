@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #Import required modules
 from __future__ import print_function
-from PySide import QtCore, QtGui, QtSvg
+from PySide2 import QtCore, QtGui, QtSvg, QtWidgets
 import sys
 import logging
 
@@ -416,7 +416,7 @@ if __name__ == "__main__":
 
 	mol = Chem.MolFromSmiles('CCN(C)C1CCCCC1S')
 	rdDepictor.Compute2DCoords(mol)
-	myApp = QtGui.QApplication(sys.argv)
+	myApp = QtWidgets.QApplication(sys.argv)
 	molblockview = MolWidget(mol)
 	molblockview.show()
 	myApp.exec_()
