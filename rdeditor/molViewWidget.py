@@ -119,14 +119,20 @@ class MolWidget(QtSvg.QSvgWidget):
         self.sanitizeMol()
         self.draw()
 
-    sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
-    @QtCore.Slot()
-    def sanitizeMol(self, kekulize=False):
-        self.logger.debug(f'pre sani {[str(self._mol.GetConformer(0).GetAtomPosition(a.GetIdx()).x) for a in self._mol.GetAtoms()]}')
-        #Generate 2D coords if none present
+    def computeNewCoords(self, ignoreExisting=False):
+        """Computes new coordinates for the molecule taking into account all
+        existing positions (feeding these to the rdkit coordinate generation as
+        prev_coords).
+        """
+        # This code is buggy when you are not using the CoordGen coordinate
+        # generation system, so we enable it here
+        rdDepictor.SetPreferCoordGen(True)
         prev_coords = {}
         if self._mol.GetNumConformers() == 0:
             self.logger.debug("No Conformers found, computing all 2D coords")
+        elif ignoreExisting:
+            self.logger.debug("Ignoring existing conformers, computing all "
+                              "2D coords")
         else:
             assert self._mol.GetNumConformers() == 1
             self.logger.debug("1 Conformer found, computing 2D coords not in "
@@ -138,6 +144,12 @@ class MolWidget(QtSvg.QSvgWidget):
                     continue
                 prev_coords[a.GetIdx()] = Point2D(pos3d.x, pos3d.y)
         rdDepictor.Compute2DCoords(self._mol, coordMap=prev_coords)
+
+
+    sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
+    @QtCore.Slot()
+    def sanitizeMol(self, kekulize=False):
+        self.computeNewCoords()
         self._drawmol = Chem.Mol(self._mol.ToBinary()) #Is this necessary?
         try:
             Chem.SanitizeMol(self._drawmol)
@@ -160,13 +172,10 @@ class MolWidget(QtSvg.QSvgWidget):
             self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=kekulize)
         except ValueError:  # <- can happen on a kekulization failure
             self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=False)
-        self.logger.debug(f'post sani {[str(self._mol.GetConformer(0).GetAtomPosition(a.GetIdx()).x) for a in self._mol.GetAtoms()]}')
-
 
 
     finishedDrawing = QtCore.Signal(name="finishedDrawing")
     def getMolSvg(self):
-        self.logger.debug(f'pre draw {[str(self._drawmol.GetConformer(0).GetAtomPosition(a.GetIdx()).x) for a in self._drawmol.GetAtoms()]}')
         self.drawer = rdMolDraw2D.MolDraw2DSVG(300,300)
         #TODO, what if self._drawmol doesn't exist?
         if self._drawmol != None:
@@ -178,7 +187,6 @@ class MolWidget(QtSvg.QSvgWidget):
         self.drawer.FinishDrawing()
         self.finishedDrawing.emit()#Signal that drawer has finished
         svg = self.drawer.GetDrawingText().replace('svg:','')
-        self.logger.debug(f'post draw {[str(self._drawmol.GetConformer(0).GetAtomPosition(a.GetIdx()).x) for a in self._drawmol.GetAtoms()]}')
         return svg
 
 
