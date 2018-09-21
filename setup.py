@@ -10,14 +10,14 @@ setup(name='rdeditor',
       author_email='esbenjannik@rocketmail.com',
       license='LGPL',
       packages=['rdeditor'],
-      package_data = {'rdeditor': ['pixmaps/*'] },
+      package_data={'rdeditor': ['pixmaps/*']},
       install_requires=[
-	'PySide22',
+	'PySide2',
 	'numpy'
       ],
       entry_points = {
               'console_scripts': [
-                  'rdEditor = rdeditor.rdEditor:launch',                  
-              ], },            
+                  'rdEditor = rdeditor.rdEditor:launch',
+              ], },
       zip_safe=False)
 
