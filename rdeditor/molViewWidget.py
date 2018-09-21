@@ -12,6 +12,7 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import Draw
 from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit.Geometry.rdGeometry import Point2D
 
 #The Viewer Class
 class MolWidget(QtSvg.QSvgWidget):
@@ -118,9 +119,37 @@ class MolWidget(QtSvg.QSvgWidget):
         self.sanitizeMol()
         self.draw()
 
+    def computeNewCoords(self, ignoreExisting=False):
+        """Computes new coordinates for the molecule taking into account all
+        existing positions (feeding these to the rdkit coordinate generation as
+        prev_coords).
+        """
+        # This code is buggy when you are not using the CoordGen coordinate
+        # generation system, so we enable it here
+        rdDepictor.SetPreferCoordGen(True)
+        prev_coords = {}
+        if self._mol.GetNumConformers() == 0:
+            self.logger.debug("No Conformers found, computing all 2D coords")
+        elif ignoreExisting:
+            self.logger.debug("Ignoring existing conformers, computing all "
+                              "2D coords")
+        else:
+            assert self._mol.GetNumConformers() == 1
+            self.logger.debug("1 Conformer found, computing 2D coords not in "
+                              "found conformer")
+            conf = self._mol.GetConformer(0)
+            for a in self._mol.GetAtoms():
+                pos3d = conf.GetAtomPosition(a.GetIdx())
+                if (pos3d.x, pos3d.y) == (0, 0):
+                    continue
+                prev_coords[a.GetIdx()] = Point2D(pos3d.x, pos3d.y)
+        rdDepictor.Compute2DCoords(self._mol, coordMap=prev_coords)
+
+
     sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
     @QtCore.Slot()
     def sanitizeMol(self, kekulize=False):
+        self.computeNewCoords()
         self._drawmol = Chem.Mol(self._mol.ToBinary()) #Is this necessary?
         try:
             Chem.SanitizeMol(self._drawmol)
@@ -139,22 +168,10 @@ class MolWidget(QtSvg.QSvgWidget):
                 Chem.Kekulize(self._drawmol)
             except:
                 self.logger.warning("Unkekulizable")
-
         try:
             self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=kekulize)
         except ValueError:  # <- can happen on a kekulization failure
             self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=False)
-
-        #Generate 2D coords if none present
-        if not self._drawmol.GetNumConformers():
-            rdDepictor.Compute2DCoords(self._drawmol)
-            self.logger.debug("No Conformers found, computing 2D coords")
-        else: #TODO match to already drawed
-            self.logger.debug("%i Conformers in molecule"%self._drawmol.GetNumConformers())
-#            try:
-#                rdDepictor.GenerateDepictionMatching2DStructure(self._drawmol, self._prevmol)#, acceptFailure=True)
-#            except:
-            rdDepictor.Compute2DCoords(self._drawmol)
 
 
     finishedDrawing = QtCore.Signal(name="finishedDrawing")
