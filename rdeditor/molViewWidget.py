@@ -179,6 +179,12 @@ class MolWidget(QtSvg.QSvgWidget):
         self.drawer = rdMolDraw2D.MolDraw2DSVG(300,300)
         #TODO, what if self._drawmol doesn't exist?
         if self._drawmol != None:
+            #Chiral tags on R/S
+            chiraltags = Chem.FindMolChiralCenters(self._drawmol)
+            opts = self.drawer.drawOptions()
+            for tag in chiraltags:
+                idx = tag[0]
+                opts.atomLabels[idx]= self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ':' + tag[1]
             if len(self._selectedAtoms) > 0:
                 colors={self._selectedAtoms[-1]:(1,0.2,0.2)} #Color lastly selected a different color
                 self.drawer.DrawMolecule(self._drawmol, highlightAtoms=self._selectedAtoms, highlightAtomColors=colors)

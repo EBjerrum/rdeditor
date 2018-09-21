@@ -325,6 +325,7 @@ class MolEditWidget(MolWidget):
         stereotype = atom.GetChiralTag()
         self.logger.debug("Current stereotype of clicked atom %s"%stereotype)
         stereotypes = [Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW,
+#                        Chem.rdchem.ChiralType.CHI_OTHER, this one doesn't show a wiggly bond
                         Chem.rdchem.ChiralType.CHI_UNSPECIFIED,
                         Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW,
                         Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW]
@@ -337,17 +338,37 @@ class MolEditWidget(MolWidget):
         rdDepictor.Compute2DCoords(self._mol)
         self.molChanged.emit()
 
+    def assert_stereo_atoms(self, bond):
+        if len(bond.GetStereoAtoms()) ==0:
+            #get atoms and idx's of bond
+            bondatoms = [bond.GetBeginAtom(), bond.GetEndAtom()]
+            bondidx = [atom.GetIdx() for atom in bondatoms]
+            
+            #Figure out the atom idx's of the neigbor atoms, that are NOT the other end of the bond
+            stereoatoms = []
+            for bondatom in bondatoms:
+                neighboridxs = [atom.GetIdx() for atom in bondatom.GetNeighbors()]
+                neighboridx = [idx for idx in neighboridxs if idx not in bondidx][0]
+                stereoatoms.append(neighboridx)
+            #Set the bondstereoatoms
+            bond.SetStereoAtoms(stereoatoms[0], stereoatoms[1])
+        else:
+            pass
+
+
 
     def toogleEZ(self, bond):
         self.backupMol()
         #Chem.rdmolops.AssignStereochemistry(self._mol,cleanIt=True,force=False)
         stereotype = bond.GetStereo()
+        self.assert_stereo_atoms(bond)
         self.logger.debug("Current stereotype of clicked atom %s"%stereotype)
+        #TODO: what if molecule already contain STEREOE or STEREOZ
         stereotypes = [Chem.rdchem.BondStereo.STEREONONE,
-                        Chem.rdchem.BondStereo.STEREOANY,
-                        Chem.rdchem.BondStereo.STEREOE,
-                        Chem.rdchem.BondStereo.STEREOZ,
-                        Chem.rdchem.BondStereo.STEREONONE]
+                        Chem.rdchem.BondStereo.STEREOCIS,
+                        Chem.rdchem.BondStereo.STEREOTRANS,
+#                        Chem.rdchem.BondStereo.STEREOANY, TODO, this should be wiggly, but is not
+                        Chem.rdchem.BondStereo.STEREONONE,]
         newidx = np.argmax(np.array(stereotypes) == stereotype)+1
         bond.SetStereo(stereotypes[newidx])
         self.logger.debug("New stereotype set to %s"%bond.GetStereo())
