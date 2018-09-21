@@ -12,6 +12,7 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import Draw
 from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
+from rdkit.Geometry.rdGeometry import Point2D
 
 #The Viewer Class
 class MolWidget(QtSvg.QSvgWidget):
@@ -121,6 +122,22 @@ class MolWidget(QtSvg.QSvgWidget):
     sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
     @QtCore.Slot()
     def sanitizeMol(self, kekulize=False):
+        self.logger.debug(f'pre sani {[str(self._mol.GetConformer(0).GetAtomPosition(a.GetIdx()).x) for a in self._mol.GetAtoms()]}')
+        #Generate 2D coords if none present
+        prev_coords = {}
+        if self._mol.GetNumConformers() == 0:
+            self.logger.debug("No Conformers found, computing all 2D coords")
+        else:
+            assert self._mol.GetNumConformers() == 1
+            self.logger.debug("1 Conformer found, computing 2D coords not in "
+                              "found conformer")
+            conf = self._mol.GetConformer(0)
+            for a in self._mol.GetAtoms():
+                pos3d = conf.GetAtomPosition(a.GetIdx())
+                if (pos3d.x, pos3d.y) == (0, 0):
+                    continue
+                prev_coords[a.GetIdx()] = Point2D(pos3d.x, pos3d.y)
+        rdDepictor.Compute2DCoords(self._mol, coordMap=prev_coords)
         self._drawmol = Chem.Mol(self._mol.ToBinary()) #Is this necessary?
         try:
             Chem.SanitizeMol(self._drawmol)
@@ -139,26 +156,17 @@ class MolWidget(QtSvg.QSvgWidget):
                 Chem.Kekulize(self._drawmol)
             except:
                 self.logger.warning("Unkekulizable")
-
         try:
             self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=kekulize)
         except ValueError:  # <- can happen on a kekulization failure
             self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=False)
+        self.logger.debug(f'post sani {[str(self._mol.GetConformer(0).GetAtomPosition(a.GetIdx()).x) for a in self._mol.GetAtoms()]}')
 
-        #Generate 2D coords if none present
-        if not self._drawmol.GetNumConformers():
-            rdDepictor.Compute2DCoords(self._drawmol)
-            self.logger.debug("No Conformers found, computing 2D coords")
-        else: #TODO match to already drawed
-            self.logger.debug("%i Conformers in molecule"%self._drawmol.GetNumConformers())
-#            try:
-#                rdDepictor.GenerateDepictionMatching2DStructure(self._drawmol, self._prevmol)#, acceptFailure=True)
-#            except:
-            rdDepictor.Compute2DCoords(self._drawmol)
 
 
     finishedDrawing = QtCore.Signal(name="finishedDrawing")
     def getMolSvg(self):
+        self.logger.debug(f'pre draw {[str(self._drawmol.GetConformer(0).GetAtomPosition(a.GetIdx()).x) for a in self._drawmol.GetAtoms()]}')
         self.drawer = rdMolDraw2D.MolDraw2DSVG(300,300)
         #TODO, what if self._drawmol doesn't exist?
         if self._drawmol != None:
@@ -170,6 +178,7 @@ class MolWidget(QtSvg.QSvgWidget):
         self.drawer.FinishDrawing()
         self.finishedDrawing.emit()#Signal that drawer has finished
         svg = self.drawer.GetDrawingText().replace('svg:','')
+        self.logger.debug(f'post draw {[str(self._drawmol.GetConformer(0).GetAtomPosition(a.GetIdx()).x) for a in self._drawmol.GetAtoms()]}')
         return svg
 
 

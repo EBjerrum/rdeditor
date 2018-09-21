@@ -189,9 +189,9 @@ class MolEditWidget(MolWidget):
         #If not below a given threshold, then it was not clicked
         if min([atom_dist, bond_dist]) < 14.0:
             if atom_dist < bond_dist:
-                return self.mol.GetAtomWithIdx(atom_idx)
+                return self.mol.GetAtomWithIdx(int(atom_idx))
             else:
-                return self.mol.GetBondWithIdx(bond_idx)
+                return self.mol.GetBondWithIdx(int(bond_idx))
         else:
             #Translate SVG to Coords
             return self.SVG_to_coord(x_svg, y_svg)
