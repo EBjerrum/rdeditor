@@ -325,7 +325,7 @@ class MolEditWidget(MolWidget):
         stereotype = atom.GetChiralTag()
         self.logger.debug("Current stereotype of clicked atom %s"%stereotype)
         stereotypes = [Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW,
-                        Chem.rdchem.ChiralType.CHI_OTHER,
+#                        Chem.rdchem.ChiralType.CHI_OTHER, this one doesn't show a wiggly bond
                         Chem.rdchem.ChiralType.CHI_UNSPECIFIED,
                         Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW,
                         Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW]
