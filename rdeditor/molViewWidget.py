@@ -111,6 +111,7 @@ class MolWidget(QtSvg.QSvgWidget):
     #Actions and functions
     @QtCore.Slot()
     def draw(self):
+        self.logger.debug("Updating SVG")
         svg = self.getMolSvg()
         self.load(QtCore.QByteArray(svg.encode('utf-8')))
 
@@ -119,7 +120,7 @@ class MolWidget(QtSvg.QSvgWidget):
         self.sanitizeMol()
         self.draw()
 
-    def computeNewCoords(self, ignoreExisting=False):
+    def computeNewCoords(self, ignoreExisting=False, canonOrient=False):
         """Computes new coordinates for the molecule taking into account all
         existing positions (feeding these to the rdkit coordinate generation as
         prev_coords).
@@ -143,8 +144,15 @@ class MolWidget(QtSvg.QSvgWidget):
                 if (pos3d.x, pos3d.y) == (0, 0):
                     continue
                 prev_coords[a.GetIdx()] = Point2D(pos3d.x, pos3d.y)
-        rdDepictor.Compute2DCoords(self._mol, coordMap=prev_coords)
+        self.logger.debug("Coordmap %s"%prev_coords)
+        self.logger.debug("canonOrient %s"%canonOrient)
+        rdDepictor.Compute2DCoords(self._mol, coordMap=prev_coords, canonOrient=canonOrient)
 
+    def canon_coords_and_draw(self):
+        self.logger.debug("Recalculating coordinates")
+        self.computeNewCoords(canonOrient=True, ignoreExisting=True)
+        self._drawmol = Chem.Mol(self._mol.ToBinary())
+        self.draw()
 
     sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
     @QtCore.Slot()
@@ -187,7 +195,7 @@ class MolWidget(QtSvg.QSvgWidget):
                 opts.atomLabels[idx]= self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ':' + tag[1]
             if len(self._selectedAtoms) > 0:
                 colors={self._selectedAtoms[-1]:(1,0.2,0.2)} #Color lastly selected a different color
-                self.drawer.DrawMolecule(self._drawmol, highlightAtoms=self._selectedAtoms, highlightAtomColors=colors)
+                self.drawer.DrawMolecule(self._drawmol, highlightAtoms=self._selectedAtoms, highlightAtomColors=colors, )
             else:
                 self.drawer.DrawMolecule(self._drawmol)
         self.drawer.FinishDrawing()

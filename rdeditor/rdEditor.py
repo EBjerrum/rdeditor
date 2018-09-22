@@ -98,6 +98,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu.addAction(self.increaseChargeAction)
         self.toolMenu.addAction(self.decreaseChargeAction)
         self.toolMenu.addSeparator()
+        self.toolMenu.addAction(self.cleanCoordinatesAction)
+        self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.undoAction)
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.removeAction)
@@ -144,6 +146,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolBar.addAction(self.ezAction)
         self.mainToolBar.addAction(self.increaseChargeAction)
         self.mainToolBar.addAction(self.decreaseChargeAction)
+        self.mainToolBar.addSeparator()
+        self.mainToolBar.addAction(self.cleanCoordinatesAction)
 
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.removeAction)
@@ -407,6 +411,11 @@ class MainWindow(QtWidgets.QMainWindow):
                                    self, shortcut="Ctrl+X",
                                    statusTip="Clear Canvas (no warning)",
                                    triggered=self.clearCanvas, objectName="Clear Canvas")
+
+        self.cleanCoordinatesAction = QAction( QIcon(self.pixmappath + 'icons8-Broom.png'), 'Recalculate coordinates &F',
+                                   self, shortcut="Ctrl+F",
+                                   statusTip="Re-calculates coordinates and redraw",
+                                   triggered=self.editor.canon_coords_and_draw, objectName="Recalculate Coordinates")
 
 
         #Atom Actions in actiongroup, reuse from ptable widget
