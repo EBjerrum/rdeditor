@@ -1,5 +1,5 @@
 # rdeditor
-Simple RDKit molecule editor GUI using PySide
+Simple RDKit molecule editor GUI using PySide2
 ![rdeditor, the RDKit molecule editor](./Screenshots/Main_window.png)
 
 ## Installation
@@ -13,7 +13,7 @@ python setup.py install
 
 ```
 
-The install script Will also install PySide, but not RDkit, so that should be installed manually or via your operating systems package manager. A launch script will also be added so that it can be started from the command line via the rdEditor command.
+The install script Will also install PySide2, but not RDkit, so that should be installed manually or via your operating systems package manager. A launch script will also be added so that it can be started from the command line via the rdEditor command.
 
 ## Alternative install
 Install PySide and RDKit yourself, save the content of rdeditor folder to somewhere you like and start it with 
@@ -22,7 +22,7 @@ Install PySide and RDKit yourself, save the content of rdeditor folder to somewh
 ## Usage
 
 Can be started with `rdEditor` or `rdEditor your_molecule.mol` to start edit an existing molecule.
-Interactiions with the molecule is done via clicking on the canvas, atoms or bonds. A choice of tools are available.
+Interactions with the molecule are done via clicking on the canvas, atoms or bonds. A choice of tools is available.
 
 #### Top Menu: 
 ![top menu of rdeditor, the RDKit molecule editor](./Screenshots/Top_Menu.png)
@@ -58,4 +58,5 @@ Access to all standard operations as well as less used atom types and bond-types
 * Not possible to distinguish undefined and trans when editing cis/trans double bonds
 * Aromaticity perception hides double-single bonds (kekulization can do likewise)
 * Molecule jumping now more limited, but atom placement may not be optimal as rest og structure kept fixed (and ignored?)
+* Command line binding seem broken and not able to load molecule from commandline
 
