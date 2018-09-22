@@ -87,7 +87,7 @@ class MolEditWidget(MolWidget):
     def setBondType(self, bondtype):
         if type(bondtype) == Chem.rdchem.BondType:
             self.bondtype = bondtype
-        elif type(bondtype) in StringTypes:
+        elif isinstance(bondtype, str):
             assert bondtype in self.bondtypes.keys(), "Bondtype %s not known"%bondtype
             self.bondtype = self.bondtypes[bondtype]
         else:

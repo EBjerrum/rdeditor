@@ -156,7 +156,7 @@ class MolWidget(QtSvg.QSvgWidget):
 
     sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
     @QtCore.Slot()
-    def sanitizeMol(self, kekulize=False):
+    def sanitizeMol(self, kekulize=False, drawkekulize=False):
         self.computeNewCoords()
         self._drawmol = Chem.Mol(self._mol.ToBinary()) #Is this necessary?
         try:
@@ -177,7 +177,7 @@ class MolWidget(QtSvg.QSvgWidget):
             except:
                 self.logger.warning("Unkekulizable")
         try:
-            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=kekulize)
+            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=drawkekulize)
         except ValueError:  # <- can happen on a kekulization failure
             self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=False)
 

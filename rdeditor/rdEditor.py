@@ -95,8 +95,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu.addAction(self.addAction)
         self.toolMenu.addAction(self.addBondAction)
         self.toolMenu.addAction(self.replaceAction)
+        self.toolMenu.addAction(self.rsAction)
+        self.toolMenu.addAction(self.ezAction)
         self.toolMenu.addAction(self.increaseChargeAction)
         self.toolMenu.addAction(self.decreaseChargeAction)
+
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.cleanCoordinatesAction)
         self.toolMenu.addSeparator()
@@ -264,13 +267,15 @@ class MainWindow(QtWidgets.QMainWindow):
                                   triggered=self.openFile)
 
         self.saveAction = QAction( QIcon(self.pixmappath + '/icons8-Save.png'), 'S&ave',
-                                  self, shortcut=QKeySequence.Open,
+                                  self, 
+                                  shortcut=QKeySequence.Save,
                                   statusTip="Save file",
                                   triggered=self.saveFile)
 
 
-        self.saveAsAction = QAction( QIcon(self.pixmappath + 'icons8-Save as.png'), 'S&ave As',
-                                  self, shortcut=QKeySequence.Open,
+        self.saveAsAction = QAction( QIcon(self.pixmappath + 'icons8-Save as.png'), 'Save As',
+                                  self, 
+                                  shortcut=QKeySequence.SaveAs,
                                   statusTip="Save file as ..",
                                   triggered=self.saveAsFile)
 
@@ -295,36 +300,36 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #Edit actions
         self.actionActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
-        self.selectAction = QAction( QIcon(self.pixmappath + 'icons8-Cursor.png'), 'S&elect',
-                                   self, shortcut="Ctrl+S",
+        self.selectAction = QAction( QIcon(self.pixmappath + 'icons8-Cursor.png'), 'Se&lect',
+                                   self, shortcut="Ctrl+L",
                                    statusTip="Select Atoms",
                                    triggered=self.setAction, objectName="Select",
                                    checkable=True)
         self.actionActionGroup.addAction(self.selectAction)
 
-        self.addAction = QAction( QIcon(self.pixmappath + 'icons8-Edit.png'), 'A&dd',
+        self.addAction = QAction( QIcon(self.pixmappath + 'icons8-Edit.png'), '&Add',
                                    self, shortcut="Ctrl+A",
                                    statusTip="Add Atoms",
                                    triggered=self.setAction, objectName="Add",
                                    checkable=True)
         self.actionActionGroup.addAction(self.addAction)
 
-        self.addBondAction = QAction( QIcon(self.pixmappath + 'icons8-Pinch.png'), 'Add B&ond',
+        self.addBondAction = QAction( QIcon(self.pixmappath + 'icons8-Pinch.png'), 'Add &Bond',
                                    self, shortcut="Ctrl+B",
                                    statusTip="Add Bond",
                                    triggered=self.setAction, objectName="Add Bond",
                                    checkable=True)
         self.actionActionGroup.addAction(self.addBondAction)
 
-        self.replaceAction = QAction( QIcon(self.pixmappath + 'icons8-Replace Atom.png'), 'R&eplace',
+        self.replaceAction = QAction( QIcon(self.pixmappath + 'icons8-Replace Atom.png'), '&Replace',
                                    self, shortcut="Ctrl+R",
                                    statusTip="Replace Atom/Bond",
                                    triggered=self.setAction, objectName="Replace",
                                    checkable=True)
         self.actionActionGroup.addAction(self.replaceAction)
 
-        self.rsAction = QAction( QIcon(self.pixmappath + 'Change_R_S.png'), 'T&oggle R/S',
-                                   self, shortcut="Ctrl+o",
+        self.rsAction = QAction( QIcon(self.pixmappath + 'Change_R_S.png'), 'To&ggle R/S',
+                                   self, shortcut="Ctrl+G",
                                    statusTip="Toggle Stereo Chemistry",
                                    triggered=self.setAction, objectName="RStoggle",
                                    checkable=True)
@@ -365,21 +370,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.bondtypeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
 
         self.singleBondAction = QAction( QIcon(self.pixmappath + 'icons8-Single.png'), 'S&ingle Bond',
-                                   self, shortcut="Ctrl+S",
+                                   self, shortcut="Ctrl+1",
                                    statusTip="Set bondtype to SINGLE",
                                    triggered=self.setBondType, objectName="SINGLE",
                                    checkable=True)
         self.bondtypeActionGroup.addAction(self.singleBondAction)
 
         self.doubleBondAction = QAction( QIcon(self.pixmappath + 'icons8-Double.png'), 'Double Bond',
-                                   self, shortcut="Ctrl+S",
+                                   self, shortcut="Ctrl+2",
                                    statusTip="Set bondtype to DOUBLE",
                                    triggered=self.setBondType, objectName="DOUBLE",
                                    checkable=True)
         self.bondtypeActionGroup.addAction(self.doubleBondAction)
 
         self.tripleBondAction = QAction( QIcon(self.pixmappath + 'icons8-Triple.png'), 'Triple Bond',
-                                   self, shortcut="Ctrl+S",
+                                   self, shortcut="Ctrl+3",
                                    statusTip="Set bondtype to TRIPLE",
                                    triggered=self.setBondType, objectName="TRIPLE",
                                    checkable=True)
@@ -403,8 +408,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         #Misc Actions
         self.undoAction = QAction( QIcon(self.pixmappath + 'prev.png'), 'U&ndo',
-                           self, shortcut="Ctrl+U",
-                           statusTip="Undo/Redo changes to molecule",
+                           self, shortcut="Ctrl+Z",
+                           statusTip="Undo/Redo changes to molecule Ctrl+Z",
                            triggered=self.editor.undo, objectName="undo")
 
         self.clearCanvasAction = QAction( QIcon(self.pixmappath + 'icons8-Trash.png'), 'C&lear Canvas',
