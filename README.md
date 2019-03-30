@@ -52,6 +52,10 @@ Most commonly used bond types, and atom types can be selected. A Periodic table 
 #### Dropdown menus
 Access to all standard operations as well as less used atom types and bond-types.
 
+## Blog
+I wrote a blog post with an overview of the structure of the code.
+[https://www.wildcardconsulting.dk/rdeditor-an-open-source-molecular-editor-based-using-python-pyside2-and-rdkit/](https://www.wildcardconsulting.dk/rdeditor-an-open-source-molecular-editor-based-using-python-pyside2-and-rdkit/)
+
 
 ## ISSUES
 * Not possible to set undefined R/S (no wiggly bond rendered)
