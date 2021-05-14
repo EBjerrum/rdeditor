@@ -259,7 +259,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 
-    # Function to create actions for menus
+    # Function to create actions for menus and toolbars
     def CreateActions(self):
         self.openAction = QAction( QIcon(self.pixmappath + 'open.png'), 'O&pen',
                                   self, shortcut=QKeySequence.Open,
