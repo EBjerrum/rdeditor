@@ -11,8 +11,8 @@ from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2 import QtSvg
 
 #Import model
-from molEditWidget import MolEditWidget
-from ptable_widget import PTable
+from rdeditor.molEditWidget import MolEditWidget
+from rdeditor.ptable_widget import PTable
 
 from rdkit import Chem
 

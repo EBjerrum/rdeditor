@@ -6,7 +6,7 @@ import logging
 
 from PySide2 import QtGui, QtCore, QtWidgets
 
-from ptable import ptable
+from rdeditor.ptable import ptable
 
 class PTable(QtWidgets.QWidget):
 	

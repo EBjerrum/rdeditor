@@ -1,0 +1,1 @@
+from rdeditor.jupyter_widget.rdeditor_widget import EditMol
