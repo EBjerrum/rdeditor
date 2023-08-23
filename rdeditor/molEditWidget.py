@@ -47,6 +47,7 @@ class MolEditWidget(MolWidget):
         self._action = "Add"
         self._bondtype = self.bondtypes["SINGLE"]
         self._atomtype = 6
+        self._ringtype = None
 
         # Points to calculate the SVG to coord scaling
         self.points = [Point2D(0, 0), Point2D(1, 1)]
@@ -82,11 +83,23 @@ class MolEditWidget(MolWidget):
     def bondtype(self):
         return self._bondtype
 
+    @property
+    def ringtype(self):
+        return self._ringtype
+
     @bondtype.setter
     def bondtype(self, bondtype):
         if bondtype != self.bondtype:
             self._bondtype = bondtype
             self.bondTypeChanged.emit()
+
+    @ringtype.setter
+    def ringtype(self, ringtype):
+        if ringtype != self.ringtype:
+            self._ringtype = ringtype
+
+    def setRingType(self, ringtype):
+        self.ringtype = ringtype
 
     def setBondType(self, bondtype):
         if type(bondtype) == Chem.rdchem.BondType:
@@ -233,7 +246,10 @@ class MolEditWidget(MolWidget):
     # Lookup tables to relate actions to context type with action type #TODO more clean to use Dictionaries??
     def atom_click(self, atom):
         if self.action == "Add":
-            self.add_atom_to(atom)
+            if self.ringtype is None:
+                self.add_atom_to(atom)
+            else:
+                self.add_ring_to_atom(atom)
         elif self.action == "Remove":
             self.remove_atom(atom)
         elif self.action == "Select":
@@ -255,7 +271,10 @@ class MolEditWidget(MolWidget):
 
     def bond_click(self, bond):
         if self.action == "Add":
-            self.toggle_bond(bond)
+            if self.ringtype is None:
+                self.toggle_bond(bond)
+            else:
+                self.add_ring_to_bond(bond)
         elif self.action == "Add Bond":
             self.replace_bond(bond)
         elif self.action == "Remove":
@@ -273,7 +292,10 @@ class MolEditWidget(MolWidget):
 
     def canvas_click(self, point):
         if self.action == "Add":
-            self.add_canvas_atom(point)
+            if self.ringtype == None:
+                self.add_canvas_atom(point)
+            else:
+                self.add_canvas_ring(point, self.ringtype)
         elif self.action == "Select":
             # Click on canvas
             # Unselect any selected
@@ -292,6 +314,47 @@ class MolEditWidget(MolWidget):
         newbond = rwmol.AddBond(atom.GetIdx(), newidx, order=self.bondtype)
         self.mol = rwmol
 
+    def add_ring_to_atom(self, atom, ringtype="benzene"):
+        if self.ringtype == "benzene":
+            ring = Chem.MolFromSmiles("c1ccccc1")
+        elif self.ringtype == "aliphatic6":
+            ring = Chem.MolFromSmiles("C1CCCCC1")
+        combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
+        _ = combined.AddBond(
+            atom.GetIdx(), self.mol.GetNumAtoms(), Chem.rdchem.BondType.SINGLE
+        )
+        self.mol = combined
+
+    def add_ring_to_bond(self, bond, ringtype="benzene"):
+        if self.ringtype == "benzene":
+            ring = Chem.MolFromSmarts("c:c:c:c")
+            bondType = Chem.rdchem.BondType.AROMATIC
+        if self.ringtype == "aliphatic6":
+            ring = Chem.MolFromSmarts("C-C-C-C")
+            bondType = Chem.rdchem.BondType.SINGLE
+        combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
+        combined.AddBond(
+            bond.GetEndAtomIdx(),
+            self.mol.GetNumAtoms() + 3,
+            bondType,
+        )
+
+        combined.AddBond(
+            bond.GetBeginAtomIdx(),
+            self.mol.GetNumAtoms(),
+            bondType,
+        )
+        # if bond to which aromatic ring is added is not aromatic it will be made aromatic
+        if ringtype == "benzene":
+            combined.GetBondWithIdx(bond.GetIdx()).SetIsAromatic(True)
+
+        # the extra sanitization is done to make sure that aromaticity is correctly displayed
+        try:
+            Chem.SanitizeMol(combined)
+            self.mol = Chem.MolFromSmiles(Chem.MolToSmiles(combined))
+        except:
+            self.mol = combined
+
     def add_canvas_atom(self, point):
         rwmol = Chem.rdchem.RWMol(self.mol)
         if rwmol.GetNumAtoms() == 0:
@@ -306,6 +369,24 @@ class MolEditWidget(MolWidget):
         p3 = Point3D(point.x, point.y, 0)
         conf.SetAtomPosition(newidx, p3)
         self.mol = rwmol
+
+    def add_canvas_ring(self, point, ringtype="benzene"):
+        if self.ringtype == "benzene":
+            ring = Chem.MolFromSmiles("c1ccccc1")
+        elif self.ringtype == "aliphatic6":
+            ring = Chem.MolFromSmiles("C1CCCCC1")
+
+        if self.mol.GetNumAtoms() == 0:
+            point.x = 0.0
+            point.y = 0.0
+        combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
+        # This should only trigger if we have an empty canvas
+        if not combined.GetNumConformers():
+            rdDepictor.Compute2DCoords(combined)
+        conf = combined.GetConformer(0)
+        p3 = Point3D(point.x, point.y, 0)
+        conf.SetAtomPosition(self.mol.GetNumAtoms(), p3)
+        self.mol = combined
 
     def remove_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
