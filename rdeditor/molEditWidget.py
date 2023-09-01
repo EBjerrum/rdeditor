@@ -11,7 +11,9 @@ from rdkit.Chem import AllChem
 from rdkit.Chem import Draw
 from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
+from PySide2.QtCore import QRunnable, Slot, QThreadPool, Signal, QObject
 from rdkit.Geometry.rdGeometry import Point2D, Point3D
+import time
 
 # from rdkit.Chem.AllChem import GenerateDepictionMatching3DStructure
 
@@ -31,6 +33,10 @@ class MolEditWidget(MolWidget):
         super(MolEditWidget, self).__init__(parent)
         # This sets the window to delete itself when its closed, so it doesn't keep querying the model
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.worker = highlight_worker()
+        self.threads = QThreadPool()
+        self.threads.start(self.worker)
+        self.worker.signals.mouseposition.connect(self.test)
 
         # Properties
         self._prevmol = None  # For undo
@@ -195,23 +201,39 @@ class MolEditWidget(MolWidget):
             return None, 1e10  # Return ridicilous long distance so that its not chosen
 
     # Function that translates coodinates from an event into a molobject
+    def test(self, position):
+        out = self.get_molobject(position)
+        if type(out) == Chem.rdchem.Atom:
+            self.setHoverAtom(out.GetIdx())
+            self.removeHoverBond()
+        elif type(out) == Chem.rdchem.Bond:
+            self.setHoverBond(out.GetIdx())
+            self.removeHoverAtom()
+        else:
+            self.removeHoverAtom()
+            self.removeHoverBond()
+
     def get_molobject(self, event):
         # Recalculate to SVG coords
         viewbox = self.renderer().viewBox()
         size = self.size()
-
-        x = event.pos().x()
-        y = event.pos().y()
+        if type(event) is QtCore.QPoint:
+            event = self.mapFromGlobal(event)
+            x = event.x()
+            y = event.y()
+        else:
+            x = event.pos().x()
+            y = event.pos().y()
         # Rescale, divide by the size of the widget, multiply by the size of the viewbox + offset.
         x_svg = float(x) / size.width() * viewbox.width() + viewbox.left()
         y_svg = float(y) / size.height() * viewbox.height() + viewbox.top()
-        self.logger.debug("SVG_coords:\t%s\t%s" % (x_svg, y_svg))
+        # self.logger.debug("SVG_coords:\t%s\t%s" % (x_svg, y_svg))
         # Identify Nearest atomindex
         atom_idx, atom_dist = self.get_nearest_atom(x_svg, y_svg)
         bond_idx, bond_dist = self.get_nearest_bond(x_svg, y_svg)
-        self.logger.debug(
-            "Distances to atom %0.2F, bond %0.2F" % (atom_dist, bond_dist)
-        )
+        # self.logger.debug(
+        #    "Distances to atom %0.2F, bond %0.2F" % (atom_dist, bond_dist)
+        # )
         # If not below a given threshold, then it was not clicked
         if min([atom_dist, bond_dist]) < 14.0:
             if atom_dist < bond_dist:
@@ -221,6 +243,9 @@ class MolEditWidget(MolWidget):
         else:
             # Translate SVG to Coords
             return self.SVG_to_coord(x_svg, y_svg)
+
+    def mouseMoveEvent(self, event):
+        print(event.x())
 
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
@@ -543,6 +568,26 @@ class MolEditWidget(MolWidget):
 
     def backupMol(self):
         self._prevmol = Chem.Mol(self.mol.ToBinary())
+
+
+class WorkerSignals(QObject):
+    finished = Signal()  # QtCore.Signal
+    error = Signal(tuple)
+    mouseposition = Signal(object)
+
+
+class highlight_worker(QRunnable):
+    def __init__(self):
+        super(highlight_worker, self).__init__()
+
+        self.signals = WorkerSignals()
+
+    @Slot()  # QtCore.Slot
+    def run(self):
+        while True:
+            cursor_position = QtGui.QCursor.pos()
+            self.signals.mouseposition.emit(cursor_position)
+            time.sleep(0.13)
 
 
 if __name__ == "__main__":
