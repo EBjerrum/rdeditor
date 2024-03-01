@@ -62,5 +62,4 @@ I wrote a blog post with an overview of the structure of the code.
 * Not possible to distinguish undefined and trans when editing cis/trans double bonds
 * Aromaticity perception hides double-single bonds (kekulization can do likewise)
 * Molecule jumping now more limited, but atom placement may not be optimal as rest og structure kept fixed (and ignored?)
-* Command line binding seem broken and not able to load molecule from commandline
 
