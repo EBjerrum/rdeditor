@@ -33,9 +33,6 @@ class MolWidget(QtSvg.QSvgWidget):
         self._drawmol = None  # Molecule for drawing
         self.drawer = None  # drawing object for producing SVG
         self._selectedAtoms = []  # List of selected atoms
-        self._selectedBonds = []
-        self._hoverAtom = []
-        self._hoverBond = []
 
         # Bind signales to slots for automatic actions
         self.molChanged.connect(self.sanitize_draw)
@@ -86,10 +83,6 @@ class MolWidget(QtSvg.QSvgWidget):
         self._selectedAtoms = [atomidx]
         self.selectionChanged.emit()
 
-    def selectBond(self, bondidx):
-        self._selectedAtoms = [bondidx]
-        self.selectionChanged.emit()
-
     def unselectAtom(self, atomidx):
         self.selectedAtoms.remove(atomidx)
         self.selectionChanged.emit()
@@ -97,29 +90,6 @@ class MolWidget(QtSvg.QSvgWidget):
     def clearAtomSelection(self):
         if self._selectedAtoms != []:
             self._selectedAtoms = []
-            self.selectionChanged.emit()
-
-    def clearBondSelection(self):
-        if self._selectedBonds != []:
-            self._selectedBonds = []
-            self.selectionChanged.emit()
-
-    def setHoverAtom(self, atomidx):
-        self._hoverAtom = [atomidx]
-        self.selectionChanged.emit()
-
-    def setHoverBond(self, bondidx):
-        self._hoverBond = [bondidx]
-        self.selectionChanged.emit()
-
-    def removeHoverAtom(self):
-        if self._hoverAtom != []:
-            self._hoverAtom = []
-            self.selectionChanged.emit()
-
-    def removeHoverBond(self):
-        if self._hoverBond != []:
-            self._hoverBond = []
             self.selectionChanged.emit()
 
     @property
@@ -235,29 +205,17 @@ class MolWidget(QtSvg.QSvgWidget):
                 opts.atomLabels[idx] = (
                     self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
                 )
-            atoms2Color = list(range(self._drawmol.GetNumAtoms()))
-            colors_atoms = {x: (1.0, 1.0, 1.0) for x in atoms2Color}
             if len(self._selectedAtoms) > 0:
-                # atoms2Color = self._selectedAtoms
-                [colors_atoms[x].pop() for x in self._selectedAtoms]
-                colors_atoms = {
+                colors = {
                     self._selectedAtoms[-1]: (1, 0.2, 0.2)
                 }  # Color lastly selected a different color
-
-            if len(self._hoverAtom) > 0:
-                colors_atoms[self._hoverAtom[0]] = (0.86, 0.86, 0.86)
-            colors_bonds = {}
-            if len(self._hoverBond) > 0:
-                colors_bonds = {self._hoverBond[-1]: (0.86, 0.86, 0.86)}
-
-            self.drawer.DrawMolecule(
-                self._drawmol,
-                highlightAtoms=atoms2Color,
-                highlightAtomColors=colors_atoms,
-                highlightBonds=self._hoverBond,
-                highlightBondColors=colors_bonds,
-            )
-
+                self.drawer.DrawMolecule(
+                    self._drawmol,
+                    highlightAtoms=self._selectedAtoms,
+                    highlightAtomColors=colors,
+                )
+            else:
+                self.drawer.DrawMolecule(self._drawmol)
         self.drawer.FinishDrawing()
         self.finishedDrawing.emit()  # Signal that drawer has finished
         svg = self.drawer.GetDrawingText().replace("svg:", "")
