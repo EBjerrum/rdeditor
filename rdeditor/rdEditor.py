@@ -11,8 +11,8 @@ from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2 import QtSvg
 
 #Import model
-from molEditWidget import MolEditWidget
-from ptable_widget import PTable
+from rdeditor.molEditWidget import MolEditWidget
+from rdeditor.ptable_widget import PTable
 
 from rdkit import Chem
 
@@ -59,7 +59,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.myStatusBar.addPermanentWidget(self.infobar, 0)
 
         if self.fileName is not None:
-            self.logger.info("Loading model from %s"%self.fileName)
+            self.editor.logger.info("Loading model from %s"%self.fileName)
             self.loadMolFile(fileName)
 
         self.editor.sanitizeSignal.connect(self.infobar.setText)
