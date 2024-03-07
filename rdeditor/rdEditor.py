@@ -81,6 +81,8 @@ class MainWindow(QtWidgets.QMainWindow):
     # Actual menu bar item creation
     def CreateMenus(self):
         self.fileMenu = self.menuBar().addMenu("&File")
+        #self.edit_menu = self.menuBar().addMenu("&Edit")
+        
         self.toolMenu = self.menuBar().addMenu("&Tools")
         self.atomtypeMenu = self.menuBar().addMenu("&AtomTypes")
         self.bondtypeMenu = self.menuBar().addMenu("&BondTypes")
@@ -89,6 +91,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.fileMenu.addAction(self.openAction)
         self.fileMenu.addAction(self.saveAction)
         self.fileMenu.addAction(self.saveAsAction)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.copyAction)
+        self.fileMenu.addAction(self.pasteAction)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAction)
 
@@ -107,7 +112,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu.addAction(self.undoAction)
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.removeAction)
-
 
         #Atomtype menu
         for action in self.atomActions:
@@ -232,6 +236,25 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 self.statusBar().showMessage("Invalid file format", 2000)
 
+    def copy(self):
+        selected_text = Chem.MolToSmiles(self.editor.mol)
+        clipboard = QApplication.clipboard()
+        clipboard.setText(selected_text)
+
+    def paste(self):
+        clipboard = QApplication.clipboard()
+        text = clipboard.text()
+        mol = Chem.MolFromSmiles(text, sanitize=True)
+        if not mol:
+            mol = Chem.MolFromSmiles(text, sanitize=False)
+            if mol:
+                self.editor.logger.warning("Pasted SMILES is not sanitizable")
+        if mol:
+            self.editor.mol = mol
+        else:
+            self.editor.logger.warning(f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}")
+        
+
     def clearCanvas(self):
         self.editor.clearAtomSelection()
         self.editor.mol = None
@@ -332,6 +355,16 @@ class MainWindow(QtWidgets.QMainWindow):
                                   self, shortcut=QKeySequence.Open,
                                   statusTip="Open the periodic table for atom type selection",
                                   triggered=self.openPtable)
+        
+        #Copy-Paste actions
+        self.copyAction = QAction(QIcon(self.pixmappath + 'icons8-copy-96.png'),
+                                    "Copy SMILES", self, shortcut=QKeySequence.Copy, 
+                                   statusTip="Copy the current molecule as a SMILES string",
+                                   triggered=self.copy)
+        
+        self.pasteAction = QAction(QIcon(self.pixmappath + 'icons8-paste-100.png'), "Paste SMILES", self, shortcut=QKeySequence.Paste, 
+                                   statusTip="Paste the clipboard and parse assuming it is a SMILES string",
+                                   triggered=self.paste)
 
         #Edit actions
         self.actionActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
