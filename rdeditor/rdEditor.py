@@ -52,7 +52,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.center)
         self.fileName = fileName
 
-        self.filters = "MOL Files (*.mol *.mol);;Any File (*)"
+        self.filters = "MOL Files (*.mol *.mol);;SMILES Files (*.smi *.smi);;Any File (*)"
+
         self.SetupComponents()
 
         self.infobar = QLabel("")
@@ -189,13 +190,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def saveAsFile(self):
         self.fileName, self.filterName = QFileDialog.getSaveFileName(self, filter=self.filters)
-        if(self.fileName != ''):
-            if self.fileName[-4:].upper() != ".MOL":
-                self.fileName = self.fileName + ".mol"
-            Chem.MolToMolFile(self.editor.mol, str(self.fileName))
-#            file = open(self.fileName, 'w')
-#            file.write(self.textEdit.toPlainText())
-            self.statusBar().showMessage("File saved", 2000)
+        if self.fileName != '':
+            if self.filterName == "MOL Files (*.mol *.mol)":
+                if not self.fileName.lower().endswith(".mol"):
+                    self.fileName = self.fileName + ".mol"
+                Chem.MolToMolFile(self.editor.mol, str(self.fileName))
+                self.statusBar().showMessage("File saved as MolFile", 2000)
+            elif self.filterName == "SMILES Files (*.smi *.smi)":
+                if not self.fileName.lower().endswith(".smi"):
+                    self.fileName = self.fileName + ".smi"
+                smiles = Chem.MolToSmiles(self.editor.mol)
+                with open(self.fileName, 'w') as file:
+                    file.write(smiles)
+                self.statusBar().showMessage("File saved as SMILES", 2000)
+            else:
+                self.statusBar().showMessage("Invalid file format", 2000)
 
     def clearCanvas(self):
         self.editor.clearAtomSelection()
