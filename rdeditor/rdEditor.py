@@ -60,8 +60,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.myStatusBar.addPermanentWidget(self.infobar, 0)
 
         if self.fileName is not None:
-            self.editor.logger.info("Loading model from %s"%self.fileName)
-            self.loadMolFile(fileName)
+            self.editor.logger.info("Loading molecule from %s"%self.fileName)
+            self.loadFile()
 
         self.editor.sanitizeSignal.connect(self.infobar.setText)
         self.show()
@@ -170,17 +170,43 @@ class MainWindow(QtWidgets.QMainWindow):
             self.sideToolBar.addAction(action)
         self.sideToolBar.addAction(self.openPtableAction)
 
+    def loadSmilesFile(self, filename):
+        self.fileName = filename
+        with open(self.fileName, 'r') as file:
+            lines = file.readlines()
+            if len(lines) > 1:
+                self.editor.logger.warning("The SMILES file contains more than one line.")
+                self.statusBar().showMessage("The SMILES file contains more than one line.")
+                return None
+            smiles = lines[0].strip()
+            mol = Chem.MolFromSmiles(smiles)
+            self.editor.mol = mol
+            self.statusBar().showMessage(f"SMILES file {filename} opened")
+
     def loadMolFile(self, filename):
         self.fileName = filename
         mol = Chem.MolFromMolFile(str(self.fileName), sanitize=False, strictParsing=False)
         self.editor.mol = mol
-        self.statusBar().showMessage("File opened")
-
-
+        self.statusBar().showMessage(f"Mol file {filename} opened")
 
     def openFile(self):
-        self.fileName, self.filterName = QFileDialog.getOpenFileName(self, caption = "Open MOL file",filter = self.filters)
-        self.loadMolFile(self.fileName)
+        self.fileName, _ = QFileDialog.getOpenFileName(self, caption="Open file", filter=self.filters)
+        return self.loadFile()
+
+    def loadFile(self):
+        if not self.fileName:
+            self.editor.logger.warning("No file selected.")
+            self.statusBar().showMessage("No file selected.")
+            return
+        if self.fileName.lower().endswith(".mol"):
+            self.loadMolFile(self.fileName)
+        elif self.fileName.lower().endswith(".smi"):
+            self.loadSmilesFile(self.fileName)
+        else:
+            self.editor.logger.warning("Unknown file format. Assuming file as .mol format.")
+            self.statusBar().showMessage("Unknown file format. Assuming file as .mol format.")
+            self.loadMolFile(self.fileName)
+            self.fileName += ".mol"
 
     def saveFile(self):
         if self.fileName != None:
@@ -201,7 +227,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.fileName = self.fileName + ".smi"
                 smiles = Chem.MolToSmiles(self.editor.mol)
                 with open(self.fileName, 'w') as file:
-                    file.write(smiles)
+                    file.write(smiles + "\n")
                 self.statusBar().showMessage("File saved as SMILES", 2000)
             else:
                 self.statusBar().showMessage("Invalid file format", 2000)
@@ -452,9 +478,9 @@ def launch(loglevel="WARNING"):
     # Exception Handling
     try:
         myApp = QApplication(sys.argv)
-        try:
+        if len(sys.argv) > 1:
             mainWindow = MainWindow(fileName = sys.argv[1], loglevel=loglevel)
-        except:
+        else:
             mainWindow = MainWindow(loglevel=loglevel)
         myApp.exec_()
         sys.exit(0)
