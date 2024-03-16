@@ -15,6 +15,7 @@ from molEditWidget import MolEditWidget
 from ptable_widget import PTable
 
 from rdkit import Chem
+import qdarktheme
 
 
 # The main window class
@@ -25,7 +26,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pixmappath = os.path.abspath(os.path.dirname(__file__)) + "/pixmaps/"
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
         self.editor = MolEditWidget()
-        self.ptable = PTable()
+        self.chemEntityActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.ptable = PTable(self.chemEntityActionGroup)
         self._fileName = None
         self.initGUI(fileName=fileName)
         self.ptable.atomtypeChanged.connect(self.setAtomTypeName)
@@ -164,8 +166,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sideToolBar.addAction(self.doubleBondAction)
         self.sideToolBar.addAction(self.tripleBondAction)
         self.sideToolBar.addSeparator()
-        self.sideToolBar.addAction(self.bezeneAction)
-        self.sideToolBar.addAction(self.ringSixAction)
+        self.sideToolBar.addAction(self.ringAliphatic6Action)
+        self.sideToolBar.addAction(self.ringAromatic6Action)
         self.sideToolBar.addSeparator()
         for action in self.atomActions:
             self.sideToolBar.addAction(action)
@@ -247,32 +249,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.editor.setAction(sender.objectName())
         self.myStatusBar.showMessage("Action %s selected" % sender.objectName())
 
-    def setRingType(self, ringType):
-        if ringType == self.editor.ringtype:
-            self.editor.setRingType(None)
-            self.bezeneAction.setChecked(False)
-            self.ringSixAction.setChecked(False)
-        else:
-            self.editor.setRingType(ringType)
-            if ringType != "benzene":
-                self.bezeneAction.setChecked(False)
-            if ringType != "aliphatic6":
-                self.ringSixAction.setChecked(False)
+    def setRingType(self):
+        sender = self.sender()
+        self.editor.setRingType(sender.objectName())
+        self.myStatusBar.showMessage("Ringtype %s selected" % sender.objectName())
 
     def setBondType(self):
         sender = self.sender()
         self.editor.setBondType(sender.objectName())
-        self.editor.setRingType(None)
-        self.bezeneAction.setChecked(False)
-        self.ringSixAction.setChecked(False)
         self.myStatusBar.showMessage("Bondtype %s selected" % sender.objectName())
 
     def setAtomType(self):
         sender = self.sender()
         self.editor.setAtomType(sender.objectName())
         self.editor.setRingType(None)
-        self.bezeneAction.setChecked(False)
-        self.ringSixAction.setChecked(False)
         self.myStatusBar.showMessage("Atomtype %s selected" % sender.objectName())
 
     def setAtomTypeName(self, atomname):
@@ -460,7 +450,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addAction.setChecked(True)
 
         # BondTypeActions
-        self.bondtypeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
 
         self.singleBondAction = QAction(
             QIcon(self.pixmappath + "icons8-Single.png"),
@@ -472,7 +461,7 @@ class MainWindow(QtWidgets.QMainWindow):
             objectName="SINGLE",
             checkable=True,
         )
-        self.bondtypeActionGroup.addAction(self.singleBondAction)
+        self.chemEntityActionGroup.addAction(self.singleBondAction)
 
         self.doubleBondAction = QAction(
             QIcon(self.pixmappath + "icons8-Double.png"),
@@ -484,7 +473,7 @@ class MainWindow(QtWidgets.QMainWindow):
             objectName="DOUBLE",
             checkable=True,
         )
-        self.bondtypeActionGroup.addAction(self.doubleBondAction)
+        self.chemEntityActionGroup.addAction(self.doubleBondAction)
 
         self.tripleBondAction = QAction(
             QIcon(self.pixmappath + "icons8-Triple.png"),
@@ -496,8 +485,32 @@ class MainWindow(QtWidgets.QMainWindow):
             objectName="TRIPLE",
             checkable=True,
         )
-        self.bondtypeActionGroup.addAction(self.tripleBondAction)
+        self.chemEntityActionGroup.addAction(self.tripleBondAction)
         self.singleBondAction.setChecked(True)
+
+        self.ringAromatic6Action = QAction(
+            QIcon(self.pixmappath + "icons8-Benzene.png"),
+            "Benzene Ring",
+            self,
+            shortcut="Ctrl+4",
+            statusTip="Select Benzene Ring",
+            triggered=self.setRingType,
+            objectName="ARO6",
+            checkable=True,
+        )
+        self.chemEntityActionGroup.addAction(self.ringAromatic6Action)
+
+        self.ringAliphatic6Action = QAction(
+            QIcon(self.pixmappath + "icons8-Ring.png"),
+            "Aliphatic Six Ring",
+            self,
+            shortcut="Ctrl+5",
+            statusTip="Select Aliphatic Ring",
+            triggered=self.setRingType,
+            objectName="ALI6",
+            checkable=True,
+        )
+        self.chemEntityActionGroup.addAction(self.ringAliphatic6Action)
 
         # Build dictionary of ALL available bondtypes in RDKit
         self.bondActions = {}
@@ -510,34 +523,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 objectName=key,
                 checkable=True,
             )
-            self.bondtypeActionGroup.addAction(action)
+            self.chemEntityActionGroup.addAction(action)
             self.bondActions[key] = action
         # Replace defined actions
+
         self.bondActions["SINGLE"] = self.singleBondAction
         self.bondActions["DOUBLE"] = self.doubleBondAction
         self.bondActions["TRIPLE"] = self.tripleBondAction
-
-        self.bezeneAction = QAction(
-            QIcon(self.pixmappath + "icons8-Benzene.png"),
-            "Benzene Ring",
-            self,
-            shortcut="Ctrl+4",
-            statusTip="Select Benzene Ring",
-            triggered=lambda: self.setRingType("benzene"),
-            objectName="Benzene",
-            checkable=True,
-        )
-
-        self.ringSixAction = QAction(
-            QIcon(self.pixmappath + "icons8-Ring.png"),
-            "Aliphatic Six Ring",
-            self,
-            shortcut="Ctrl+5",
-            statusTip="Select Aliphatic Ring",
-            triggered=lambda: self.setRingType("aliphatic6"),
-            objectName="aliphatic6",
-            checkable=True,
-        )
+        self.bondActions["ARO6"] = self.ringAromatic6Action
+        self.bondActions["ALI6"] = self.ringAliphatic6Action
 
         # Misc Actions
         self.undoAction = QAction(
@@ -594,6 +588,7 @@ def launch(loglevel="WARNING"):
     # Exception Handling
     try:
         myApp = QApplication(sys.argv)
+        qdarktheme.setup_theme("light")
         try:
             mainWindow = MainWindow(fileName=sys.argv[1], loglevel=loglevel)
         except:

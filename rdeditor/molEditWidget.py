@@ -31,7 +31,7 @@ class MolEditWidget(MolWidget):
         super(MolEditWidget, self).__init__(parent)
         # This sets the window to delete itself when its closed, so it doesn't keep querying the model
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-
+        self.available_rings = ["ALI6", "ARO6"]
         # Properties
         self._prevmol = None  # For undo
         self.coordlist = None  # SVG coords of the current mols atoms
@@ -45,9 +45,11 @@ class MolEditWidget(MolWidget):
 
         # Default actions
         self._action = "Add"
-        self._bondtype = self.bondtypes["SINGLE"]
-        self._atomtype = 6
-        self._ringtype = None
+        # self._bondtype = self.bondtypes["SINGLE"]
+        # self._atomtype = 6
+        # self._ringtype = None
+        self._chemEntityType = "bond"
+        self._chemEntitySubType = self.bondtypes["SINGLE"]
 
         # Points to calculate the SVG to coord scaling
         self.points = [Point2D(0, 0), Point2D(1, 1)]
@@ -79,6 +81,30 @@ class MolEditWidget(MolWidget):
 
     bondTypeChanged = QtCore.Signal(name="bondTypeChanged")
 
+    chemEntityTypeChanged = QtCore.Signal(name="chemEntityTypeChanged")
+
+    @property
+    def chemEntityType(self):
+        return self._chemEntityType
+
+    @chemEntityType.setter
+    def chemEntityType(self, chemEntityType):
+        if self._chemEntityType != chemEntityType:
+            self._chemEntityType = chemEntityType
+            self.chemEntityTypeChanged.emit()
+
+    chemEntitySubTypeChanged = QtCore.Signal(name="chemEntitySubTypeChanged")
+
+    @property
+    def chemEntitySubType(self):
+        return self._chemEntitySubType
+
+    @chemEntitySubType.setter
+    def chemEntitySubType(self, subtype):
+        if self._chemEntitySubType != subtype:
+            self._chemEntitySubType = subtype
+            # chemEntitySubTypeChanged.emit()
+
     @property
     def bondtype(self):
         return self._bondtype
@@ -99,14 +125,22 @@ class MolEditWidget(MolWidget):
             self._ringtype = ringtype
 
     def setRingType(self, ringtype):
-        self.ringtype = ringtype
+        if ringtype in self.available_rings:
+            self.chemEntityType = "ring"
+            self.chemEntitySubType = ringtype
+        else:
+            self.error(f"Currently only {self.available_rings} are supported.")
 
     def setBondType(self, bondtype):
+
         if type(bondtype) == Chem.rdchem.BondType:
-            self.bondtype = bondtype
+            self.chemEntityType = "bond"
+            self.chemEntitySubType = bondtype
+
         elif isinstance(bondtype, str):
             assert bondtype in self.bondtypes.keys(), "Bondtype %s not known" % bondtype
-            self.bondtype = self.bondtypes[bondtype]
+            self.chemEntityType = "bond"
+            self.chemEntitySubType = self.bondtypes[bondtype]
         else:
             self.logger.error(
                 "Bondtype must be string or rdchem.BondType, not %s" % type(bondtype)
@@ -128,10 +162,13 @@ class MolEditWidget(MolWidget):
         self.logger.debug("Setting atomtype selection to %s" % atomtype)
         if atomtype in self.symboltoint.keys():
             self.logger.debug("Atomtype found in keys")
-            self.atomtype = self.symboltoint[atomtype]
+            # self.atomtype = self.symboltoint[atomtype]
+            self.chemEntityType = "atom"
+            self.chemEntitySubType = self.symboltoint[atomtype]
         elif type(atomtype) == IntType:
             # Can we assert that its a proper number known by RDKit??
-            self.atomtype = atomtype
+            self.chemEntityType = "atom"
+            self.chemEntitySubType = atomtype
         else:
             self.error("Atomtype must be string or integer, not %s" % type(atomtype))
 
@@ -246,16 +283,13 @@ class MolEditWidget(MolWidget):
     # Lookup tables to relate actions to context type with action type #TODO more clean to use Dictionaries??
     def atom_click(self, atom):
         if self.action == "Add":
-            if self.ringtype is None:
-                self.add_atom_to(atom)
-            else:
-                self.add_ring_to_atom(atom)
+            self.add_to_atom(atom)
         elif self.action == "Remove":
             self.remove_atom(atom)
         elif self.action == "Select":
             self.select_atom_add(atom)
         elif self.action == "Replace":
-            self.replace_atom(atom)
+            self.replace_on_atom(atom)
         elif self.action == "Add Bond":
             self.add_bond(atom)
         elif self.action == "Increase Charge":
@@ -271,10 +305,7 @@ class MolEditWidget(MolWidget):
 
     def bond_click(self, bond):
         if self.action == "Add":
-            if self.ringtype is None:
-                self.toggle_bond(bond)
-            else:
-                self.add_ring_to_bond(bond)
+            self.add_to_bond(bond)
         elif self.action == "Add Bond":
             self.replace_bond(bond)
         elif self.action == "Remove":
@@ -292,10 +323,8 @@ class MolEditWidget(MolWidget):
 
     def canvas_click(self, point):
         if self.action == "Add":
-            if self.ringtype == None:
-                self.add_canvas_atom(point)
-            else:
-                self.add_canvas_ring(point, self.ringtype)
+            self.add_canvas_entity(point)
+
         elif self.action == "Select":
             # Click on canvas
             # Unselect any selected
@@ -306,24 +335,46 @@ class MolEditWidget(MolWidget):
                 "The combination of Canvas click and Action %s undefined" % self.action
             )
 
-    # Atom Actions
-    def add_atom_to(self, atom):
+    def add_to_atom(self, atom):
+        if self.chemEntityType == "atom":
+            self.add_atom_to_atom(atom)
+        if self.chemEntityType == "ring":
+            self.add_ring_to_atom(atom)
+        if self.chemEntityType == "bond":
+            self.add_bond_to_atom(atom)
+
+    def add_atom_to_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
-        newatom = Chem.rdchem.Atom(self.atomtype)
+        newatom = Chem.rdchem.Atom(self.chemEntitySubType)
         newidx = rwmol.AddAtom(newatom)
-        newbond = rwmol.AddBond(atom.GetIdx(), newidx, order=self.bondtype)
+        newbond = rwmol.AddBond(atom.GetIdx(), newidx, Chem.rdchem.BondType.SINGLE)
         self.mol = rwmol
 
-    def add_ring_to_atom(self, atom, ringtype="benzene"):
-        if self.ringtype == "benzene":
+    def add_bond_to_atom(self, atom):
+        rwmol = Chem.rdchem.RWMol(self.mol)
+        newatom = Chem.rdchem.Atom(6)
+        newidx = rwmol.AddAtom(newatom)
+        newbond = rwmol.AddBond(atom.GetIdx(), newidx, order=self.chemEntitySubType)
+        self.mol = rwmol
+
+    def add_ring_to_atom(self, atom):
+        if self.chemEntitySubType == "ARO6":
             ring = Chem.MolFromSmiles("c1ccccc1")
-        elif self.ringtype == "aliphatic6":
+        elif self.chemEntitySubType == "ALI6":
             ring = Chem.MolFromSmiles("C1CCCCC1")
         combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
         _ = combined.AddBond(
             atom.GetIdx(), self.mol.GetNumAtoms(), Chem.rdchem.BondType.SINGLE
         )
         self.mol = combined
+
+    def add_to_bond(self, bond):
+        if self.chemEntityType == "atom":
+            self.toggle_bond(bond)
+        if self.chemEntityType == "ring":
+            self.add_ring_to_bond(bond)
+        if self.chemEntityType == "bond":
+            self.toggle_bond(bond)
 
     def add_ring_to_bond(self, bond, ringtype="benzene"):
         if self.ringtype == "benzene":
@@ -355,12 +406,20 @@ class MolEditWidget(MolWidget):
         except:
             self.mol = combined
 
+    def add_canvas_entity(self, point):
+        if self.chemEntityType == "atom":
+            self.add_canvas_atom(point)
+        if self.chemEntityType == "ring":
+            self.add_canvas_ring(point)
+        if self.chemEntityType == "bond":
+            self.add_canvas_bond(point)
+
     def add_canvas_atom(self, point):
         rwmol = Chem.rdchem.RWMol(self.mol)
         if rwmol.GetNumAtoms() == 0:
             point.x = 0.0
             point.y = 0.0
-        newatom = Chem.rdchem.Atom(self.atomtype)
+        newatom = Chem.rdchem.Atom(self.chemEntitySubType)
         newidx = rwmol.AddAtom(newatom)
         # This should only trigger if we have an empty canvas
         if not rwmol.GetNumConformers():
@@ -370,10 +429,29 @@ class MolEditWidget(MolWidget):
         conf.SetAtomPosition(newidx, p3)
         self.mol = rwmol
 
-    def add_canvas_ring(self, point, ringtype="benzene"):
-        if self.ringtype == "benzene":
+    def add_canvas_bond(self, point):
+        rwmol = Chem.rdchem.RWMol(self.mol)
+        if rwmol.GetNumAtoms() == 0:
+            point.x = 0.0
+            point.y = 0.0
+
+        atom_0 = rwmol.AddAtom(Chem.rdchem.Atom(6))
+        atom_1 = rwmol.AddAtom(Chem.rdchem.Atom(6))
+        print(self.chemEntitySubType)
+        newidx = rwmol.AddBond(atom_0, atom_1, order=self.chemEntitySubType)
+
+        # This should only trigger if we have an empty canvas
+        if not rwmol.GetNumConformers():
+            rdDepictor.Compute2DCoords(rwmol)
+        conf = rwmol.GetConformer(0)
+        p3 = Point3D(point.x, point.y, 0)
+        conf.SetAtomPosition(self.mol.GetNumAtoms(), p3)
+        self.mol = rwmol
+
+    def add_canvas_ring(self, point):
+        if self.chemEntitySubType == "ARO6":
             ring = Chem.MolFromSmiles("c1ccccc1")
-        elif self.ringtype == "aliphatic6":
+        elif self.chemEntitySubType == "ALI6":
             ring = Chem.MolFromSmiles("C1CCCCC1")
 
         if self.mol.GetNumAtoms() == 0:
@@ -405,9 +483,15 @@ class MolEditWidget(MolWidget):
         else:
             self.selectAtomAdd(selidx)
 
+    def replace_on_atom(self, atom):
+        if self.chemEntityType == "atom":
+            self.replace_atom(atom)
+        else:
+            pass
+
     def replace_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
-        newatom = Chem.rdchem.Atom(self.atomtype)
+        newatom = Chem.rdchem.Atom(self.chemEntitySubType)
         rwmol.ReplaceAtom(atom.GetIdx(), newatom)
         self.mol = rwmol
 
@@ -420,7 +504,12 @@ class MolEditWidget(MolWidget):
                 atm.GetIdx() for atm in self.mol.GetAtomWithIdx(selected).GetNeighbors()
             ]
             if atom.GetIdx() not in neighborIdx:  # check if bond already exists
-                rwmol.AddBond(selected, atom.GetIdx(), order=self.bondtype)
+                bondType = (
+                    self.chemEntitySubType
+                    if self.chemEntityType == "bond"
+                    else Chem.rdchem.BondType.SINGLE
+                )
+                rwmol.AddBond(selected, atom.GetIdx(), order=bondType)
             self.mol = rwmol
             self.selectedAtoms = []
         else:
@@ -475,7 +564,7 @@ class MolEditWidget(MolWidget):
             Chem.rdchem.BondStereo.STEREONONE,
             Chem.rdchem.BondStereo.STEREOCIS,
             Chem.rdchem.BondStereo.STEREOTRANS,
-            #                        Chem.rdchem.BondStereo.STEREOANY, TODO, this should be wiggly, but is not
+            #  Chem.rdchem.BondStereo.STEREOANY, TODO, this should be wiggly, but is not
             Chem.rdchem.BondStereo.STEREONONE,
         ]
         newidx = np.argmax(np.array(stereotypes) == stereotype) + 1
