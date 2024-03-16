@@ -371,13 +371,13 @@ class MolEditWidget(MolWidget):
         if self.chemEntityType == "ring":
             self.add_ring_to_bond(bond)
         if self.chemEntityType == "bond":
-            self.toggle_bond(bond)
+            self.replace_bond(bond)
 
-    def add_ring_to_bond(self, bond, ringtype="benzene"):
-        if self.ringtype == "benzene":
+    def add_ring_to_bond(self, bond):
+        if self.chemEntitySubType == "ARO6":
             ring = Chem.MolFromSmarts("c:c:c:c")
             bondType = Chem.rdchem.BondType.AROMATIC
-        if self.ringtype == "aliphatic6":
+        if self.chemEntitySubType == "ALI6":
             ring = Chem.MolFromSmarts("C-C-C-C")
             bondType = Chem.rdchem.BondType.SINGLE
         combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
@@ -393,9 +393,8 @@ class MolEditWidget(MolWidget):
             bondType,
         )
         # if bond to which aromatic ring is added is not aromatic it will be made aromatic
-        if ringtype == "benzene":
+        if self.chemEntitySubType == "ARO6":
             combined.GetBondWithIdx(bond.GetIdx()).SetIsAromatic(True)
-
         # the extra sanitization is done to make sure that aromaticity is correctly displayed
         try:
             Chem.SanitizeMol(combined)
@@ -597,8 +596,6 @@ class MolEditWidget(MolWidget):
         bond.SetBondType(newtype)
         self.molChanged.emit()
 
-    # self.replace_bond(bond)
-
     def replace_on_bond(self, bond):
         if self.chemEntityType == "atom":
             self.toggle_bond(bond)
@@ -610,7 +607,7 @@ class MolEditWidget(MolWidget):
     def replace_bond(self, bond):
         self.backupMol()
         self.logger.debug("Replacing bond %s" % bond)
-        bond.SetBondType(self.chemEntitySubTypeChanged)
+        bond.SetBondType(self.chemEntitySubType)
         self.molChanged.emit()
 
     # self.remove_bond(bond)
