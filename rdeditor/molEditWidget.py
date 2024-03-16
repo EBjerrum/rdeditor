@@ -45,9 +45,6 @@ class MolEditWidget(MolWidget):
 
         # Default actions
         self._action = "Add"
-        # self._bondtype = self.bondtypes["SINGLE"]
-        # self._atomtype = 6
-        # self._ringtype = None
         self._chemEntityType = "bond"
         self._chemEntitySubType = self.bondtypes["SINGLE"]
 
@@ -313,7 +310,7 @@ class MolEditWidget(MolWidget):
         elif self.action == "Select":
             self.select_bond(bond)
         elif self.action == "Replace":
-            self.replace_bond(bond)
+            self.replace_on_bond(bond)
         elif self.action == "EZtoggle":
             self.toogleEZ(bond)
         else:
@@ -601,10 +598,19 @@ class MolEditWidget(MolWidget):
         self.molChanged.emit()
 
     # self.replace_bond(bond)
+
+    def replace_on_bond(self, bond):
+        if self.chemEntityType == "atom":
+            self.toggle_bond(bond)
+        if self.chemEntityType == "ring":
+            self.toggle_bond(bond)
+        if self.chemEntityType == "bond":
+            self.replace_bond(bond)
+
     def replace_bond(self, bond):
         self.backupMol()
         self.logger.debug("Replacing bond %s" % bond)
-        bond.SetBondType(self.bondtype)
+        bond.SetBondType(self.chemEntitySubTypeChanged)
         self.molChanged.emit()
 
     # self.remove_bond(bond)
