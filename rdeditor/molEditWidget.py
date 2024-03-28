@@ -119,7 +119,7 @@ class MolEditWidget(MolWidget):
     # Function to translate from SVG coords to atom coords using scaling calculated from atomcoords (0,0) and (1,1)
     # Returns rdkit Point2D
     def SVG_to_coord(self, x_svg, y_svg):
-        if self.drawer != None:
+        if self.drawer is not None:
             scale0 = self.drawer.GetDrawCoords(self.points[0])
             scale1 = self.drawer.GetDrawCoords(self.points[1])
 
@@ -134,14 +134,14 @@ class MolEditWidget(MolWidget):
             return Point2D(0.0, 0.0)
 
     def update_coordlist(self):
-        if self.mol != None:
+        if self.mol is not None:
             self.coordlist = np.array([list(self.drawer.GetDrawCoords(i)) for i in range(self.mol.GetNumAtoms())])
             self.logger.debug("Current coordlist:\n%s" % self.coordlist)
         else:
             self.coordlist = None
 
     def get_nearest_atom(self, x_svg, y_svg):
-        if self.mol != None and self.mol.GetNumAtoms() > 0:
+        if self.mol is not None and self.mol.GetNumAtoms() > 0:
             atomsvgcoords = np.array([x_svg, y_svg])
             # find distance, https://codereview.stackexchange.com/questions/28207/finding-the-closest-point-to-a-list-of-points
             deltas = self.coordlist - atomsvgcoords
@@ -152,7 +152,7 @@ class MolEditWidget(MolWidget):
             return None, 1e10  # Return ridicilous long distance so that its not chosen
 
     def get_nearest_bond(self, x_svg, y_svg):
-        if self.mol != None and self.mol.GetNumAtoms() > 2:
+        if self.mol is not None and self.mol.GetNumAtoms() > 2:
             bondlist = []
             for bond in self.mol.GetBonds():
                 bi = bond.GetBeginAtomIdx()
@@ -380,7 +380,7 @@ class MolEditWidget(MolWidget):
                 "StereoAtoms are %s and %s" % bond.GetStereoAtoms()[0],
                 bond.GetStereoAtoms()[1],
             )
-        except:
+        except Exception as e:
             self.logger.warning("StereoAtoms not defined")
         self._mol.ClearComputedProps()
         # Chem.rdmolops.AssignStereochemistry(self._mol,cleanIt=True,force=False)

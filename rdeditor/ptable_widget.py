@@ -43,7 +43,7 @@ class PTable(QtWidgets.QWidget):
             button.setFocusPolicy(QtCore.Qt.NoFocus)
             button.setMaximumWidth(40)
 
-            if self.ptable[key]["Group"] != None:
+            if self.ptable[key]["Group"] is not None:
                 grid.addWidget(button, self.ptable[key]["Period"], self.ptable[key]["Group"])
             else:
                 if key < 72:

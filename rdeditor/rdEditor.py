@@ -3,7 +3,9 @@ from __future__ import print_function
 
 
 # Import required modules
-import sys, time, os
+import sys
+import time
+import os
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import QByteArray
@@ -213,7 +215,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fileName += ".mol"
 
     def saveFile(self):
-        if self.fileName != None:
+        if self.fileName is not None:
             Chem.MolToMolFile(self.editor.mol, str(self.fileName))
         else:
             self.saveAsFile()
