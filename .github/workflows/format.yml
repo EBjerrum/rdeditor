@@ -17,5 +17,8 @@ jobs:
       - name: Install dependencies
         run: pip install ruff
 
-      - name: Format code with ruff
+      - name: Check code formatting with ruff
         run: ruff check .
+
+      - name: Format code with ruff
+        run: ruff format .
