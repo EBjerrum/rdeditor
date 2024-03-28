@@ -10,7 +10,7 @@ from PySide2.QtCore import QByteArray
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2 import QtSvg
 
-# Import model
+#Import model
 from rdeditor.molEditWidget import MolEditWidget
 from rdeditor.ptable_widget import PTable
 

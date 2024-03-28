@@ -47,7 +47,7 @@ You can set up a pre-commit hook in your local Git repository to automatically f
    #!/bin/bash
 
    # Run the ruff formatter on staged changes
-   ruff --format $(git diff --cached --name-only | grep '\.py$')
+   ruff format $(git diff --cached --name-only | grep '\.py$')
 
    # Stage the formatted changes
    git add $(git diff --cached --name-only)
