@@ -3,34 +3,37 @@ from __future__ import print_function
 
 
 # Import required modules
-import sys, time, os
+import sys
+import time
+import os
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import QByteArray
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2 import QtSvg
 
-#Import model
+# Import model
 from rdeditor.molEditWidget import MolEditWidget
 from rdeditor.ptable_widget import PTable
 
 from rdkit import Chem
 
+
 # The main window class
 class MainWindow(QtWidgets.QMainWindow):
     # Constructor function
     def __init__(self, fileName=None, loglevel="WARNING"):
-        super(MainWindow,self).__init__()
-        self.pixmappath = os.path.abspath(os.path.dirname(__file__)) + '/pixmaps/'
-        self.loglevels = ["Critical","Error","Warning","Info","Debug","Notset"]
+        super(MainWindow, self).__init__()
+        self.pixmappath = os.path.abspath(os.path.dirname(__file__)) + "/pixmaps/"
+        self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
         self.editor = MolEditWidget()
         self.ptable = PTable()
         self._fileName = None
-        self.initGUI(fileName = fileName)
+        self.initGUI(fileName=fileName)
         self.ptable.atomtypeChanged.connect(self.setAtomTypeName)
         self.editor.logger.setLevel(loglevel)
 
-    #Properties
+    # Properties
     @property
     def fileName(self):
         return self._fileName
@@ -41,14 +44,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self._fileName = filename
             self.setWindowTitle(str(filename))
 
-
     def initGUI(self, fileName=None):
         self.setWindowTitle("A simple mol editor")
-        self.setWindowIcon(QIcon(self.pixmappath + 'appicon.svg.png'))
+        self.setWindowIcon(QIcon(self.pixmappath + "appicon.svg.png"))
         self.setGeometry(100, 100, 200, 150)
 
         self.center = self.editor
-        self.center.setFixedSize(600,600)
+        self.center.setFixedSize(600, 600)
         self.setCentralWidget(self.center)
         self.fileName = fileName
 
@@ -60,7 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.myStatusBar.addPermanentWidget(self.infobar, 0)
 
         if self.fileName is not None:
-            self.editor.logger.info("Loading molecule from %s"%self.fileName)
+            self.editor.logger.info("Loading molecule from %s" % self.fileName)
             self.loadFile()
 
         self.editor.sanitizeSignal.connect(self.infobar.setText)
@@ -69,10 +71,10 @@ class MainWindow(QtWidgets.QMainWindow):
     # Function to setup status bar, central widget, menu bar, tool bar
     def SetupComponents(self):
         self.myStatusBar = QStatusBar()
-#        self.molcounter = QLabel("-/-")
-#        self.myStatusBar.addPermanentWidget(self.molcounter, 0)
+        #        self.molcounter = QLabel("-/-")
+        #        self.myStatusBar.addPermanentWidget(self.molcounter, 0)
         self.setStatusBar(self.myStatusBar)
-        self.myStatusBar.showMessage('Ready', 10000)
+        self.myStatusBar.showMessage("Ready", 10000)
 
         self.CreateActions()
         self.CreateMenus()
@@ -81,8 +83,8 @@ class MainWindow(QtWidgets.QMainWindow):
     # Actual menu bar item creation
     def CreateMenus(self):
         self.fileMenu = self.menuBar().addMenu("&File")
-        #self.edit_menu = self.menuBar().addMenu("&Edit")
-        
+        # self.edit_menu = self.menuBar().addMenu("&Edit")
+
         self.toolMenu = self.menuBar().addMenu("&Tools")
         self.atomtypeMenu = self.menuBar().addMenu("&AtomTypes")
         self.bondtypeMenu = self.menuBar().addMenu("&BondTypes")
@@ -113,7 +115,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.removeAction)
 
-        #Atomtype menu
+        # Atomtype menu
         for action in self.atomActions:
             self.atomtypeMenu.addAction(action)
         self.specialatommenu = self.atomtypeMenu.addMenu("All Atoms")
@@ -121,27 +123,27 @@ class MainWindow(QtWidgets.QMainWindow):
             atomname = self.ptable.ptable[atomnumber]["Symbol"]
             self.specialatommenu.addAction(self.ptable.atomActions[atomname])
 
-        #Bondtype Menu
+        # Bondtype Menu
         self.bondtypeMenu.addAction(self.singleBondAction)
         self.bondtypeMenu.addAction(self.doubleBondAction)
         self.bondtypeMenu.addAction(self.tripleBondAction)
         self.bondtypeMenu.addSeparator()
-        #Bondtype Special types
+        # Bondtype Special types
         self.specialbondMenu = self.bondtypeMenu.addMenu("Special Bonds")
         for key in self.bondActions.keys():
             self.specialbondMenu.addAction(self.bondActions[key])
-        #Help menu
+        # Help menu
         self.helpMenu.addAction(self.aboutAction)
         self.helpMenu.addSeparator()
         self.helpMenu.addAction(self.aboutQtAction)
-        #Debug level sub menu
+        # Debug level sub menu
         self.loglevelMenu = self.helpMenu.addMenu("Logging Level")
         for loglevel in self.loglevels:
             self.loglevelMenu.addAction(self.loglevelactions[loglevel])
 
     def CreateToolBars(self):
-        self.mainToolBar = self.addToolBar('Main')
-        #Main action bar
+        self.mainToolBar = self.addToolBar("Main")
+        # Main action bar
         self.mainToolBar.addAction(self.openAction)
         self.mainToolBar.addAction(self.saveAction)
         self.mainToolBar.addAction(self.saveAsAction)
@@ -160,10 +162,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.removeAction)
         self.mainToolBar.addAction(self.clearCanvasAction)
-        #Bond types TODO are they necessary as can be toggled??
+        # Bond types TODO are they necessary as can be toggled??
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.undoAction)
-        #Side Toolbar
+        # Side Toolbar
         self.sideToolBar = QtWidgets.QToolBar(self)
         self.addToolBar(QtCore.Qt.LeftToolBarArea, self.sideToolBar)
         self.sideToolBar.addAction(self.singleBondAction)
@@ -176,7 +178,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadSmilesFile(self, filename):
         self.fileName = filename
-        with open(self.fileName, 'r') as file:
+        with open(self.fileName, "r") as file:
             lines = file.readlines()
             if len(lines) > 1:
                 self.editor.logger.warning("The SMILES file contains more than one line.")
@@ -213,14 +215,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.fileName += ".mol"
 
     def saveFile(self):
-        if self.fileName != None:
+        if self.fileName is not None:
             Chem.MolToMolFile(self.editor.mol, str(self.fileName))
         else:
             self.saveAsFile()
 
     def saveAsFile(self):
         self.fileName, self.filterName = QFileDialog.getSaveFileName(self, filter=self.filters)
-        if self.fileName != '':
+        if self.fileName != "":
             if self.filterName == "MOL Files (*.mol *.mol)":
                 if not self.fileName.lower().endswith(".mol"):
                     self.fileName = self.fileName + ".mol"
@@ -230,7 +232,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if not self.fileName.lower().endswith(".smi"):
                     self.fileName = self.fileName + ".smi"
                 smiles = Chem.MolToSmiles(self.editor.mol)
-                with open(self.fileName, 'w') as file:
+                with open(self.fileName, "w") as file:
                     file.write(smiles + "\n")
                 self.statusBar().showMessage("File saved as SMILES", 2000)
             else:
@@ -253,7 +255,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.editor.mol = mol
         else:
             self.editor.logger.warning(f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}")
-        
 
     def clearCanvas(self):
         self.editor.clearAtomSelection()
@@ -267,18 +268,16 @@ class MainWindow(QtWidgets.QMainWindow):
         event.ignore()
 
     def exitFile(self):
-        response = self.msgApp("Confirmation","This will quit the application. Do you want to Continue?")
+        response = self.msgApp("Confirmation", "This will quit the application. Do you want to Continue?")
         if response == "Y":
             self.ptable.close()
-            exit(0) #TODO, how to exit qapplication from within class instance?
+            exit(0)  # TODO, how to exit qapplication from within class instance?
         else:
             self.editor.logger.debug("Abort closing")
 
-
     # Function to show Diaglog box with provided Title and Message
-    def msgApp(self,title,msg):
-        userInfo = QMessageBox.question(self,title,msg,
-                                        QMessageBox.Yes | QMessageBox.No)
+    def msgApp(self, title, msg):
+        userInfo = QMessageBox.question(self, title, msg, QMessageBox.Yes | QMessageBox.No)
         if userInfo == QMessageBox.Yes:
             return "Y"
         if userInfo == QMessageBox.No:
@@ -286,214 +285,320 @@ class MainWindow(QtWidgets.QMainWindow):
         self.close()
 
     def aboutHelp(self):
-        QMessageBox.about(self, "About Simple Molecule Editor",
-                """A Simple Molecule Editor where you can edit molecules\nBased on RDKit! http://www.rdkit.org/ \nSome icons from http://icons8.com\n\nSource code: https://github.com/EBjerrum/rdeditor""")
+        QMessageBox.about(
+            self,
+            "About Simple Molecule Editor",
+            """A Simple Molecule Editor where you can edit molecules\nBased on RDKit! http://www.rdkit.org/ \n
+            Some icons from http://icons8.com\n\nSource code: https://github.com/EBjerrum/rdeditor""",
+        )
 
     def setAction(self):
         sender = self.sender()
         self.editor.setAction(sender.objectName())
-        self.myStatusBar.showMessage("Action %s selected"%sender.objectName())
+        self.myStatusBar.showMessage("Action %s selected" % sender.objectName())
 
     def setBondType(self):
         sender = self.sender()
         self.editor.setBondType(sender.objectName())
-        self.myStatusBar.showMessage("Bondtype %s selected"%sender.objectName())
+        self.myStatusBar.showMessage("Bondtype %s selected" % sender.objectName())
 
     def setAtomType(self):
         sender = self.sender()
         self.editor.setAtomType(sender.objectName())
-        self.myStatusBar.showMessage("Atomtype %s selected"%sender.objectName())
+        self.myStatusBar.showMessage("Atomtype %s selected" % sender.objectName())
 
     def setAtomTypeName(self, atomname):
         self.editor.setAtomType(str(atomname))
-        self.myStatusBar.showMessage("Atomtype %s selected"%atomname)
+        self.myStatusBar.showMessage("Atomtype %s selected" % atomname)
 
     def openPtable(self):
         self.ptable.show()
 
     def setLogLevel(self):
-        loglevel = self.sender().objectName().split(':')[-1].upper()
+        loglevel = self.sender().objectName().split(":")[-1].upper()
         self.editor.logger.setLevel(loglevel)
-
-
 
     # Function to create actions for menus and toolbars
     def CreateActions(self):
-        self.openAction = QAction( QIcon(self.pixmappath + 'open.png'), 'O&pen',
-                                  self, shortcut=QKeySequence.Open,
-                                  statusTip="Open an existing file",
-                                  triggered=self.openFile)
+        self.openAction = QAction(
+            QIcon(self.pixmappath + "open.png"),
+            "O&pen",
+            self,
+            shortcut=QKeySequence.Open,
+            statusTip="Open an existing file",
+            triggered=self.openFile,
+        )
 
-        self.saveAction = QAction( QIcon(self.pixmappath + '/icons8-Save.png'), 'S&ave',
-                                  self, 
-                                  shortcut=QKeySequence.Save,
-                                  statusTip="Save file",
-                                  triggered=self.saveFile)
+        self.saveAction = QAction(
+            QIcon(self.pixmappath + "/icons8-Save.png"),
+            "S&ave",
+            self,
+            shortcut=QKeySequence.Save,
+            statusTip="Save file",
+            triggered=self.saveFile,
+        )
 
+        self.saveAsAction = QAction(
+            QIcon(self.pixmappath + "icons8-Save as.png"),
+            "Save As",
+            self,
+            shortcut=QKeySequence.SaveAs,
+            statusTip="Save file as ..",
+            triggered=self.saveAsFile,
+        )
 
-        self.saveAsAction = QAction( QIcon(self.pixmappath + 'icons8-Save as.png'), 'Save As',
-                                  self, 
-                                  shortcut=QKeySequence.SaveAs,
-                                  statusTip="Save file as ..",
-                                  triggered=self.saveAsFile)
+        self.exitAction = QAction(
+            QIcon(self.pixmappath + "icons8-Shutdown.png"),
+            "E&xit",
+            self,
+            shortcut="Ctrl+Q",
+            statusTip="Exit the Application",
+            triggered=self.exitFile,
+        )
 
+        self.aboutAction = QAction(
+            QIcon(self.pixmappath + "about.png"),
+            "A&bout",
+            self,
+            statusTip="Displays info about text editor",
+            triggered=self.aboutHelp,
+        )
 
-        self.exitAction = QAction( QIcon(self.pixmappath + 'icons8-Shutdown.png'), 'E&xit',
-                                   self, shortcut="Ctrl+Q",
-                                   statusTip="Exit the Application",
-                                   triggered=self.exitFile)
+        self.aboutQtAction = QAction(
+            "About &Qt", self, statusTip="Show the Qt library's About box", triggered=QApplication.aboutQt
+        )
 
-        self.aboutAction = QAction( QIcon(self.pixmappath + 'about.png'), 'A&bout',
-                                    self, statusTip="Displays info about text editor",
-                                   triggered=self.aboutHelp)
+        self.openPtableAction = QAction(
+            QIcon(self.pixmappath + "ptable.png"),
+            "O&pen Periodic Table",
+            self,
+            shortcut=QKeySequence.Open,
+            statusTip="Open the periodic table for atom type selection",
+            triggered=self.openPtable,
+        )
 
-        self.aboutQtAction = QAction("About &Qt", self,
-                                statusTip="Show the Qt library's About box",
-                                triggered=QApplication.aboutQt)
+        # Copy-Paste actions
+        self.copyAction = QAction(
+            QIcon(self.pixmappath + "icons8-copy-96.png"),
+            "Copy SMILES",
+            self,
+            shortcut=QKeySequence.Copy,
+            statusTip="Copy the current molecule as a SMILES string",
+            triggered=self.copy,
+        )
 
-        self.openPtableAction = QAction( QIcon(self.pixmappath + 'ptable.png'), 'O&pen Periodic Table',
-                                  self, shortcut=QKeySequence.Open,
-                                  statusTip="Open the periodic table for atom type selection",
-                                  triggered=self.openPtable)
-        
-        #Copy-Paste actions
-        self.copyAction = QAction(QIcon(self.pixmappath + 'icons8-copy-96.png'),
-                                    "Copy SMILES", self, shortcut=QKeySequence.Copy, 
-                                   statusTip="Copy the current molecule as a SMILES string",
-                                   triggered=self.copy)
-        
-        self.pasteAction = QAction(QIcon(self.pixmappath + 'icons8-paste-100.png'), "Paste SMILES", self, shortcut=QKeySequence.Paste, 
-                                   statusTip="Paste the clipboard and parse assuming it is a SMILES string",
-                                   triggered=self.paste)
+        self.pasteAction = QAction(
+            QIcon(self.pixmappath + "icons8-paste-100.png"),
+            "Paste SMILES",
+            self,
+            shortcut=QKeySequence.Paste,
+            statusTip="Paste the clipboard and parse assuming it is a SMILES string",
+            triggered=self.paste,
+        )
 
-        #Edit actions
+        # Edit actions
         self.actionActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
-        self.selectAction = QAction( QIcon(self.pixmappath + 'icons8-Cursor.png'), 'Se&lect',
-                                   self, shortcut="Ctrl+L",
-                                   statusTip="Select Atoms",
-                                   triggered=self.setAction, objectName="Select",
-                                   checkable=True)
+        self.selectAction = QAction(
+            QIcon(self.pixmappath + "icons8-Cursor.png"),
+            "Se&lect",
+            self,
+            shortcut="Ctrl+L",
+            statusTip="Select Atoms",
+            triggered=self.setAction,
+            objectName="Select",
+            checkable=True,
+        )
         self.actionActionGroup.addAction(self.selectAction)
 
-        self.addAction = QAction( QIcon(self.pixmappath + 'icons8-Edit.png'), '&Add',
-                                   self, shortcut="Ctrl+A",
-                                   statusTip="Add Atoms",
-                                   triggered=self.setAction, objectName="Add",
-                                   checkable=True)
+        self.addAction = QAction(
+            QIcon(self.pixmappath + "icons8-Edit.png"),
+            "&Add",
+            self,
+            shortcut="Ctrl+A",
+            statusTip="Add Atoms",
+            triggered=self.setAction,
+            objectName="Add",
+            checkable=True,
+        )
         self.actionActionGroup.addAction(self.addAction)
 
-        self.addBondAction = QAction( QIcon(self.pixmappath + 'icons8-Pinch.png'), 'Add &Bond',
-                                   self, shortcut="Ctrl+B",
-                                   statusTip="Add Bond",
-                                   triggered=self.setAction, objectName="Add Bond",
-                                   checkable=True)
+        self.addBondAction = QAction(
+            QIcon(self.pixmappath + "icons8-Pinch.png"),
+            "Add &Bond",
+            self,
+            shortcut="Ctrl+B",
+            statusTip="Add Bond",
+            triggered=self.setAction,
+            objectName="Add Bond",
+            checkable=True,
+        )
         self.actionActionGroup.addAction(self.addBondAction)
 
-        self.replaceAction = QAction( QIcon(self.pixmappath + 'icons8-Replace Atom.png'), '&Replace',
-                                   self, shortcut="Ctrl+R",
-                                   statusTip="Replace Atom/Bond",
-                                   triggered=self.setAction, objectName="Replace",
-                                   checkable=True)
+        self.replaceAction = QAction(
+            QIcon(self.pixmappath + "icons8-Replace Atom.png"),
+            "&Replace",
+            self,
+            shortcut="Ctrl+R",
+            statusTip="Replace Atom/Bond",
+            triggered=self.setAction,
+            objectName="Replace",
+            checkable=True,
+        )
         self.actionActionGroup.addAction(self.replaceAction)
 
-        self.rsAction = QAction( QIcon(self.pixmappath + 'Change_R_S.png'), 'To&ggle R/S',
-                                   self, shortcut="Ctrl+G",
-                                   statusTip="Toggle Stereo Chemistry",
-                                   triggered=self.setAction, objectName="RStoggle",
-                                   checkable=True)
+        self.rsAction = QAction(
+            QIcon(self.pixmappath + "Change_R_S.png"),
+            "To&ggle R/S",
+            self,
+            shortcut="Ctrl+G",
+            statusTip="Toggle Stereo Chemistry",
+            triggered=self.setAction,
+            objectName="RStoggle",
+            checkable=True,
+        )
         self.actionActionGroup.addAction(self.rsAction)
 
-        self.ezAction = QAction( QIcon(self.pixmappath + 'Change_E_Z.png'), 'Toggle &E/Z',
-                                   self, shortcut="Ctrl+E",
-                                   statusTip="Toggle Bond Stereo Chemistry",
-                                   triggered=self.setAction, objectName="EZtoggle",
-                                   checkable=True)
+        self.ezAction = QAction(
+            QIcon(self.pixmappath + "Change_E_Z.png"),
+            "Toggle &E/Z",
+            self,
+            shortcut="Ctrl+E",
+            statusTip="Toggle Bond Stereo Chemistry",
+            triggered=self.setAction,
+            objectName="EZtoggle",
+            checkable=True,
+        )
         self.actionActionGroup.addAction(self.ezAction)
 
-
-        self.removeAction = QAction( QIcon(self.pixmappath + 'icons8-Cancel.png'), 'D&elete',
-                                   self, shortcut="Ctrl+D",
-                                   statusTip="Delete Atom or Bond",
-                                   triggered=self.setAction, objectName="Remove",
-                                   checkable=True)
+        self.removeAction = QAction(
+            QIcon(self.pixmappath + "icons8-Cancel.png"),
+            "D&elete",
+            self,
+            shortcut="Ctrl+D",
+            statusTip="Delete Atom or Bond",
+            triggered=self.setAction,
+            objectName="Remove",
+            checkable=True,
+        )
         self.actionActionGroup.addAction(self.removeAction)
 
-        self.increaseChargeAction = QAction( QIcon(self.pixmappath + 'icons8-Increase Font.png'), 'I&ncrease Charge',
-                                   self, shortcut="Ctrl++",
-                                   statusTip="Increase Atom Charge",
-                                   triggered=self.setAction, objectName="Increase Charge",
-                                   checkable=True)
+        self.increaseChargeAction = QAction(
+            QIcon(self.pixmappath + "icons8-Increase Font.png"),
+            "I&ncrease Charge",
+            self,
+            shortcut="Ctrl++",
+            statusTip="Increase Atom Charge",
+            triggered=self.setAction,
+            objectName="Increase Charge",
+            checkable=True,
+        )
         self.actionActionGroup.addAction(self.increaseChargeAction)
 
-        self.decreaseChargeAction = QAction( QIcon(self.pixmappath + 'icons8-Decrease Font.png'), 'D&ecrease Charge',
-                                   self, shortcut="Ctrl+-",
-                                   statusTip="Decrease Atom Charge",
-                                   triggered=self.setAction, objectName="Decrease Charge",
-                                   checkable=True)
+        self.decreaseChargeAction = QAction(
+            QIcon(self.pixmappath + "icons8-Decrease Font.png"),
+            "D&ecrease Charge",
+            self,
+            shortcut="Ctrl+-",
+            statusTip="Decrease Atom Charge",
+            triggered=self.setAction,
+            objectName="Decrease Charge",
+            checkable=True,
+        )
         self.actionActionGroup.addAction(self.decreaseChargeAction)
         self.addAction.setChecked(True)
 
-
-        #BondTypeActions
+        # BondTypeActions
         self.bondtypeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
 
-        self.singleBondAction = QAction( QIcon(self.pixmappath + 'icons8-Single.png'), 'S&ingle Bond',
-                                   self, shortcut="Ctrl+1",
-                                   statusTip="Set bondtype to SINGLE",
-                                   triggered=self.setBondType, objectName="SINGLE",
-                                   checkable=True)
+        self.singleBondAction = QAction(
+            QIcon(self.pixmappath + "icons8-Single.png"),
+            "S&ingle Bond",
+            self,
+            shortcut="Ctrl+1",
+            statusTip="Set bondtype to SINGLE",
+            triggered=self.setBondType,
+            objectName="SINGLE",
+            checkable=True,
+        )
         self.bondtypeActionGroup.addAction(self.singleBondAction)
 
-        self.doubleBondAction = QAction( QIcon(self.pixmappath + 'icons8-Double.png'), 'Double Bond',
-                                   self, shortcut="Ctrl+2",
-                                   statusTip="Set bondtype to DOUBLE",
-                                   triggered=self.setBondType, objectName="DOUBLE",
-                                   checkable=True)
+        self.doubleBondAction = QAction(
+            QIcon(self.pixmappath + "icons8-Double.png"),
+            "Double Bond",
+            self,
+            shortcut="Ctrl+2",
+            statusTip="Set bondtype to DOUBLE",
+            triggered=self.setBondType,
+            objectName="DOUBLE",
+            checkable=True,
+        )
         self.bondtypeActionGroup.addAction(self.doubleBondAction)
 
-        self.tripleBondAction = QAction( QIcon(self.pixmappath + 'icons8-Triple.png'), 'Triple Bond',
-                                   self, shortcut="Ctrl+3",
-                                   statusTip="Set bondtype to TRIPLE",
-                                   triggered=self.setBondType, objectName="TRIPLE",
-                                   checkable=True)
+        self.tripleBondAction = QAction(
+            QIcon(self.pixmappath + "icons8-Triple.png"),
+            "Triple Bond",
+            self,
+            shortcut="Ctrl+3",
+            statusTip="Set bondtype to TRIPLE",
+            triggered=self.setBondType,
+            objectName="TRIPLE",
+            checkable=True,
+        )
         self.bondtypeActionGroup.addAction(self.tripleBondAction)
         self.singleBondAction.setChecked(True)
 
-        #Build dictionary of ALL available bondtypes in RDKit
+        # Build dictionary of ALL available bondtypes in RDKit
         self.bondActions = {}
         for key in self.editor.bondtypes.keys():
-            action = QAction( '%s'%key,
-                                   self,
-                                   statusTip="Set bondtype to %s"%key,
-                                   triggered=self.setBondType, objectName=key,
-                                   checkable=True)
+            action = QAction(
+                "%s" % key,
+                self,
+                statusTip="Set bondtype to %s" % key,
+                triggered=self.setBondType,
+                objectName=key,
+                checkable=True,
+            )
             self.bondtypeActionGroup.addAction(action)
             self.bondActions[key] = action
-        #Replace defined actions
+        # Replace defined actions
         self.bondActions["SINGLE"] = self.singleBondAction
         self.bondActions["DOUBLE"] = self.doubleBondAction
         self.bondActions["TRIPLE"] = self.tripleBondAction
 
-        #Misc Actions
-        self.undoAction = QAction( QIcon(self.pixmappath + 'prev.png'), 'U&ndo',
-                           self, shortcut="Ctrl+Z",
-                           statusTip="Undo/Redo changes to molecule Ctrl+Z",
-                           triggered=self.editor.undo, objectName="undo")
+        # Misc Actions
+        self.undoAction = QAction(
+            QIcon(self.pixmappath + "prev.png"),
+            "U&ndo",
+            self,
+            shortcut="Ctrl+Z",
+            statusTip="Undo/Redo changes to molecule Ctrl+Z",
+            triggered=self.editor.undo,
+            objectName="undo",
+        )
 
-        self.clearCanvasAction = QAction( QIcon(self.pixmappath + 'icons8-Trash.png'), 'C&lear Canvas',
-                                   self, shortcut="Ctrl+X",
-                                   statusTip="Clear Canvas (no warning)",
-                                   triggered=self.clearCanvas, objectName="Clear Canvas")
+        self.clearCanvasAction = QAction(
+            QIcon(self.pixmappath + "icons8-Trash.png"),
+            "C&lear Canvas",
+            self,
+            shortcut="Ctrl+X",
+            statusTip="Clear Canvas (no warning)",
+            triggered=self.clearCanvas,
+            objectName="Clear Canvas",
+        )
 
-        self.cleanCoordinatesAction = QAction( QIcon(self.pixmappath + 'icons8-Broom.png'), 'Recalculate coordinates &F',
-                                   self, shortcut="Ctrl+F",
-                                   statusTip="Re-calculates coordinates and redraw",
-                                   triggered=self.editor.canon_coords_and_draw, objectName="Recalculate Coordinates")
+        self.cleanCoordinatesAction = QAction(
+            QIcon(self.pixmappath + "icons8-Broom.png"),
+            "Recalculate coordinates &F",
+            self,
+            shortcut="Ctrl+F",
+            statusTip="Re-calculates coordinates and redraw",
+            triggered=self.editor.canon_coords_and_draw,
+            objectName="Recalculate Coordinates",
+        )
 
-
-        #Atom Actions in actiongroup, reuse from ptable widget
+        # Atom Actions in actiongroup, reuse from ptable widget
         self.atomActions = []
-        for atomname in ["H","B","C","N","O","F","P","S","Cl","Br","I"]:
+        for atomname in ["H", "B", "C", "N", "O", "F", "P", "S", "Cl", "Br", "I"]:
             action = self.ptable.atomActions[atomname]
             if action.objectName() == "C":
                 action.setChecked(True)
@@ -501,10 +606,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.loglevelactions = {}
         for key in self.loglevels:
-            self.loglevelactions[key] = QAction(key,
-                                   self,
-                                   statusTip="Set logging level to %s"%key,
-                                   triggered=self.setLogLevel, objectName="loglevel:%s"%key)
+            self.loglevelactions[key] = QAction(
+                key,
+                self,
+                statusTip="Set logging level to %s" % key,
+                triggered=self.setLogLevel,
+                objectName="loglevel:%s" % key,
+            )
+
 
 def launch(loglevel="WARNING"):
     "Function that launches the mainWindow Application"
@@ -512,7 +621,7 @@ def launch(loglevel="WARNING"):
     try:
         myApp = QApplication(sys.argv)
         if len(sys.argv) > 1:
-            mainWindow = MainWindow(fileName = sys.argv[1], loglevel=loglevel)
+            mainWindow = MainWindow(fileName=sys.argv[1], loglevel=loglevel)
         else:
             mainWindow = MainWindow(loglevel=loglevel)
         myApp.exec_()
@@ -525,6 +634,5 @@ def launch(loglevel="WARNING"):
         print(sys.exc_info()[1])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     launch(loglevel="DEBUG")
-
