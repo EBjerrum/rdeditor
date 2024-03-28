@@ -87,6 +87,16 @@ With these settings configured, VS Code will automatically format your Python co
 
 ## Contributing
 
+## Checking code with ruff
+
+Code submitted to github master branch are checked with ruff via GitHub Actions. It is thus advisable to check yourself before a pull request is made. This can be done with:
+
+`ruff check` which will inspect the code and print a list of issues.
+
+Sometimes they can be safely fixed with
+
+`ruff check --fix` and even `ruff check --fix --unsafe-fixes` but otherwise they need to be inspected and mitigated.
+
 ### Development Environment Setup
 
 1. Follow the installation steps in the INSTALL section.
