@@ -9,8 +9,13 @@ import os
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import QByteArray
+from PySide2.QtCore import QSettings
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2 import QtSvg
+import qdarktheme
+import qdarkstyle
+from qdarkstyle.dark.palette import DarkPalette
+from qdarkstyle.light.palette import LightPalette
 
 # Import model
 from rdeditor.molEditWidget import MolEditWidget
@@ -66,7 +71,16 @@ class MainWindow(QtWidgets.QMainWindow):
             self.loadFile()
 
         self.editor.sanitizeSignal.connect(self.infobar.setText)
+
+        self.applySettings()
+
         self.show()
+
+    def applySettings(self):
+        self.settings = QSettings("Cheminformania.com", "rdEditor")
+        theme_name = self.settings.value("theme_name", "Fusion")
+        self.applyTheme(theme_name)
+        self.themeActions[theme_name].setChecked(True)
 
     # Function to setup status bar, central widget, menu bar, tool bar
     def SetupComponents(self):
@@ -134,12 +148,25 @@ class MainWindow(QtWidgets.QMainWindow):
             self.specialbondMenu.addAction(self.bondActions[key])
         # Help menu
         self.helpMenu.addAction(self.aboutAction)
+        self.themeMenu = self.helpMenu.addMenu("Theme")
+        self.populateThemeActions(self.themeMenu)
         self.helpMenu.addSeparator()
         self.helpMenu.addAction(self.aboutQtAction)
+
         # Debug level sub menu
         self.loglevelMenu = self.helpMenu.addMenu("Logging Level")
         for loglevel in self.loglevels:
             self.loglevelMenu.addAction(self.loglevelactions[loglevel])
+
+    def populateThemeActions(self, menu: QMenu):
+        stylelist = QStyleFactory.keys() + ["Qds light", "Qds dark", "Qdt light", "Qdt dark"]
+        self.themeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.themeActions = {}
+        for style_name in stylelist:
+            action = QAction(style_name, self, objectName=style_name, triggered=self.setTheme, checkable=True)
+            self.themeActionGroup.addAction(action)
+            self.themeActions[style_name] = action
+            menu.addAction(action)
 
     def CreateToolBars(self):
         self.mainToolBar = self.addToolBar("Main")
@@ -317,6 +344,29 @@ class MainWindow(QtWidgets.QMainWindow):
     def setLogLevel(self):
         loglevel = self.sender().objectName().split(":")[-1].upper()
         self.editor.logger.setLevel(loglevel)
+
+    def setTheme(self):
+        sender = self.sender()
+        theme_name = sender.objectName()
+        self.myStatusBar.showMessage(f"Setting theme or style to {theme_name}")
+        self.applyTheme(theme_name)
+        self.settings.setValue("theme_name", theme_name)
+        self.settings.sync()
+
+    def applyTheme(self, theme_name):
+        app = QApplication.instance()
+        app.setStyleSheet("")  # resets style
+        if theme_name in QStyleFactory.keys():
+            app.setStyle(theme_name)
+        else:
+            if theme_name == "Qds light":
+                app.setStyleSheet(qdarkstyle.load_stylesheet(palette=LightPalette))
+            elif theme_name == "Qds dark":
+                app.setStyleSheet(qdarkstyle.load_stylesheet(palette=DarkPalette))
+            elif theme_name == "Qdt light":
+                qdarktheme.setup_theme("light")
+            elif theme_name == "Qdt dark":
+                qdarktheme.setup_theme("dark")
 
     # Function to create actions for menus and toolbars
     def CreateActions(self):

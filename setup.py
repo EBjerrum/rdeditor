@@ -12,7 +12,7 @@ setup(
     license="LGPL",
     packages=["rdeditor"],
     package_data={"rdeditor": ["pixmaps/*"]},
-    install_requires=["PySide2", "numpy", "rdkit"],
+    install_requires=["PySide2", "numpy", "rdkit", "qdarkstyle", "pyqtdarktheme"],
     entry_points={
         "console_scripts": [
             "rdEditor = rdeditor.rdEditor:launch",
