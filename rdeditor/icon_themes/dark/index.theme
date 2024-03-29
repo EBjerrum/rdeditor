@@ -1,0 +1,8 @@
+[Icon Theme]
+Name=dark
+Directories=application,
+
+
+[application]
+Size=128
+Context=Applications
