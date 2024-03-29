@@ -41,7 +41,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initGUI(fileName=fileName)
         self.applySettings()
         self.ptable.atomtypeChanged.connect(self.setAtomTypeName)
-        self.editor.logger.setLevel(loglevel)
+        # self.editor.logger.setLevel(loglevel)
 
     # Properties
     @property
@@ -118,6 +118,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.applyTheme(theme_name)
         self.themeActions[theme_name].setChecked(True)
+
+        loglevel = self.settings.value("loglevel", "Error")
+
+        action = self.loglevelactions.get(loglevel, None)
+        if action:
+            action.trigger()
 
     # Function to setup status bar, central widget, menu bar, tool bar
     def SetupComponents(self):
@@ -384,8 +390,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ptable.show()
 
     def setLogLevel(self):
-        loglevel = self.sender().objectName().split(":")[-1].upper()
-        self.editor.logger.setLevel(loglevel)
+        loglevel = self.sender().objectName().split(":")[-1]  # .upper()
+        self.editor.logger.setLevel(loglevel.upper())
+        print(f"Sat loglevel to {loglevel}")
+        self.settings.setValue("loglevel", loglevel)
+        self.settings.sync()
 
     def setTheme(self):
         sender = self.sender()
@@ -706,6 +715,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.atomActions.append(action)
 
         self.loglevelactions = {}
+        self.loglevelActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
         for key in self.loglevels:
             self.loglevelactions[key] = QAction(
                 key,
@@ -713,7 +723,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 statusTip="Set logging level to %s" % key,
                 triggered=self.setLogLevel,
                 objectName="loglevel:%s" % key,
+                checkable=True,
             )
+            self.loglevelActionGroup.addAction(self.loglevelactions[key])
 
 
 def launch(loglevel="WARNING"):
