@@ -12,6 +12,8 @@ from PySide2.QtCore import QByteArray
 from PySide2.QtCore import QSettings
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2 import QtSvg
+from PySide2.QtCore import QUrl
+from PySide2.QtGui import QDesktopServices
 import qdarktheme
 import qdarkstyle
 from qdarkstyle.dark.palette import DarkPalette
@@ -145,6 +147,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu = self.menuBar().addMenu("&Tools")
         self.atomtypeMenu = self.menuBar().addMenu("&AtomTypes")
         self.bondtypeMenu = self.menuBar().addMenu("&BondTypes")
+        self.settingsMenu = self.menuBar().addMenu("&Settings")
         self.helpMenu = self.menuBar().addMenu("&Help")
 
         self.fileMenu.addAction(self.openAction)
@@ -189,22 +192,28 @@ class MainWindow(QtWidgets.QMainWindow):
         self.specialbondMenu = self.bondtypeMenu.addMenu("Special Bonds")
         for key in self.bondActions.keys():
             self.specialbondMenu.addAction(self.bondActions[key])
-        # Help menu
-        self.helpMenu.addAction(self.aboutAction)
-        self.themeMenu = self.helpMenu.addMenu("Theme")
+        # Settings menu
+        self.themeMenu = self.settingsMenu.addMenu("Theme")
         self.populateThemeActions(self.themeMenu)
+        self.loglevelMenu = self.settingsMenu.addMenu("Logging Level")
+        for loglevel in self.loglevels:
+            self.loglevelMenu.addAction(self.loglevelactions[loglevel])
+
+        # Help menu
+
+        self.helpMenu.addAction(self.aboutAction)
+        self.helpMenu.addSeparator()
+        self.helpMenu.addAction(self.openChemRxiv)
+        self.helpMenu.addAction(self.openRepository)
         self.helpMenu.addSeparator()
         self.helpMenu.addAction(self.aboutQtAction)
 
-        actionListAction = QAction(
-            "List Actions", self, triggered=lambda: print(set(self.get_all_icon_actions_in_application(QApplication)))
-        )
-        self.helpMenu.addAction(actionListAction)
+        # actionListAction = QAction(
+        #     "List Actions", self, triggered=lambda: print(set(self.get_all_icon_actions_in_application(QApplication)))
+        # )
+        # self.helpMenu.addAction(actionListAction)
 
         # Debug level sub menu
-        self.loglevelMenu = self.helpMenu.addMenu("Logging Level")
-        for loglevel in self.loglevels:
-            self.loglevelMenu.addAction(self.loglevelactions[loglevel])
 
     def populateThemeActions(self, menu: QMenu):
         stylelist = QStyleFactory.keys() + ["Qds light", "Qds dark", "Qdt light", "Qdt dark"]
@@ -427,6 +436,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 qdarktheme.setup_theme("dark")
 
         self.reset_action_icons()
+
+    def openUrl(self):
+        url = self.sender().data()
+        QDesktopServices.openUrl(QUrl(url))
 
     # Function to create actions for menus and toolbars
     def CreateActions(self):
@@ -726,6 +739,26 @@ class MainWindow(QtWidgets.QMainWindow):
                 checkable=True,
             )
             self.loglevelActionGroup.addAction(self.loglevelactions[key])
+
+        self.openChemRxiv = QAction(
+            QIcon.fromTheme("icons8-Exit"),
+            "ChemRxiv Preprint",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Opens the ChemRxiv preprint",
+            triggered=self.openUrl,
+            data="https://doi.org/10.26434/chemrxiv-2024-jfhmw",
+        )
+
+        self.openRepository = QAction(
+            QIcon.fromTheme("icons8-Exit"),
+            "GitHub repository",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Opens the GitHub repository",
+            triggered=self.openUrl,
+            data="https://github.com/EBjerrum/rdeditor",
+        )
 
 
 def launch(loglevel="WARNING"):
