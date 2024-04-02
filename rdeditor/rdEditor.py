@@ -81,7 +81,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.show()
 
-    def get_all_actions(self, qmenu: QMenu):
+    def getAllActionsInMenu(self, qmenu: QMenu):
         all_actions = []
 
         # Iterate through actions in the current menu
@@ -90,11 +90,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 if action.icon():
                     all_actions.append(action)
             elif isinstance(action, QMenu):  # If the action is a submenu, recursively get its actions
-                all_actions.extend(self.get_all_actions(action))
+                all_actions.extend(self.getAllActionsInMenu(action))
 
         return all_actions
 
-    def get_all_icon_actions_in_application(self, qapp: QApplication):
+    def getAllIconActions(self, qapp: QApplication):
         all_actions = []
 
         # Iterate through all top-level widgets in the application
@@ -103,12 +103,12 @@ class MainWindow(QtWidgets.QMainWindow):
             menus = widget.findChildren(QMenu)
             for menu in menus:
                 # Recursively get all actions from each menu
-                all_actions.extend(self.get_all_actions(menu))
+                all_actions.extend(self.getAllActionsInMenu(menu))
 
         return all_actions
 
-    def reset_action_icons(self):
-        actions_with_icons = list(set(self.get_all_icon_actions_in_application(QApplication)))
+    def resetActionIcons(self):
+        actions_with_icons = list(set(self.getAllIconActions(QApplication)))
         for action in actions_with_icons:
             icon_name = action.icon().name()
             print(f"reset icon {icon_name}")
@@ -435,7 +435,7 @@ class MainWindow(QtWidgets.QMainWindow):
             elif theme_name == "Qdt dark":
                 qdarktheme.setup_theme("dark")
 
-        self.reset_action_icons()
+        self.resetActionIcons()
 
     def openUrl(self):
         url = self.sender().data()
