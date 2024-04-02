@@ -11,10 +11,9 @@ setup(
     description="An RDKit based molecule editor using PySide",
     setup_requires=["setuptools_scm"],
     use_scm_version={
-        'write_to': 'rdeditor/_version.py',
+        "write_to": "rdeditor/_version.py",
         #'version_scheme': 'post-release'
     },
-    use_scm_version=True,
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords="RDKit molecule editor pyside",
