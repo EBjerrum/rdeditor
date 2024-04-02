@@ -16,7 +16,7 @@ python setup.py install
 
 ```
 
-The install script Will also install PySide2, but not RDkit, so that should be installed manually or via your operating systems package manager. A launch script will also be added so that it can be started from the command line via the rdEditor command.
+A launch script will also be added so that it can be started from the command line via the rdEditor command.
 
 ## Alternative install
 

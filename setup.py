@@ -1,10 +1,15 @@
 from setuptools import setup
 
+
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
 setup(
     name="rdeditor",
-    version="0.1",
+    version="0.1.2",
     description="An RDKit based molecule editor using PySide",
-    long_description="""The editor is not meant as a drawing program, rather a simple and easy to expand editor""",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     keywords="RDKit molecule editor pyside",
     url="http://github.com/ebjerrum/rdeditor",
     author="Esben Jannik Bjerrum",
