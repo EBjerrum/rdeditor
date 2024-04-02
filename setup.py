@@ -6,8 +6,10 @@ with open("README.md", "r") as fh:
 
 setup(
     name="rdeditor",
-    version="0.1.2",
+    # version="0.1.2",
     description="An RDKit based molecule editor using PySide",
+    setup_requires=["setuptools_scm"],
+    use_scm_version=True,
     long_description=long_description,
     long_description_content_type="text/markdown",
     keywords="RDKit molecule editor pyside",
