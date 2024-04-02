@@ -13,6 +13,7 @@ setup(
     packages=["rdeditor"],
     package_data={"rdeditor": ["pixmaps/*"]},
     install_requires=["PySide2", "numpy", "rdkit"],
+    python_requires=">=3.8, <3.11",
     entry_points={
         "console_scripts": [
             "rdEditor = rdeditor.rdEditor:launch",
