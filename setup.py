@@ -12,7 +12,7 @@ setup(
     setup_requires=["setuptools_scm"],
     use_scm_version={
         'write_to': 'rdeditor/_version.py',
-        'version_scheme': 'post-release'
+        #'version_scheme': 'post-release'
     },
     use_scm_version=True,
     long_description=long_description,
