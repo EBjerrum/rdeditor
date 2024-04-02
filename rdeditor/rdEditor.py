@@ -13,6 +13,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2 import QtSvg
 
 # Import model
+import rdeditor
 from rdeditor.molEditWidget import MolEditWidget
 from rdeditor.ptable_widget import PTable
 
@@ -288,8 +289,12 @@ class MainWindow(QtWidgets.QMainWindow):
         QMessageBox.about(
             self,
             "About Simple Molecule Editor",
-            """A Simple Molecule Editor where you can edit molecules\nBased on RDKit! http://www.rdkit.org/ \n
-            Some icons from http://icons8.com\n\nSource code: https://github.com/EBjerrum/rdeditor""",
+            f"""A Simple Molecule Editor where you can edit molecules\n
+Based on RDKit! http://www.rdkit.org/\n
+Some icons from http://icons8.com\n
+Source code: https://github.com/EBjerrum/rdeditor\n
+Version: {rdeditor.__version__}
+            """,
         )
 
     def setAction(self):
