@@ -20,7 +20,14 @@ setup(
     author_email="esbenjannik@rocketmail.com",
     license="LGPL",
     packages=["rdeditor"],
-    package_data={"rdeditor": ["pixmaps/*"]},
+    package_data={
+        "rdeditor": [
+            "icon_themes/dark/*",
+            "icon_themes/dark/application/*",
+            "icon_themes/light/*",
+            "icon_themes/light/application/*",
+        ]
+    },
     install_requires=["PySide2", "numpy", "rdkit", "pyqtdarktheme"],
     python_requires=">=3.8, <3.11",
     entry_points={
