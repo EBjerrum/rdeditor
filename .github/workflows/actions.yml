@@ -3,8 +3,9 @@ name: Format Code
 on:
   push:
     branches:
-      - ruff
       - master
+    tags:
+      - '*'
 
 jobs:
   format:
