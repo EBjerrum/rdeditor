@@ -43,7 +43,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initGUI(fileName=fileName)
         self.applySettings()
         self.ptable.atomtypeChanged.connect(self.setAtomTypeName)
-        # self.editor.logger.setLevel(loglevel)
 
     # Properties
     @property
@@ -57,7 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setWindowTitle(str(filename))
 
     def initGUI(self, fileName=None):
-        self.setWindowTitle("A simple mol editor")
+        self.setWindowTitle("rdEditor")
         self.setWindowIcon(QIcon.fromTheme("appicon"))
         self.setGeometry(100, 100, 200, 150)
 
@@ -417,11 +416,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if "dark" in theme_name:
             QIcon.setThemeName("dark")
             self.editor.darkmode = True
-            print("resetting for dark")
+            self.editor.logger.info("Resetting theme for dark theme")
         else:
             QIcon.setThemeName("light")
             self.editor.darkmode = False
-            print("resetting for light")
+            self.editor.logger.info("Resetting theme for light theme")
 
         app = QApplication.instance()
         app.setStyleSheet("")  # resets style
