@@ -8,7 +8,7 @@ on:
     branches:
       - master
   release:
-    types: [published, released]
+    types: [published]
 
 jobs:
   format:
@@ -32,7 +32,7 @@ jobs:
     name: deploy to pypi
     runs-on: ubuntu-latest
     # this checks that the commit is a tagged commit
-    if: github.event_name == 'release' && github.event.action == 'created'
+    if: github.event_name == 'release' && github.event.action == 'published'
     steps:
       - uses: actions/checkout@v4
         with:
