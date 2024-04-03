@@ -1,11 +1,6 @@
 name: Format Code
 
-on:
-  push:
-    branches:
-      - master
-    tags:
-      - '*'
+on: [push, pull_request]
 
 jobs:
   format:
