@@ -32,7 +32,7 @@ jobs:
     name: deploy to pypi
     runs-on: ubuntu-latest
     # this checks that the commit is a tagged commit
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    if: github.event_name == 'release' && github.event.action == 'created'
     steps:
       - uses: actions/checkout@v4
         with:
