@@ -216,7 +216,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Debug level sub menu
 
     def populateThemeActions(self, menu: QMenu):
-        stylelist = QStyleFactory.keys() + ["Qds light", "Qds dark", "Qdt light", "Qdt dark"]
+        stylelist = QStyleFactory.keys() + ["Qdt light", "Qdt dark"]
         self.themeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
         self.themeActions = {}
         for style_name in stylelist:
@@ -428,11 +428,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if theme_name in QStyleFactory.keys():
             app.setStyle(theme_name)
         else:
-            if theme_name == "Qds light":
-                app.setStyleSheet(qdarkstyle.load_stylesheet(palette=LightPalette))
-            elif theme_name == "Qds dark":
-                app.setStyleSheet(qdarkstyle.load_stylesheet(palette=DarkPalette))
-            elif theme_name == "Qdt light":
+            if theme_name == "Qdt light":
                 qdarktheme.setup_theme("light")
             elif theme_name == "Qdt dark":
                 qdarktheme.setup_theme("dark")
