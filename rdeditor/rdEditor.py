@@ -416,9 +416,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def applyTheme(self, theme_name):
         if "dark" in theme_name:
             QIcon.setThemeName("dark")
+            self.editor.darkmode = True
             print("resetting for dark")
         else:
             QIcon.setThemeName("light")
+            self.editor.darkmode = False
             print("resetting for light")
 
         app = QApplication.instance()
