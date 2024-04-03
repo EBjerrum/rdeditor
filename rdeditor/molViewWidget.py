@@ -33,6 +33,7 @@ class MolWidget(QtSvg.QSvgWidget):
         self._drawmol = None  # Molecule for drawing
         self.drawer = None  # drawing object for producing SVG
         self._selectedAtoms = []  # List of selected atoms
+        self._darkmode = False
 
         # Bind signales to slots for automatic actions
         self.molChanged.connect(self.sanitize_draw)
@@ -49,6 +50,15 @@ class MolWidget(QtSvg.QSvgWidget):
     @loglevel.setter
     def loglevel(self, loglvl):
         self.logger.setLevel(loglvl)
+
+    @property
+    def darkmode(self):
+        return self._darkmode
+
+    @darkmode.setter
+    def darkmode(self, value: bool):
+        self._darkmode = bool(value)
+        self.draw()
 
     # Getter and setter for mol
     molChanged = QtCore.Signal(name="molChanged")
@@ -188,6 +198,8 @@ class MolWidget(QtSvg.QSvgWidget):
             # Chiral tags on R/S
             chiraltags = Chem.FindMolChiralCenters(self._drawmol)
             opts = self.drawer.drawOptions()
+            if self._darkmode:
+                rdMolDraw2D.SetDarkMode(opts)
             for tag in chiraltags:
                 idx = tag[0]
                 opts.atomLabels[idx] = self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]

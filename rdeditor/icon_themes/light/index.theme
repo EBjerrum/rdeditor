@@ -1,0 +1,8 @@
+[Icon Theme]
+Name=light
+Directories=application,
+
+
+[application]
+Size=128
+Context=Applications

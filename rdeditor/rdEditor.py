@@ -9,8 +9,15 @@ import os
 from PySide2.QtGui import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import QByteArray
+from PySide2.QtCore import QSettings
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2 import QtSvg
+from PySide2.QtCore import QUrl
+from PySide2.QtGui import QDesktopServices
+import qdarktheme
+import qdarkstyle
+from qdarkstyle.dark.palette import DarkPalette
+from qdarkstyle.light.palette import LightPalette
 
 # Import model
 import rdeditor
@@ -26,13 +33,17 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, fileName=None, loglevel="WARNING"):
         super(MainWindow, self).__init__()
         self.pixmappath = os.path.abspath(os.path.dirname(__file__)) + "/pixmaps/"
+        QtGui.QIcon.setThemeSearchPaths(
+            # QtGui.QIcon.themeSearchPaths() +
+            [os.path.abspath(os.path.dirname(__file__)) + "/icon_themes/"]
+        )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
         self.editor = MolEditWidget()
         self.ptable = PTable()
         self._fileName = None
         self.initGUI(fileName=fileName)
+        self.applySettings()
         self.ptable.atomtypeChanged.connect(self.setAtomTypeName)
-        self.editor.logger.setLevel(loglevel)
 
     # Properties
     @property
@@ -46,8 +57,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setWindowTitle(str(filename))
 
     def initGUI(self, fileName=None):
-        self.setWindowTitle("A simple mol editor")
-        self.setWindowIcon(QIcon(self.pixmappath + "appicon.svg.png"))
+        self.setWindowTitle("rdEditor")
+        self.setWindowIcon(QIcon.fromTheme("appicon"))
         self.setGeometry(100, 100, 200, 150)
 
         self.center = self.editor
@@ -67,7 +78,54 @@ class MainWindow(QtWidgets.QMainWindow):
             self.loadFile()
 
         self.editor.sanitizeSignal.connect(self.infobar.setText)
+
         self.show()
+
+    def getAllActionsInMenu(self, qmenu: QMenu):
+        all_actions = []
+
+        # Iterate through actions in the current menu
+        for action in qmenu.actions():
+            if isinstance(action, QAction):
+                if action.icon():
+                    all_actions.append(action)
+            elif isinstance(action, QMenu):  # If the action is a submenu, recursively get its actions
+                all_actions.extend(self.getAllActionsInMenu(action))
+
+        return all_actions
+
+    def getAllIconActions(self, qapp: QApplication):
+        all_actions = []
+
+        # Iterate through all top-level widgets in the application
+        for widget in qapp.topLevelWidgets():
+            # Find all menus in the widget
+            menus = widget.findChildren(QMenu)
+            for menu in menus:
+                # Recursively get all actions from each menu
+                all_actions.extend(self.getAllActionsInMenu(menu))
+
+        return all_actions
+
+    def resetActionIcons(self):
+        actions_with_icons = list(set(self.getAllIconActions(QApplication)))
+        for action in actions_with_icons:
+            icon_name = action.icon().name()
+            print(f"reset icon {icon_name}")
+            action.setIcon(QIcon.fromTheme(icon_name))
+
+    def applySettings(self):
+        self.settings = QSettings("Cheminformania.com", "rdEditor")
+        theme_name = self.settings.value("theme_name", "Fusion")
+
+        self.applyTheme(theme_name)
+        self.themeActions[theme_name].setChecked(True)
+
+        loglevel = self.settings.value("loglevel", "Error")
+
+        action = self.loglevelactions.get(loglevel, None)
+        if action:
+            action.trigger()
 
     # Function to setup status bar, central widget, menu bar, tool bar
     def SetupComponents(self):
@@ -89,6 +147,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu = self.menuBar().addMenu("&Tools")
         self.atomtypeMenu = self.menuBar().addMenu("&AtomTypes")
         self.bondtypeMenu = self.menuBar().addMenu("&BondTypes")
+        self.settingsMenu = self.menuBar().addMenu("&Settings")
         self.helpMenu = self.menuBar().addMenu("&Help")
 
         self.fileMenu.addAction(self.openAction)
@@ -133,14 +192,38 @@ class MainWindow(QtWidgets.QMainWindow):
         self.specialbondMenu = self.bondtypeMenu.addMenu("Special Bonds")
         for key in self.bondActions.keys():
             self.specialbondMenu.addAction(self.bondActions[key])
-        # Help menu
-        self.helpMenu.addAction(self.aboutAction)
-        self.helpMenu.addSeparator()
-        self.helpMenu.addAction(self.aboutQtAction)
-        # Debug level sub menu
-        self.loglevelMenu = self.helpMenu.addMenu("Logging Level")
+        # Settings menu
+        self.themeMenu = self.settingsMenu.addMenu("Theme")
+        self.populateThemeActions(self.themeMenu)
+        self.loglevelMenu = self.settingsMenu.addMenu("Logging Level")
         for loglevel in self.loglevels:
             self.loglevelMenu.addAction(self.loglevelactions[loglevel])
+
+        # Help menu
+
+        self.helpMenu.addAction(self.aboutAction)
+        self.helpMenu.addSeparator()
+        self.helpMenu.addAction(self.openChemRxiv)
+        self.helpMenu.addAction(self.openRepository)
+        self.helpMenu.addSeparator()
+        self.helpMenu.addAction(self.aboutQtAction)
+
+        # actionListAction = QAction(
+        #     "List Actions", self, triggered=lambda: print(set(self.get_all_icon_actions_in_application(QApplication)))
+        # )
+        # self.helpMenu.addAction(actionListAction)
+
+        # Debug level sub menu
+
+    def populateThemeActions(self, menu: QMenu):
+        stylelist = QStyleFactory.keys() + ["Qdt light", "Qdt dark"]
+        self.themeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.themeActions = {}
+        for style_name in stylelist:
+            action = QAction(style_name, self, objectName=style_name, triggered=self.setTheme, checkable=True)
+            self.themeActionGroup.addAction(action)
+            self.themeActions[style_name] = action
+            menu.addAction(action)
 
     def CreateToolBars(self):
         self.mainToolBar = self.addToolBar("Main")
@@ -320,13 +403,50 @@ Version: {rdeditor.__version__}
         self.ptable.show()
 
     def setLogLevel(self):
-        loglevel = self.sender().objectName().split(":")[-1].upper()
-        self.editor.logger.setLevel(loglevel)
+        loglevel = self.sender().objectName().split(":")[-1]  # .upper()
+        self.editor.logger.setLevel(loglevel.upper())
+        print(f"Sat loglevel to {loglevel}")
+        self.settings.setValue("loglevel", loglevel)
+        self.settings.sync()
+
+    def setTheme(self):
+        sender = self.sender()
+        theme_name = sender.objectName()
+        self.myStatusBar.showMessage(f"Setting theme or style to {theme_name}")
+        self.applyTheme(theme_name)
+        self.settings.setValue("theme_name", theme_name)
+        self.settings.sync()
+
+    def applyTheme(self, theme_name):
+        if "dark" in theme_name:
+            QIcon.setThemeName("dark")
+            self.editor.darkmode = True
+            self.editor.logger.info("Resetting theme for dark theme")
+        else:
+            QIcon.setThemeName("light")
+            self.editor.darkmode = False
+            self.editor.logger.info("Resetting theme for light theme")
+
+        app = QApplication.instance()
+        app.setStyleSheet("")  # resets style
+        if theme_name in QStyleFactory.keys():
+            app.setStyle(theme_name)
+        else:
+            if theme_name == "Qdt light":
+                qdarktheme.setup_theme("light")
+            elif theme_name == "Qdt dark":
+                qdarktheme.setup_theme("dark")
+
+        self.resetActionIcons()
+
+    def openUrl(self):
+        url = self.sender().data()
+        QDesktopServices.openUrl(QUrl(url))
 
     # Function to create actions for menus and toolbars
     def CreateActions(self):
         self.openAction = QAction(
-            QIcon(self.pixmappath + "open.png"),
+            QIcon.fromTheme("open"),
             "O&pen",
             self,
             shortcut=QKeySequence.Open,
@@ -335,7 +455,7 @@ Version: {rdeditor.__version__}
         )
 
         self.saveAction = QAction(
-            QIcon(self.pixmappath + "/icons8-Save.png"),
+            QIcon.fromTheme("icons8-Save"),
             "S&ave",
             self,
             shortcut=QKeySequence.Save,
@@ -344,7 +464,7 @@ Version: {rdeditor.__version__}
         )
 
         self.saveAsAction = QAction(
-            QIcon(self.pixmappath + "icons8-Save as.png"),
+            QIcon.fromTheme("icons8-Save as"),
             "Save As",
             self,
             shortcut=QKeySequence.SaveAs,
@@ -353,7 +473,7 @@ Version: {rdeditor.__version__}
         )
 
         self.exitAction = QAction(
-            QIcon(self.pixmappath + "icons8-Shutdown.png"),
+            QIcon.fromTheme("icons8-Shutdown"),
             "E&xit",
             self,
             shortcut="Ctrl+Q",
@@ -362,7 +482,7 @@ Version: {rdeditor.__version__}
         )
 
         self.aboutAction = QAction(
-            QIcon(self.pixmappath + "about.png"),
+            QIcon.fromTheme("about"),
             "A&bout",
             self,
             statusTip="Displays info about text editor",
@@ -374,7 +494,7 @@ Version: {rdeditor.__version__}
         )
 
         self.openPtableAction = QAction(
-            QIcon(self.pixmappath + "ptable.png"),
+            QIcon.fromTheme("ptable"),
             "O&pen Periodic Table",
             self,
             shortcut=QKeySequence.Open,
@@ -384,7 +504,7 @@ Version: {rdeditor.__version__}
 
         # Copy-Paste actions
         self.copyAction = QAction(
-            QIcon(self.pixmappath + "icons8-copy-96.png"),
+            QIcon.fromTheme("icons8-copy-96"),
             "Copy SMILES",
             self,
             shortcut=QKeySequence.Copy,
@@ -393,7 +513,7 @@ Version: {rdeditor.__version__}
         )
 
         self.pasteAction = QAction(
-            QIcon(self.pixmappath + "icons8-paste-100.png"),
+            QIcon.fromTheme("icons8-paste-100"),
             "Paste SMILES",
             self,
             shortcut=QKeySequence.Paste,
@@ -404,7 +524,7 @@ Version: {rdeditor.__version__}
         # Edit actions
         self.actionActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
         self.selectAction = QAction(
-            QIcon(self.pixmappath + "icons8-Cursor.png"),
+            QIcon.fromTheme("icons8-Cursor"),
             "Se&lect",
             self,
             shortcut="Ctrl+L",
@@ -416,7 +536,7 @@ Version: {rdeditor.__version__}
         self.actionActionGroup.addAction(self.selectAction)
 
         self.addAction = QAction(
-            QIcon(self.pixmappath + "icons8-Edit.png"),
+            QIcon.fromTheme("icons8-Edit"),
             "&Add",
             self,
             shortcut="Ctrl+A",
@@ -428,7 +548,7 @@ Version: {rdeditor.__version__}
         self.actionActionGroup.addAction(self.addAction)
 
         self.addBondAction = QAction(
-            QIcon(self.pixmappath + "icons8-Pinch.png"),
+            QIcon.fromTheme("icons8-Pinch"),
             "Add &Bond",
             self,
             shortcut="Ctrl+B",
@@ -440,7 +560,7 @@ Version: {rdeditor.__version__}
         self.actionActionGroup.addAction(self.addBondAction)
 
         self.replaceAction = QAction(
-            QIcon(self.pixmappath + "icons8-Replace Atom.png"),
+            QIcon.fromTheme("icons8-Replace Atom"),
             "&Replace",
             self,
             shortcut="Ctrl+R",
@@ -452,7 +572,7 @@ Version: {rdeditor.__version__}
         self.actionActionGroup.addAction(self.replaceAction)
 
         self.rsAction = QAction(
-            QIcon(self.pixmappath + "Change_R_S.png"),
+            QIcon.fromTheme("Change_R_S"),
             "To&ggle R/S",
             self,
             shortcut="Ctrl+G",
@@ -464,7 +584,7 @@ Version: {rdeditor.__version__}
         self.actionActionGroup.addAction(self.rsAction)
 
         self.ezAction = QAction(
-            QIcon(self.pixmappath + "Change_E_Z.png"),
+            QIcon.fromTheme("Change_E_Z"),
             "Toggle &E/Z",
             self,
             shortcut="Ctrl+E",
@@ -476,7 +596,7 @@ Version: {rdeditor.__version__}
         self.actionActionGroup.addAction(self.ezAction)
 
         self.removeAction = QAction(
-            QIcon(self.pixmappath + "icons8-Cancel.png"),
+            QIcon.fromTheme("icons8-Cancel"),
             "D&elete",
             self,
             shortcut="Ctrl+D",
@@ -488,7 +608,7 @@ Version: {rdeditor.__version__}
         self.actionActionGroup.addAction(self.removeAction)
 
         self.increaseChargeAction = QAction(
-            QIcon(self.pixmappath + "icons8-Increase Font.png"),
+            QIcon.fromTheme("icons8-Increase Font"),
             "I&ncrease Charge",
             self,
             shortcut="Ctrl++",
@@ -500,7 +620,7 @@ Version: {rdeditor.__version__}
         self.actionActionGroup.addAction(self.increaseChargeAction)
 
         self.decreaseChargeAction = QAction(
-            QIcon(self.pixmappath + "icons8-Decrease Font.png"),
+            QIcon.fromTheme("icons8-Decrease Font"),
             "D&ecrease Charge",
             self,
             shortcut="Ctrl+-",
@@ -516,7 +636,7 @@ Version: {rdeditor.__version__}
         self.bondtypeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
 
         self.singleBondAction = QAction(
-            QIcon(self.pixmappath + "icons8-Single.png"),
+            QIcon.fromTheme("icons8-Single"),
             "S&ingle Bond",
             self,
             shortcut="Ctrl+1",
@@ -528,7 +648,7 @@ Version: {rdeditor.__version__}
         self.bondtypeActionGroup.addAction(self.singleBondAction)
 
         self.doubleBondAction = QAction(
-            QIcon(self.pixmappath + "icons8-Double.png"),
+            QIcon.fromTheme("icons8-Double"),
             "Double Bond",
             self,
             shortcut="Ctrl+2",
@@ -540,7 +660,7 @@ Version: {rdeditor.__version__}
         self.bondtypeActionGroup.addAction(self.doubleBondAction)
 
         self.tripleBondAction = QAction(
-            QIcon(self.pixmappath + "icons8-Triple.png"),
+            QIcon.fromTheme("icons8-Triple"),
             "Triple Bond",
             self,
             shortcut="Ctrl+3",
@@ -572,7 +692,7 @@ Version: {rdeditor.__version__}
 
         # Misc Actions
         self.undoAction = QAction(
-            QIcon(self.pixmappath + "prev.png"),
+            QIcon.fromTheme("prev"),
             "U&ndo",
             self,
             shortcut="Ctrl+Z",
@@ -582,7 +702,7 @@ Version: {rdeditor.__version__}
         )
 
         self.clearCanvasAction = QAction(
-            QIcon(self.pixmappath + "icons8-Trash.png"),
+            QIcon.fromTheme("icons8-Trash"),
             "C&lear Canvas",
             self,
             shortcut="Ctrl+X",
@@ -592,7 +712,7 @@ Version: {rdeditor.__version__}
         )
 
         self.cleanCoordinatesAction = QAction(
-            QIcon(self.pixmappath + "icons8-Broom.png"),
+            QIcon.fromTheme("icons8-Broom"),
             "Recalculate coordinates &F",
             self,
             shortcut="Ctrl+F",
@@ -610,6 +730,7 @@ Version: {rdeditor.__version__}
             self.atomActions.append(action)
 
         self.loglevelactions = {}
+        self.loglevelActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
         for key in self.loglevels:
             self.loglevelactions[key] = QAction(
                 key,
@@ -617,7 +738,29 @@ Version: {rdeditor.__version__}
                 statusTip="Set logging level to %s" % key,
                 triggered=self.setLogLevel,
                 objectName="loglevel:%s" % key,
+                checkable=True,
             )
+            self.loglevelActionGroup.addAction(self.loglevelactions[key])
+
+        self.openChemRxiv = QAction(
+            QIcon.fromTheme("icons8-Exit"),
+            "ChemRxiv Preprint",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Opens the ChemRxiv preprint",
+            triggered=self.openUrl,
+            data="https://doi.org/10.26434/chemrxiv-2024-jfhmw",
+        )
+
+        self.openRepository = QAction(
+            QIcon.fromTheme("icons8-Exit"),
+            "GitHub repository",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Opens the GitHub repository",
+            triggered=self.openUrl,
+            data="https://github.com/EBjerrum/rdeditor",
+        )
 
 
 def launch(loglevel="WARNING"):
