@@ -15,9 +15,6 @@ from PySide2 import QtSvg
 from PySide2.QtCore import QUrl
 from PySide2.QtGui import QDesktopServices
 import qdarktheme
-import qdarkstyle
-from qdarkstyle.dark.palette import DarkPalette
-from qdarkstyle.light.palette import LightPalette
 
 # Import model
 import rdeditor
