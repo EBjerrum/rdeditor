@@ -97,6 +97,11 @@ Sometimes they can be safely fixed with
 
 `ruff check --fix` and even `ruff check --fix --unsafe-fixes` but otherwise they need to be inspected and mitigated.
 
+## Deployment to PyPi
+
+The github actions has been set to automatically deploy to pypi every time a new release is published.
+The release will need a new tag created (incremented), otherwise PyPi will not accept the new package.
+
 ### Development Environment Setup
 
 1. Follow the installation steps in the INSTALL section.
