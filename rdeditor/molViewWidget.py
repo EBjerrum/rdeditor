@@ -36,7 +36,7 @@ class MolWidget(QtSvg.QSvgWidget):
         self._darkmode = False
 
         # Color settings
-        self._unsanitizable_background_colour = (1, 0.75, 0.75)
+        self._unsanitizable_background_colour = None  # (1, 0.75, 0.75)
         self._last_selected_atom_colour = (1, 0.2, 0.2)
         self._selected_atom_colour = (1, 0.5, 0.5)
 
@@ -212,7 +212,7 @@ class MolWidget(QtSvg.QSvgWidget):
             # Chiral tags on R/S
             chiraltags = Chem.FindMolChiralCenters(self._drawmol)
             opts = self.drawer.drawOptions()
-            if not self.molecule_sanitizable:
+            if (not self.molecule_sanitizable) and self._unsanitizable_background_colour:
                 opts.setBackgroundColour(self._unsanitizable_background_colour)
             if self._darkmode:
                 rdMolDraw2D.SetDarkMode(opts)
