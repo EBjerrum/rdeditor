@@ -35,9 +35,15 @@ class MolWidget(QtSvg.QSvgWidget):
         self._selectedAtoms = []  # List of selected atoms
         self._darkmode = False
 
+        # Color settings
+        self._unsanitizable_background_colour = (1, 0.75, 0.75)
+        self._last_selected_atom_colour = (1, 0.2, 0.2)
+        self._selected_atom_colour = (1, 0.5, 0.5)
+
         # Bind signales to slots for automatic actions
         self.molChanged.connect(self.sanitize_draw)
         self.selectionChanged.connect(self.draw)
+        self.sanitizeSignal.connect(self.changeSanitizeStatus)
 
         # Initialize class with the mol passed
         self.mol = mol
@@ -129,6 +135,14 @@ class MolWidget(QtSvg.QSvgWidget):
         self.sanitizeMol()
         self.draw()
 
+    @QtCore.Slot()
+    def changeSanitizeStatus(self, value):
+        self.logger.debug(f"changeBorder called with value {value}")
+        if value.upper() == "SANITIZABLE":
+            self.molecule_sanitizable = True
+        else:
+            self.molecule_sanitizable = False
+
     def computeNewCoords(self, ignoreExisting=False, canonOrient=False):
         """Computes new coordinates for the molecule taking into account all
         existing positions (feeding these to the rdkit coordinate generation as
@@ -198,13 +212,18 @@ class MolWidget(QtSvg.QSvgWidget):
             # Chiral tags on R/S
             chiraltags = Chem.FindMolChiralCenters(self._drawmol)
             opts = self.drawer.drawOptions()
+            if not self.molecule_sanitizable:
+                opts.setBackgroundColour(self._unsanitizable_background_colour)
             if self._darkmode:
                 rdMolDraw2D.SetDarkMode(opts)
             for tag in chiraltags:
                 idx = tag[0]
                 opts.atomLabels[idx] = self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
             if len(self._selectedAtoms) > 0:
-                colors = {self._selectedAtoms[-1]: (1, 0.2, 0.2)}  # Color lastly selected a different color
+                colors = {atom_idx: self._selected_atom_colour for atom_idx in self._selectedAtoms}
+                colors[self._selectedAtoms[-1]] = (
+                    self._last_selected_atom_colour
+                )  # Color lastly selected an optionally different color
                 self.drawer.DrawMolecule(
                     self._drawmol,
                     highlightAtoms=self._selectedAtoms,
