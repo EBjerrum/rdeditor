@@ -28,10 +28,14 @@ class MolWidget(QtSvg.QSvgWidget):
 
         # This sets the window to delete itself when its closed, so it doesn't keep lingering in the background
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        # ColorDict can be used to switch highlighting colors
+        self.colorDict = {"default": (1.0, 0.5, 0.5)}
+
         # Private Properties
         self._mol = None  # The molecule
         self._drawmol = None  # Molecule for drawing
         self.drawer = None  # drawing object for producing SVG
+        self._drawColor = "default"
         self._selectedAtoms = []  # List of selected atoms
         self._darkmode = False
 
@@ -50,6 +54,14 @@ class MolWidget(QtSvg.QSvgWidget):
     @loglevel.setter
     def loglevel(self, loglvl):
         self.logger.setLevel(loglvl)
+
+    @property
+    def drawColor(self):
+        return self._drawColor
+
+    @drawColor.setter
+    def drawColor(self, color):
+        self._drawColor = color
 
     @property
     def darkmode(self):
@@ -109,8 +121,12 @@ class MolWidget(QtSvg.QSvgWidget):
     @selectedAtoms.setter
     def selectedAtoms(self, atomlist):
         if atomlist != self._selectedAtoms:
-            assert isinstance(atomlist, list), "selectedAtoms should be a list of integers"
-            assert all(isinstance(item, int) for item in atomlist), "selectedAtoms should be a list of integers"
+            assert isinstance(
+                atomlist, list
+            ), "selectedAtoms should be a list of integers"
+            assert all(
+                isinstance(item, int) for item in atomlist
+            ), "selectedAtoms should be a list of integers"
             self._selectedAtoms = atomlist
             self.selectionChanged.emit()
 
@@ -141,10 +157,14 @@ class MolWidget(QtSvg.QSvgWidget):
         if self._mol.GetNumConformers() == 0:
             self.logger.debug("No Conformers found, computing all 2D coords")
         elif ignoreExisting:
-            self.logger.debug("Ignoring existing conformers, computing all " "2D coords")
+            self.logger.debug(
+                "Ignoring existing conformers, computing all " "2D coords"
+            )
         else:
             assert self._mol.GetNumConformers() == 1
-            self.logger.debug("1 Conformer found, computing 2D coords not in " "found conformer")
+            self.logger.debug(
+                "1 Conformer found, computing 2D coords not in " "found conformer"
+            )
             conf = self._mol.GetConformer(0)
             for a in self._mol.GetAtoms():
                 pos3d = conf.GetAtomPosition(a.GetIdx())
@@ -153,7 +173,9 @@ class MolWidget(QtSvg.QSvgWidget):
                 prev_coords[a.GetIdx()] = Point2D(pos3d.x, pos3d.y)
         self.logger.debug("Coordmap %s" % prev_coords)
         self.logger.debug("canonOrient %s" % canonOrient)
-        rdDepictor.Compute2DCoords(self._mol, coordMap=prev_coords, canonOrient=canonOrient)
+        rdDepictor.Compute2DCoords(
+            self._mol, coordMap=prev_coords, canonOrient=canonOrient
+        )
 
     def canon_coords_and_draw(self):
         self.logger.debug("Recalculating coordinates")
@@ -185,9 +207,13 @@ class MolWidget(QtSvg.QSvgWidget):
             except Exception as e:
                 self.logger.warning("Unkekulizable")
         try:
-            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=drawkekulize)
+            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(
+                self._drawmol, kekulize=drawkekulize
+            )
         except ValueError:  # <- can happen on a kekulization failure
-            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=False)
+            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(
+                self._drawmol, kekulize=False
+            )
 
     finishedDrawing = QtCore.Signal(name="finishedDrawing")
 
@@ -202,9 +228,18 @@ class MolWidget(QtSvg.QSvgWidget):
                 rdMolDraw2D.SetDarkMode(opts)
             for tag in chiraltags:
                 idx = tag[0]
-                opts.atomLabels[idx] = self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
+                opts.atomLabels[idx] = (
+                    self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
+                )
             if len(self._selectedAtoms) > 0:
-                colors = {self._selectedAtoms[-1]: (1, 0.2, 0.2)}  # Color lastly selected a different color
+                draw_color = self.colorDict[self._drawColor]
+                colors = {
+                    self._selectedAtoms[i]: draw_color
+                    for i in range(len(self._selectedAtoms))
+                }
+                # Color lastly selected a different color, increases color b
+                colors[self._selectedAtoms[-1]] = self.increase_brightness(draw_color)
+
                 self.drawer.DrawMolecule(
                     self._drawmol,
                     highlightAtoms=self._selectedAtoms,
@@ -216,6 +251,13 @@ class MolWidget(QtSvg.QSvgWidget):
         self.finishedDrawing.emit()  # Signal that drawer has finished
         svg = self.drawer.GetDrawingText().replace("svg:", "")
         return svg
+
+    @staticmethod
+    def increase_brightness(x: tuple):
+        print(x)
+        x = tuple([min([1, max([0, i + 0.2])]) for i in x])
+        print(x)
+        return x
 
 
 if __name__ == "__main__":
