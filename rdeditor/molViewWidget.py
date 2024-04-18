@@ -254,9 +254,7 @@ class MolWidget(QtSvg.QSvgWidget):
 
     @staticmethod
     def increase_brightness(x: tuple):
-        print(x)
         x = tuple([min([1, max([0, i + 0.2])]) for i in x])
-        print(x)
         return x
 
 
