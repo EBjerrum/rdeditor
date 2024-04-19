@@ -14,6 +14,8 @@ from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Geometry.rdGeometry import Point2D
 
+from rdeditor.utilities import validate_rgb
+
 
 # The Viewer Class
 class MolWidget(QtSvg.QSvgWidget):
@@ -132,8 +134,9 @@ class MolWidget(QtSvg.QSvgWidget):
 
     @unsanitizable_background_colour.setter
     def unsanitizable_background_colour(self, colour):
-        # TODO make a sanitization check that it conforms to a rgb triplet
         if colour != self._unsanitizable_background_colour:
+            if colour is not None:
+                assert validate_rgb(colour)
             self._unsanitizable_background_colour = colour
             self.drawSettingsChanged.emit()
 
@@ -143,7 +146,7 @@ class MolWidget(QtSvg.QSvgWidget):
 
     @last_selected_highlight_colour.setter
     def last_selected_highlight_colour(self, colour):
-        # TODO make a sanitization check that it conforms to a rgb triplet
+        assert validate_rgb(colour)
         if colour != self._last_selected_highlight_colour:
             self._last_selected_highlight_colour = colour
             self.drawSettingsChanged.emit()
@@ -155,7 +158,7 @@ class MolWidget(QtSvg.QSvgWidget):
     @selected_highlight_colour.setter
     def selected_highlight_colour(self, colour):
         if colour != self._selected_highlight_colour:
-            # TODO make a sanitization check that it conforms to a rgb triplet
+            assert validate_rgb(colour)
             self._selected_highlight_colour = colour
             self.drawSettingsChanged.emit()
 
