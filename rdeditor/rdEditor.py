@@ -358,7 +358,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Function to show Diaglog box with provided Title and Message
     def msgApp(self, title, msg):
-        userInfo = QMessageBox.question(self, title, msg, QMessageBox.Yes or QMessageBox.No)
+        userInfo = QMessageBox.question(self, title, msg)
         if userInfo == QMessageBox.Yes:
             return "Y"
         if userInfo == QMessageBox.No:
