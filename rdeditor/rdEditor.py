@@ -12,6 +12,8 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6 import QtSvg
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices, QIcon, QAction, QKeySequence
+
+import darkdetect
 import qdarktheme
 
 # Import model
@@ -34,9 +36,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
         self.editor = MolEditWidget()
-        print("Here 1")
         self.ptable = PTable()
-        print("Here")
         self._fileName = None
         self.initGUI(fileName=fileName)
         self.applySettings()
@@ -108,7 +108,7 @@ class MainWindow(QtWidgets.QMainWindow):
         actions_with_icons = list(set(self.getAllIconActions(QApplication)))
         for action in actions_with_icons:
             icon_name = action.icon().name()
-            print(f"reset icon {icon_name}")
+            # print(f"reset icon {icon_name}")
             action.setIcon(QIcon.fromTheme(icon_name))
 
     def applySettings(self):
@@ -402,7 +402,7 @@ Version: {rdeditor.__version__}
     def setLogLevel(self):
         loglevel = self.sender().objectName().split(":")[-1]  # .upper()
         self.editor.logger.setLevel(loglevel.upper())
-        print(f"Sat loglevel to {loglevel}")
+        # print(f"Sat loglevel to {loglevel}")
         self.settings.setValue("loglevel", loglevel)
         self.settings.sync()
 
@@ -414,15 +414,28 @@ Version: {rdeditor.__version__}
         self.settings.setValue("theme_name", theme_name)
         self.settings.sync()
 
+    def is_dark_mode(self):
+        """Hack to detect if we have a dark mode running"""
+        app = QApplication.instance()
+        palette = app.palette()
+        # Get the color of the window background
+        background_color = palette.color(QtGui.QPalette.Window)
+        # Calculate the luminance (brightness) of the color
+        luminance = (
+            0.299 * background_color.red() + 0.587 * background_color.green() + 0.114 * background_color.blue()
+        ) / 255
+        # If the luminance is below a certain threshold, it's considered dark mode
+        return luminance < 0.5
+
     def applyTheme(self, theme_name):
         if "dark" in theme_name:
-            QIcon.setThemeName("dark")
-            self.editor.darkmode = True
-            self.editor.logger.info("Resetting theme for dark theme")
+            self.set_dark()
+        elif "light" in theme_name:
+            self.set_light()
+        elif self.is_dark_mode():
+            self.set_dark()
         else:
-            QIcon.setThemeName("light")
-            self.editor.darkmode = False
-            self.editor.logger.info("Resetting theme for light theme")
+            self.set_light()
 
         app = QApplication.instance()
         app.setStyleSheet("")  # resets style
@@ -435,6 +448,16 @@ Version: {rdeditor.__version__}
                 qdarktheme.setup_theme("dark")
 
         self.resetActionIcons()
+
+    def set_light(self):
+        QIcon.setThemeName("light")
+        self.editor.darkmode = False
+        self.editor.logger.info("Resetting theme for light theme")
+
+    def set_dark(self):
+        QIcon.setThemeName("dark")
+        self.editor.darkmode = True
+        self.editor.logger.info("Resetting theme for dark theme")
 
     def openUrl(self):
         url = self.sender().data()
