@@ -1,9 +1,10 @@
 #!/usr/bin/python
 # Import required modules
 from __future__ import print_function
-from PySide2 import QtCore, QtGui, QtSvg, QtWidgets
+from PySide6 import QtCore, QtGui, QtSvg, QtWidgets, QtSvgWidgets
 import sys
-from types import *
+
+# from types import *
 import logging
 
 import numpy as np
@@ -16,7 +17,7 @@ from rdkit.Geometry.rdGeometry import Point2D
 
 
 # The Viewer Class
-class MolWidget(QtSvg.QSvgWidget):
+class MolWidget(QtSvgWidgets.QSvgWidget):
     def __init__(self, mol=None, parent=None):
         # Also init the super class
         super(MolWidget, self).__init__(parent)
@@ -228,4 +229,4 @@ if __name__ == "__main__":
     molview.selectAtom(1)
     molview.selectedAtoms = [1, 2, 3]
     molview.show()
-    myApp.exec_()
+    myApp.exec()

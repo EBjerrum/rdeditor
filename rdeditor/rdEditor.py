@@ -1,19 +1,17 @@
 #!/usr/bin/env python
-from __future__ import print_function
-
 
 # Import required modules
 import sys
 import time
 import os
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import QByteArray
-from PySide2.QtCore import QSettings
-from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2 import QtSvg
-from PySide2.QtCore import QUrl
-from PySide2.QtGui import QDesktopServices
+
+from PySide6.QtWidgets import QMenu, QApplication, QStatusBar, QMessageBox, QFileDialog
+from PySide6.QtCore import QByteArray
+from PySide6.QtCore import QSettings
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtSvg
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices, QIcon, QAction, QKeySequence
 import qdarktheme
 
 # Import model
@@ -36,7 +34,9 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
         self.editor = MolEditWidget()
+        print("Here 1")
         self.ptable = PTable()
+        print("Here")
         self._fileName = None
         self.initGUI(fileName=fileName)
         self.applySettings()
@@ -67,7 +67,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.SetupComponents()
 
-        self.infobar = QLabel("")
+        self.infobar = QtWidgets.QLabel("")
         self.myStatusBar.addPermanentWidget(self.infobar, 0)
 
         if self.fileName is not None:
@@ -213,8 +213,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Debug level sub menu
 
     def populateThemeActions(self, menu: QMenu):
-        stylelist = QStyleFactory.keys() + ["Qdt light", "Qdt dark"]
-        self.themeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        stylelist = QtWidgets.QStyleFactory.keys() + ["Qdt light", "Qdt dark"]
+        self.themeActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.themeActions = {}
         for style_name in stylelist:
             action = QAction(style_name, self, objectName=style_name, triggered=self.setTheme, checkable=True)
@@ -426,7 +426,7 @@ Version: {rdeditor.__version__}
 
         app = QApplication.instance()
         app.setStyleSheet("")  # resets style
-        if theme_name in QStyleFactory.keys():
+        if theme_name in QtWidgets.QStyleFactory.keys():
             app.setStyle(theme_name)
         else:
             if theme_name == "Qdt light":
@@ -519,7 +519,7 @@ Version: {rdeditor.__version__}
         )
 
         # Edit actions
-        self.actionActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.actionActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.selectAction = QAction(
             QIcon.fromTheme("icons8-Cursor"),
             "Se&lect",
@@ -630,7 +630,7 @@ Version: {rdeditor.__version__}
         self.addAction.setChecked(True)
 
         # BondTypeActions
-        self.bondtypeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.bondtypeActionGroup = QtGui.QActionGroup(self, exclusive=True)
 
         self.singleBondAction = QAction(
             QIcon.fromTheme("icons8-Single"),
@@ -727,7 +727,7 @@ Version: {rdeditor.__version__}
             self.atomActions.append(action)
 
         self.loglevelactions = {}
-        self.loglevelActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.loglevelActionGroup = QtGui.QActionGroup(self, exclusive=True)
         for key in self.loglevels:
             self.loglevelactions[key] = QAction(
                 key,
@@ -769,7 +769,7 @@ def launch(loglevel="WARNING"):
             mainWindow = MainWindow(fileName=sys.argv[1], loglevel=loglevel)
         else:
             mainWindow = MainWindow(loglevel=loglevel)
-        myApp.exec_()
+        myApp.exec()
         sys.exit(0)
     except NameError:
         print("Name Error:", sys.exc_info()[1])

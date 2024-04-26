@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # Import required modules
-from __future__ import print_function
-from PySide2 import QtCore, QtGui, QtSvg, QtWidgets
+from PySide6 import QtCore, QtGui, QtSvg, QtWidgets
 import sys
 import logging
 
@@ -17,7 +16,7 @@ from rdkit.Geometry.rdGeometry import Point2D, Point3D
 
 from rdeditor.molViewWidget import MolWidget
 
-from types import *
+# from types import *
 
 from rdeditor.ptable import symboltoint
 
@@ -110,7 +109,7 @@ class MolEditWidget(MolWidget):
         if atomtype in self.symboltoint.keys():
             self.logger.debug("Atomtype found in keys")
             self.atomtype = self.symboltoint[atomtype]
-        elif type(atomtype) == IntType:
+        elif isinstance(atomtype, int):
             # Can we assert that its a proper number known by RDKit??
             self.atomtype = atomtype
         else:
@@ -445,4 +444,4 @@ if __name__ == "__main__":
     myApp = QtWidgets.QApplication(sys.argv)
     molblockview = MolWidget(mol)
     molblockview.show()
-    myApp.exec_()
+    myApp.exec()

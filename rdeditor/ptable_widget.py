@@ -1,10 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 import sys
 import logging
 
-from PySide2 import QtGui, QtCore, QtWidgets
+from PySide6 import QtGui, QtCore, QtWidgets
 
 from rdeditor.ptable import ptable
 
@@ -20,12 +19,12 @@ class PTable(QtWidgets.QWidget):
     def initUI(self):
         grid = QtWidgets.QGridLayout()
         # Create actions dictionary and group dictionary
-        self.atomActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.atomActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.atomActions = {}
         # for atomname in self.editor.atomtypes.keys(): Gives unsorted list
         for key in self.ptable.keys():
             atomname = self.ptable[key]["Symbol"]
-            action = QtWidgets.QAction(
+            action = QtGui.QAction(
                 "%s" % atomname,
                 self,
                 statusTip="Set atomtype to %s" % atomname,
@@ -77,7 +76,7 @@ def main():
     pt = PTable()
     pt.selectAtomtype("N")
     pt.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

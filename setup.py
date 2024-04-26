@@ -28,7 +28,7 @@ setup(
             "icon_themes/light/application/*",
         ]
     },
-    install_requires=["PySide2", "numpy", "rdkit", "pyqtdarktheme"],
+    install_requires=["PySide6", "numpy", "rdkit", "pyqtdarktheme"],
     python_requires=">=3.8",
     entry_points={
         "console_scripts": [
