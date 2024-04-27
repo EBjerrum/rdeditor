@@ -4,6 +4,8 @@ from __future__ import print_function
 from PySide2 import QtCore, QtGui, QtSvg, QtWidgets
 import sys
 import logging
+from warnings import warn
+
 
 import numpy as np
 from rdkit import Chem
@@ -104,20 +106,40 @@ class MolEditWidget(MolWidget):
 
     @property
     def bondtype(self):
+        warn(
+            ".bondtype has been deprecated, in favor of .chemEntityType",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self._bondtype
 
     @property
     def ringtype(self):
+        warn(
+            ".ringtype has been deprecated, in favor of .chemEntityType",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self._ringtype
 
     @bondtype.setter
     def bondtype(self, bondtype):
+        warn(
+            ".bondtype has been deprecated, in favor of .chemEntityType",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if bondtype != self.bondtype:
             self._bondtype = bondtype
             self.bondTypeChanged.emit()
 
     @ringtype.setter
     def ringtype(self, ringtype):
+        warn(
+            ".ringtype has been deprecated, in favor of .chemEntityType",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if ringtype != self.ringtype:
             self._ringtype = ringtype
 
@@ -146,10 +168,20 @@ class MolEditWidget(MolWidget):
 
     @property
     def atomtype(self):
+        warn(
+            ".atomtype has been deprecated, in favor of .chemEntityType",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self._atomtype
 
     @atomtype.setter
     def atomtype(self, atomtype):
+        warn(
+            ".atomtype has been deprecated, in favor of .chemEntityType",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if atomtype != self.atomtype:
             self._atomtype = atomtype
             self.atomTypeChanged.emit()
