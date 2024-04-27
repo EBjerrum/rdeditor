@@ -65,9 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.center)
         self.fileName = fileName
 
-        self.filters = (
-            "MOL Files (*.mol *.mol);;SMILES Files (*.smi *.smi);;Any File (*)"
-        )
+        self.filters = "MOL Files (*.mol *.mol);;SMILES Files (*.smi *.smi);;Any File (*)"
 
         self.SetupComponents()
 
@@ -90,9 +88,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if isinstance(action, QAction):
                 if action.icon():
                     all_actions.append(action)
-            elif isinstance(
-                action, QMenu
-            ):  # If the action is a submenu, recursively get its actions
+            elif isinstance(action, QMenu):  # If the action is a submenu, recursively get its actions
                 all_actions.extend(self.getAllActionsInMenu(action))
 
         return all_actions
@@ -277,12 +273,8 @@ class MainWindow(QtWidgets.QMainWindow):
         with open(self.fileName, "r") as file:
             lines = file.readlines()
             if len(lines) > 1:
-                self.editor.logger.warning(
-                    "The SMILES file contains more than one line."
-                )
-                self.statusBar().showMessage(
-                    "The SMILES file contains more than one line."
-                )
+                self.editor.logger.warning("The SMILES file contains more than one line.")
+                self.statusBar().showMessage("The SMILES file contains more than one line.")
                 return None
             smiles = lines[0].strip()
             mol = Chem.MolFromSmiles(smiles)
@@ -291,16 +283,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadMolFile(self, filename):
         self.fileName = filename
-        mol = Chem.MolFromMolFile(
-            str(self.fileName), sanitize=False, strictParsing=False
-        )
+        mol = Chem.MolFromMolFile(str(self.fileName), sanitize=False, strictParsing=False)
         self.editor.mol = mol
         self.statusBar().showMessage(f"Mol file {filename} opened")
 
     def openFile(self):
-        self.fileName, _ = QFileDialog.getOpenFileName(
-            self, caption="Open file", filter=self.filters
-        )
+        self.fileName, _ = QFileDialog.getOpenFileName(self, caption="Open file", filter=self.filters)
         return self.loadFile()
 
     def loadFile(self):
@@ -313,12 +301,8 @@ class MainWindow(QtWidgets.QMainWindow):
         elif self.fileName.lower().endswith(".smi"):
             self.loadSmilesFile(self.fileName)
         else:
-            self.editor.logger.warning(
-                "Unknown file format. Assuming file as .mol format."
-            )
-            self.statusBar().showMessage(
-                "Unknown file format. Assuming file as .mol format."
-            )
+            self.editor.logger.warning("Unknown file format. Assuming file as .mol format.")
+            self.statusBar().showMessage("Unknown file format. Assuming file as .mol format.")
             self.loadMolFile(self.fileName)
             self.fileName += ".mol"
 
@@ -329,9 +313,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.saveAsFile()
 
     def saveAsFile(self):
-        self.fileName, self.filterName = QFileDialog.getSaveFileName(
-            self, filter=self.filters
-        )
+        self.fileName, self.filterName = QFileDialog.getSaveFileName(self, filter=self.filters)
         if self.fileName != "":
             if self.filterName == "MOL Files (*.mol *.mol)":
                 if not self.fileName.lower().endswith(".mol"):
@@ -364,9 +346,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if mol:
             self.editor.mol = mol
         else:
-            self.editor.logger.warning(
-                f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}"
-            )
+            self.editor.logger.warning(f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}")
 
     def clearCanvas(self):
         self.editor.clearAtomSelection()
@@ -380,9 +360,7 @@ class MainWindow(QtWidgets.QMainWindow):
         event.ignore()
 
     def exitFile(self):
-        response = self.msgApp(
-            "Confirmation", "This will quit the application. Do you want to Continue?"
-        )
+        response = self.msgApp("Confirmation", "This will quit the application. Do you want to Continue?")
         if response == "Y":
             self.ptable.close()
             exit(0)  # TODO, how to exit qapplication from within class instance?
@@ -391,9 +369,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Function to show Diaglog box with provided Title and Message
     def msgApp(self, title, msg):
-        userInfo = QMessageBox.question(
-            self, title, msg, QMessageBox.Yes | QMessageBox.No
-        )
+        userInfo = QMessageBox.question(self, title, msg, QMessageBox.Yes | QMessageBox.No)
         if userInfo == QMessageBox.Yes:
             return "Y"
         if userInfo == QMessageBox.No:
