@@ -110,3 +110,6 @@ venv.bak/
 
 #Notebooks
 *ipynb
+
+#rdeditor
+rdeditor/_version.py
