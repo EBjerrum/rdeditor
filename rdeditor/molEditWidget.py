@@ -164,8 +164,6 @@ class MolEditWidget(MolWidget):
                 "Bondtype must be string or rdchem.BondType, not %s" % type(bondtype)
             )
 
-    atomTypeChanged = QtCore.Signal(name="atomTypeChanged")
-
     @property
     def atomtype(self):
         warn(
@@ -184,7 +182,6 @@ class MolEditWidget(MolWidget):
         )
         if atomtype != self.atomtype:
             self._atomtype = atomtype
-            self.atomTypeChanged.emit()
 
     def setAtomType(self, atomtype):
         self.logger.debug("Setting atomtype selection to %s" % atomtype)
