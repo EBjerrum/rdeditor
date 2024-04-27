@@ -10,7 +10,6 @@ from rdeditor.ptable import ptable
 
 
 class PTable(QtWidgets.QWidget):
-
     def __init__(self, actionGroup):
         super(PTable, self).__init__()
         self.ptable = ptable
@@ -46,9 +45,7 @@ class PTable(QtWidgets.QWidget):
             button.setMaximumWidth(40)
 
             if self.ptable[key]["Group"] != None:
-                grid.addWidget(
-                    button, self.ptable[key]["Period"], self.ptable[key]["Group"]
-                )
+                grid.addWidget(button, self.ptable[key]["Period"], self.ptable[key]["Group"])
             else:
                 if key < 72:
                     grid.addWidget(button, 9, key - 54)

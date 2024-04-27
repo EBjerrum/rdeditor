@@ -100,9 +100,7 @@ class MolWidget(QtSvg.QSvgWidget):
     def selectedAtoms(self, atomlist):
         if atomlist != self._selectedAtoms:
             assert type(atomlist) == list, "selectedAtoms should be a list of integers"
-            assert all(
-                isinstance(item, int) for item in atomlist
-            ), "selectedAtoms should be a list of integers"
+            assert all(isinstance(item, int) for item in atomlist), "selectedAtoms should be a list of integers"
             self._selectedAtoms = atomlist
             self.selectionChanged.emit()
 
@@ -133,14 +131,10 @@ class MolWidget(QtSvg.QSvgWidget):
         if self._mol.GetNumConformers() == 0:
             self.logger.debug("No Conformers found, computing all 2D coords")
         elif ignoreExisting:
-            self.logger.debug(
-                "Ignoring existing conformers, computing all " "2D coords"
-            )
+            self.logger.debug("Ignoring existing conformers, computing all " "2D coords")
         else:
             assert self._mol.GetNumConformers() == 1
-            self.logger.debug(
-                "1 Conformer found, computing 2D coords not in " "found conformer"
-            )
+            self.logger.debug("1 Conformer found, computing 2D coords not in " "found conformer")
             conf = self._mol.GetConformer(0)
             for a in self._mol.GetAtoms():
                 pos3d = conf.GetAtomPosition(a.GetIdx())
@@ -149,9 +143,7 @@ class MolWidget(QtSvg.QSvgWidget):
                 prev_coords[a.GetIdx()] = Point2D(pos3d.x, pos3d.y)
         self.logger.debug("Coordmap %s" % prev_coords)
         self.logger.debug("canonOrient %s" % canonOrient)
-        rdDepictor.Compute2DCoords(
-            self._mol, coordMap=prev_coords, canonOrient=canonOrient
-        )
+        rdDepictor.Compute2DCoords(self._mol, coordMap=prev_coords, canonOrient=canonOrient)
 
     def canon_coords_and_draw(self):
         self.logger.debug("Recalculating coordinates")
@@ -183,13 +175,9 @@ class MolWidget(QtSvg.QSvgWidget):
             except:
                 self.logger.warning("Unkekulizable")
         try:
-            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(
-                self._drawmol, kekulize=drawkekulize
-            )
+            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=drawkekulize)
         except ValueError:  # <- can happen on a kekulization failure
-            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(
-                self._drawmol, kekulize=False
-            )
+            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=False)
 
     finishedDrawing = QtCore.Signal(name="finishedDrawing")
 
@@ -202,13 +190,9 @@ class MolWidget(QtSvg.QSvgWidget):
             opts = self.drawer.drawOptions()
             for tag in chiraltags:
                 idx = tag[0]
-                opts.atomLabels[idx] = (
-                    self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
-                )
+                opts.atomLabels[idx] = self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
             if len(self._selectedAtoms) > 0:
-                colors = {
-                    self._selectedAtoms[-1]: (1, 0.2, 0.2)
-                }  # Color lastly selected a different color
+                colors = {self._selectedAtoms[-1]: (1, 0.2, 0.2)}  # Color lastly selected a different color
                 self.drawer.DrawMolecule(
                     self._drawmol,
                     highlightAtoms=self._selectedAtoms,

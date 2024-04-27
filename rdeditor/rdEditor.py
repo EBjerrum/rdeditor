@@ -10,7 +10,7 @@ from PySide2.QtCore import QByteArray
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2 import QtSvg
 
-#Import model
+# Import model
 from rdeditor.molEditWidget import MolEditWidget
 from rdeditor.ptable_widget import PTable
 
@@ -62,7 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.myStatusBar.addPermanentWidget(self.infobar, 0)
 
         if self.fileName is not None:
-            self.editor.logger.info("Loading molecule from %s"%self.fileName)
+            self.editor.logger.info("Loading molecule from %s" % self.fileName)
             self.loadFile()
 
         self.editor.sanitizeSignal.connect(self.infobar.setText)
@@ -83,8 +83,8 @@ class MainWindow(QtWidgets.QMainWindow):
     # Actual menu bar item creation
     def CreateMenus(self):
         self.fileMenu = self.menuBar().addMenu("&File")
-        #self.edit_menu = self.menuBar().addMenu("&Edit")
-        
+        # self.edit_menu = self.menuBar().addMenu("&Edit")
+
         self.toolMenu = self.menuBar().addMenu("&Tools")
         self.atomtypeMenu = self.menuBar().addMenu("&AtomTypes")
         self.bondtypeMenu = self.menuBar().addMenu("&BondTypes")
@@ -115,7 +115,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.removeAction)
 
-        #Atomtype menu
+        # Atomtype menu
         for action in self.atomActions:
             self.atomtypeMenu.addAction(action)
         self.specialatommenu = self.atomtypeMenu.addMenu("All Atoms")
@@ -181,7 +181,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadSmilesFile(self, filename):
         self.fileName = filename
-        with open(self.fileName, 'r') as file:
+        with open(self.fileName, "r") as file:
             lines = file.readlines()
             if len(lines) > 1:
                 self.editor.logger.warning("The SMILES file contains more than one line.")
@@ -194,9 +194,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def loadMolFile(self, filename):
         self.fileName = filename
-        mol = Chem.MolFromMolFile(
-            str(self.fileName), sanitize=False, strictParsing=False
-        )
+        mol = Chem.MolFromMolFile(str(self.fileName), sanitize=False, strictParsing=False)
         self.editor.mol = mol
         self.statusBar().showMessage(f"Mol file {filename} opened")
 
@@ -227,7 +225,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def saveAsFile(self):
         self.fileName, self.filterName = QFileDialog.getSaveFileName(self, filter=self.filters)
-        if self.fileName != '':
+        if self.fileName != "":
             if self.filterName == "MOL Files (*.mol *.mol)":
                 if not self.fileName.lower().endswith(".mol"):
                     self.fileName = self.fileName + ".mol"
@@ -237,7 +235,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if not self.fileName.lower().endswith(".smi"):
                     self.fileName = self.fileName + ".smi"
                 smiles = Chem.MolToSmiles(self.editor.mol)
-                with open(self.fileName, 'w') as file:
+                with open(self.fileName, "w") as file:
                     file.write(smiles + "\n")
                 self.statusBar().showMessage("File saved as SMILES", 2000)
             else:
@@ -260,7 +258,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.editor.mol = mol
         else:
             self.editor.logger.warning(f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}")
-        
 
     def clearCanvas(self):
         self.editor.clearAtomSelection()
@@ -274,9 +271,7 @@ class MainWindow(QtWidgets.QMainWindow):
         event.ignore()
 
     def exitFile(self):
-        response = self.msgApp(
-            "Confirmation", "This will quit the application. Do you want to Continue?"
-        )
+        response = self.msgApp("Confirmation", "This will quit the application. Do you want to Continue?")
         if response == "Y":
             self.ptable.close()
             exit(0)  # TODO, how to exit qapplication from within class instance?
@@ -285,9 +280,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Function to show Diaglog box with provided Title and Message
     def msgApp(self, title, msg):
-        userInfo = QMessageBox.question(
-            self, title, msg, QMessageBox.Yes | QMessageBox.No
-        )
+        userInfo = QMessageBox.question(self, title, msg, QMessageBox.Yes | QMessageBox.No)
         if userInfo == QMessageBox.Yes:
             return "Y"
         if userInfo == QMessageBox.No:
@@ -386,20 +379,33 @@ class MainWindow(QtWidgets.QMainWindow):
             triggered=QApplication.aboutQt,
         )
 
-        self.openPtableAction = QAction( QIcon(self.pixmappath + 'ptable.png'), 'O&pen Periodic Table',
-                                  self, shortcut=QKeySequence.Open,
-                                  statusTip="Open the periodic table for atom type selection",
-                                  triggered=self.openPtable)
-        
-        #Copy-Paste actions
-        self.copyAction = QAction(QIcon(self.pixmappath + 'icons8-copy-96.png'),
-                                    "Copy SMILES", self, shortcut=QKeySequence.Copy, 
-                                   statusTip="Copy the current molecule as a SMILES string",
-                                   triggered=self.copy)
-        
-        self.pasteAction = QAction(QIcon(self.pixmappath + 'icons8-paste-100.png'), "Paste SMILES", self, shortcut=QKeySequence.Paste, 
-                                   statusTip="Paste the clipboard and parse assuming it is a SMILES string",
-                                   triggered=self.paste)
+        self.openPtableAction = QAction(
+            QIcon(self.pixmappath + "ptable.png"),
+            "O&pen Periodic Table",
+            self,
+            shortcut=QKeySequence.Open,
+            statusTip="Open the periodic table for atom type selection",
+            triggered=self.openPtable,
+        )
+
+        # Copy-Paste actions
+        self.copyAction = QAction(
+            QIcon(self.pixmappath + "icons8-copy-96.png"),
+            "Copy SMILES",
+            self,
+            shortcut=QKeySequence.Copy,
+            statusTip="Copy the current molecule as a SMILES string",
+            triggered=self.copy,
+        )
+
+        self.pasteAction = QAction(
+            QIcon(self.pixmappath + "icons8-paste-100.png"),
+            "Paste SMILES",
+            self,
+            shortcut=QKeySequence.Paste,
+            statusTip="Paste the clipboard and parse assuming it is a SMILES string",
+            triggered=self.paste,
+        )
 
         # Edit actions
         self.actionActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
@@ -652,7 +658,7 @@ def launch(loglevel="WARNING"):
     try:
         myApp = QApplication(sys.argv)
         if len(sys.argv) > 1:
-            mainWindow = MainWindow(fileName = sys.argv[1], loglevel=loglevel)
+            mainWindow = MainWindow(fileName=sys.argv[1], loglevel=loglevel)
         else:
             mainWindow = MainWindow(loglevel=loglevel)
         myApp.exec_()

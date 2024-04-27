@@ -39,9 +39,7 @@ class MolEditWidget(MolWidget):
         # Standard atom types
         self.symboltoint = symboltoint
 
-        self.bondtypes = (
-            Chem.rdchem.BondType.names
-        )  # A dictionary with all available rdkit bondtypes
+        self.bondtypes = Chem.rdchem.BondType.names  # A dictionary with all available rdkit bondtypes
 
         # Default actions
         self._action = "Add"
@@ -52,9 +50,7 @@ class MolEditWidget(MolWidget):
         self.points = [Point2D(0, 0), Point2D(1, 1)]
 
         # Bind signals to slots
-        self.finishedDrawing.connect(
-            self.update_coordlist
-        )  # When drawing finished, update coordlist of SVG atoms.
+        self.finishedDrawing.connect(self.update_coordlist)  # When drawing finished, update coordlist of SVG atoms.
 
         # Init with a mol if passed at construction
         # if mol != None:
@@ -129,7 +125,6 @@ class MolEditWidget(MolWidget):
             self.error(f"Currently only {self.available_rings} are supported.")
 
     def setBondType(self, bondtype):
-
         if type(bondtype) == Chem.rdchem.BondType:
             self.chemEntityType = "bond"
             self.chemEntitySubType = bondtype
@@ -139,9 +134,7 @@ class MolEditWidget(MolWidget):
             self.chemEntityType = "bond"
             self.chemEntitySubType = self.bondtypes[bondtype]
         else:
-            self.logger.error(
-                "Bondtype must be string or rdchem.BondType, not %s" % type(bondtype)
-            )
+            self.logger.error("Bondtype must be string or rdchem.BondType, not %s" % type(bondtype))
 
     atomTypeChanged = QtCore.Signal(name="atomTypeChanged")
 
@@ -188,12 +181,7 @@ class MolEditWidget(MolWidget):
 
     def update_coordlist(self):
         if self.mol != None:
-            self.coordlist = np.array(
-                [
-                    list(self.drawer.GetDrawCoords(i))
-                    for i in range(self.mol.GetNumAtoms())
-                ]
-            )
+            self.coordlist = np.array([list(self.drawer.GetDrawCoords(i)) for i in range(self.mol.GetNumAtoms())])
             self.logger.debug("Current coordlist:\n%s" % self.coordlist)
         else:
             self.coordlist = None
@@ -243,9 +231,7 @@ class MolEditWidget(MolWidget):
         # Identify Nearest atomindex
         atom_idx, atom_dist = self.get_nearest_atom(x_svg, y_svg)
         bond_idx, bond_dist = self.get_nearest_bond(x_svg, y_svg)
-        self.logger.debug(
-            "Distances to atom %0.2F, bond %0.2F" % (atom_dist, bond_dist)
-        )
+        self.logger.debug("Distances to atom %0.2F, bond %0.2F" % (atom_dist, bond_dist))
         # If not below a given threshold, then it was not clicked
         if min([atom_dist, bond_dist]) < 14.0:
             if atom_dist < bond_dist:
@@ -261,17 +247,13 @@ class MolEditWidget(MolWidget):
             clicked = self.get_molobject(event)
             if type(clicked) == Chem.rdchem.Atom:
                 self.logger.debug(
-                    "You clicked atom %i, with atomic number %i"
-                    % (clicked.GetIdx(), clicked.GetAtomicNum())
+                    "You clicked atom %i, with atomic number %i" % (clicked.GetIdx(), clicked.GetAtomicNum())
                 )
                 # Call the atom_click function
                 self.atom_click(clicked)
                 # self.add_atom(self.pen, clicked)
             elif type(clicked) == Chem.rdchem.Bond:
-                self.logger.debug(
-                    "You clicked bond %i with type %s"
-                    % (clicked.GetIdx(), clicked.GetBondType())
-                )
+                self.logger.debug("You clicked bond %i with type %s" % (clicked.GetIdx(), clicked.GetBondType()))
                 self.bond_click(clicked)
             elif type(clicked) == Point2D:
                 self.logger.debug("Canvas Click")
@@ -296,9 +278,7 @@ class MolEditWidget(MolWidget):
         elif self.action == "RStoggle":
             self.toogleRS(atom)
         else:
-            self.logger.warning(
-                "The combination of Atom click and Action %s undefined" % self.action
-            )
+            self.logger.warning("The combination of Atom click and Action %s undefined" % self.action)
 
     def bond_click(self, bond):
         if self.action == "Add":
@@ -314,9 +294,7 @@ class MolEditWidget(MolWidget):
         elif self.action == "EZtoggle":
             self.toogleEZ(bond)
         else:
-            self.logger.warning(
-                "The combination of Bond click and Action %s undefined" % self.action
-            )
+            self.logger.warning("The combination of Bond click and Action %s undefined" % self.action)
 
     def canvas_click(self, point):
         if self.action == "Add":
@@ -328,9 +306,7 @@ class MolEditWidget(MolWidget):
             if len(self.selectedAtoms) > 0:
                 self.clearAtomSelection()
         else:
-            self.logger.warning(
-                "The combination of Canvas click and Action %s undefined" % self.action
-            )
+            self.logger.warning("The combination of Canvas click and Action %s undefined" % self.action)
 
     def add_to_atom(self, atom):
         if self.chemEntityType == "atom":
@@ -360,9 +336,7 @@ class MolEditWidget(MolWidget):
         elif self.chemEntitySubType == "ALI6":
             ring = Chem.MolFromSmiles("C1CCCCC1")
         combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        _ = combined.AddBond(
-            atom.GetIdx(), self.mol.GetNumAtoms(), Chem.rdchem.BondType.SINGLE
-        )
+        _ = combined.AddBond(atom.GetIdx(), self.mol.GetNumAtoms(), Chem.rdchem.BondType.SINGLE)
         self.mol = combined
 
     def add_to_bond(self, bond):
@@ -496,15 +470,9 @@ class MolEditWidget(MolWidget):
         if len(self.selectedAtoms) > 0:
             selected = self.selectedAtoms[-1]
             rwmol = Chem.rdchem.RWMol(self.mol)
-            neighborIdx = [
-                atm.GetIdx() for atm in self.mol.GetAtomWithIdx(selected).GetNeighbors()
-            ]
+            neighborIdx = [atm.GetIdx() for atm in self.mol.GetAtomWithIdx(selected).GetNeighbors()]
             if atom.GetIdx() not in neighborIdx:  # check if bond already exists
-                bondType = (
-                    self.chemEntitySubType
-                    if self.chemEntityType == "bond"
-                    else Chem.rdchem.BondType.SINGLE
-                )
+                bondType = self.chemEntitySubType if self.chemEntityType == "bond" else Chem.rdchem.BondType.SINGLE
                 rwmol.AddBond(selected, atom.GetIdx(), order=bondType)
             self.mol = rwmol
             self.selectedAtoms = []
