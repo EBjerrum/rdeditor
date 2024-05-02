@@ -694,7 +694,7 @@ Version: {rdeditor.__version__}
         # self.singleBondAction.setChecked(True)
 
         self.ringAromatic6Action = QAction(
-            QIcon.fromTheme("icons8-Benzene"),
+            QIcon.fromTheme("benzene"),
             "Benzene Ring",
             self,
             shortcut="Ctrl+4",
@@ -705,7 +705,7 @@ Version: {rdeditor.__version__}
         )
         self.chemEntityActionGroup.addAction(self.ringAromatic6Action)
         self.ringAliphatic6Action = QAction(
-            QIcon.fromTheme("icons8-Ring"),
+            QIcon.fromTheme("cyclohexane"),
             "Aliphatic Six Ring",
             self,
             shortcut="Ctrl+5",
