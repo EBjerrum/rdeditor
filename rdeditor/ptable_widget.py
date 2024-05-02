@@ -10,17 +10,17 @@ from rdeditor.ptable import ptable
 
 
 class PTable(QtWidgets.QWidget):
-    def __init__(self):
+    def __init__(self, actionGroup):
         super(PTable, self).__init__()
         self.ptable = ptable
-        self.initUI()
+        self.initUI(actionGroup)
         # logging
         self.logger = logging.getLogger()
 
-    def initUI(self):
+    def initUI(self, actionGroup):
         grid = QtWidgets.QGridLayout()
         # Create actions dictionary and group dictionary
-        self.atomActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        # self.atomActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
         self.atomActions = {}
         # for atomname in self.editor.atomtypes.keys(): Gives unsorted list
         for key in self.ptable.keys():
@@ -33,11 +33,9 @@ class PTable(QtWidgets.QWidget):
                 objectName=atomname,
                 checkable=True,
             )
-            self.atomActionGroup.addAction(action)
+            # self.atomActionGroup.addAction(action)
+            actionGroup.addAction(action)
             self.atomActions[atomname] = action
-            if action.objectName() == "C":
-                action.setChecked(True)
-
             button = QtWidgets.QToolButton()
             button.setDefaultAction(action)
             button.setFocusPolicy(QtCore.Qt.NoFocus)

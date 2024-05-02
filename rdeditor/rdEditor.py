@@ -22,6 +22,7 @@ from rdeditor.molEditWidget import MolEditWidget
 from rdeditor.ptable_widget import PTable
 
 from rdkit import Chem
+import qdarktheme
 
 
 # The main window class
@@ -36,11 +37,14 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
         self.editor = MolEditWidget()
-        self.ptable = PTable()
+        self.chemEntityActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.ptable = PTable(self.chemEntityActionGroup)
         self._fileName = None
         self.initGUI(fileName=fileName)
         self.applySettings()
         self.ptable.atomtypeChanged.connect(self.setAtomTypeName)
+        # self.singleBondAction.trigger()
+        self.ptable.atomActions["C"].trigger()
 
     # Properties
     @property
@@ -59,7 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setGeometry(100, 100, 200, 150)
 
         self.center = self.editor
-        self.center.setFixedSize(600, 600)
+        self.center.setFixedSize(650, 650)
         self.setCentralWidget(self.center)
         self.fileName = fileName
 
@@ -108,7 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
         actions_with_icons = list(set(self.getAllIconActions(QApplication)))
         for action in actions_with_icons:
             icon_name = action.icon().name()
-            print(f"reset icon {icon_name}")
+            self.editor.logger.debug(f"reset icon {icon_name}")
             action.setIcon(QIcon.fromTheme(icon_name))
 
     def applySettings(self):
@@ -217,7 +221,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.themeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
         self.themeActions = {}
         for style_name in stylelist:
-            action = QAction(style_name, self, objectName=style_name, triggered=self.setTheme, checkable=True)
+            action = QAction(
+                style_name,
+                self,
+                objectName=style_name,
+                triggered=self.setTheme,
+                checkable=True,
+            )
             self.themeActionGroup.addAction(action)
             self.themeActions[style_name] = action
             menu.addAction(action)
@@ -252,6 +262,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sideToolBar.addAction(self.singleBondAction)
         self.sideToolBar.addAction(self.doubleBondAction)
         self.sideToolBar.addAction(self.tripleBondAction)
+        self.sideToolBar.addSeparator()
+        self.sideToolBar.addAction(self.ringAliphatic6Action)
+        self.sideToolBar.addAction(self.ringAromatic6Action)
         self.sideToolBar.addSeparator()
         for action in self.atomActions:
             self.sideToolBar.addAction(action)
@@ -352,7 +365,7 @@ class MainWindow(QtWidgets.QMainWindow):
         response = self.msgApp("Confirmation", "This will quit the application. Do you want to Continue?")
         if response == "Y":
             self.ptable.close()
-            exit(0)  # TODO, how to exit qapplication from within class instance?
+            exit(0)
         else:
             self.editor.logger.debug("Abort closing")
 
@@ -382,18 +395,25 @@ Version: {rdeditor.__version__}
         self.editor.setAction(sender.objectName())
         self.myStatusBar.showMessage("Action %s selected" % sender.objectName())
 
+    # TODO, the various setTypes could be unified, as the editor now understands a single chementity
+    def setRingType(self):
+        sender = self.sender()
+        self.editor.setChemEntity(sender.objectName())
+        self.myStatusBar.showMessage("Ringtype %s selected" % sender.objectName())
+
     def setBondType(self):
         sender = self.sender()
-        self.editor.setBondType(sender.objectName())
+        self.editor.setChemEntity(sender.objectName())
         self.myStatusBar.showMessage("Bondtype %s selected" % sender.objectName())
 
     def setAtomType(self):
         sender = self.sender()
-        self.editor.setAtomType(sender.objectName())
+        self.editor.setChemEntity(sender.objectName())
+        # self.editor.setRingType(None)
         self.myStatusBar.showMessage("Atomtype %s selected" % sender.objectName())
 
     def setAtomTypeName(self, atomname):
-        self.editor.setAtomType(str(atomname))
+        self.editor.setChemEntity(str(atomname))
         self.myStatusBar.showMessage("Atomtype %s selected" % atomname)
 
     def openPtable(self):
@@ -402,7 +422,7 @@ Version: {rdeditor.__version__}
     def setLogLevel(self):
         loglevel = self.sender().objectName().split(":")[-1]  # .upper()
         self.editor.logger.setLevel(loglevel.upper())
-        print(f"Sat loglevel to {loglevel}")
+        self.editor.logger.log(self.editor.logger.getEffectiveLevel(), f"loglevel set to {loglevel}")
         self.settings.setValue("loglevel", loglevel)
         self.settings.sync()
 
@@ -487,7 +507,10 @@ Version: {rdeditor.__version__}
         )
 
         self.aboutQtAction = QAction(
-            "About &Qt", self, statusTip="Show the Qt library's About box", triggered=QApplication.aboutQt
+            "About &Qt",
+            self,
+            statusTip="Show the Qt library's About box",
+            triggered=QApplication.aboutQt,
         )
 
         self.openPtableAction = QAction(
@@ -642,7 +665,7 @@ Version: {rdeditor.__version__}
             objectName="SINGLE",
             checkable=True,
         )
-        self.bondtypeActionGroup.addAction(self.singleBondAction)
+        self.chemEntityActionGroup.addAction(self.singleBondAction)
 
         self.doubleBondAction = QAction(
             QIcon.fromTheme("icons8-Double"),
@@ -654,7 +677,7 @@ Version: {rdeditor.__version__}
             objectName="DOUBLE",
             checkable=True,
         )
-        self.bondtypeActionGroup.addAction(self.doubleBondAction)
+        self.chemEntityActionGroup.addAction(self.doubleBondAction)
 
         self.tripleBondAction = QAction(
             QIcon.fromTheme("icons8-Triple"),
@@ -666,8 +689,32 @@ Version: {rdeditor.__version__}
             objectName="TRIPLE",
             checkable=True,
         )
-        self.bondtypeActionGroup.addAction(self.tripleBondAction)
-        self.singleBondAction.setChecked(True)
+        self.chemEntityActionGroup.addAction(self.tripleBondAction)
+
+        # self.singleBondAction.setChecked(True)
+
+        self.ringAromatic6Action = QAction(
+            QIcon.fromTheme("benzene"),
+            "Benzene Ring",
+            self,
+            shortcut="Ctrl+4",
+            statusTip="Select Benzene Ring",
+            triggered=self.setRingType,
+            objectName="ARO6",
+            checkable=True,
+        )
+        self.chemEntityActionGroup.addAction(self.ringAromatic6Action)
+        self.ringAliphatic6Action = QAction(
+            QIcon.fromTheme("cyclohexane"),
+            "Aliphatic Six Ring",
+            self,
+            shortcut="Ctrl+5",
+            statusTip="Select Aliphatic Ring",
+            triggered=self.setRingType,
+            objectName="ALI6",
+            checkable=True,
+        )
+        self.chemEntityActionGroup.addAction(self.ringAliphatic6Action)
 
         # Build dictionary of ALL available bondtypes in RDKit
         self.bondActions = {}
@@ -680,12 +727,15 @@ Version: {rdeditor.__version__}
                 objectName=key,
                 checkable=True,
             )
-            self.bondtypeActionGroup.addAction(action)
+            self.chemEntityActionGroup.addAction(action)
             self.bondActions[key] = action
         # Replace defined actions
+
         self.bondActions["SINGLE"] = self.singleBondAction
         self.bondActions["DOUBLE"] = self.doubleBondAction
         self.bondActions["TRIPLE"] = self.tripleBondAction
+        self.bondActions["ARO6"] = self.ringAromatic6Action
+        self.bondActions["ALI6"] = self.ringAliphatic6Action
 
         # Misc Actions
         self.undoAction = QAction(
@@ -722,8 +772,6 @@ Version: {rdeditor.__version__}
         self.atomActions = []
         for atomname in ["H", "B", "C", "N", "O", "F", "P", "S", "Cl", "Br", "I"]:
             action = self.ptable.atomActions[atomname]
-            if action.objectName() == "C":
-                action.setChecked(True)
             self.atomActions.append(action)
 
         self.loglevelactions = {}
