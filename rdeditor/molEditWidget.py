@@ -571,7 +571,7 @@ class MolEditWidget(MolWidget):
             Chem.rdchem.BondStereo.STEREONONE,
             Chem.rdchem.BondStereo.STEREOCIS,
             Chem.rdchem.BondStereo.STEREOTRANS,
-            #  Chem.rdchem.BondStereo.STEREOANY, TODO, this should be wiggly, but is not
+            Chem.rdchem.BondStereo.STEREOANY,
             Chem.rdchem.BondStereo.STEREONONE,
         ]
         newidx = np.argmax(np.array(stereotypes) == stereotype) + 1
