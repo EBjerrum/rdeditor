@@ -43,6 +43,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.initGUI(fileName=fileName)
         self.applySettings()
         self.ptable.atomtypeChanged.connect(self.setAtomTypeName)
+        # self.singleBondAction.trigger()
+        self.ptable.atomActions["C"].trigger()
 
     # Properties
     @property
@@ -770,8 +772,6 @@ Version: {rdeditor.__version__}
         self.atomActions = []
         for atomname in ["H", "B", "C", "N", "O", "F", "P", "S", "Cl", "Br", "I"]:
             action = self.ptable.atomActions[atomname]
-            if action.objectName() == "C":
-                action.setChecked(True)
             self.atomActions.append(action)
 
         self.loglevelactions = {}

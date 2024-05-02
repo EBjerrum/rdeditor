@@ -86,16 +86,16 @@ class MolEditWidget(MolWidget):
     @chemEntity.setter
     def chemEntity(self, chementity):
         if isinstance(chementity, Chem.rdchem.BondType):  # Bondtypes are also ints, but ints are not BondTypes
-            self.setBondType(chementity)
+            self.setBond(chementity)
         elif isinstance(chementity, int):
-            self.setAtomType(chementity)
+            self.setAtom(chementity)
         elif isinstance(chementity, str):
             if chementity in self.bondtypes:
-                self.setBondType(chementity)
+                self.setBond(chementity)
             elif chementity in self.available_rings:
-                self.setRingType(chementity)
+                self.setRing(chementity)
             elif chementity in symboltoint.keys():
-                self.setAtomType(chementity)
+                self.setAtom(chementity)
             else:
                 self.logger.error(f"Unknown string entity type with value {chementity}")
                 return
@@ -151,14 +151,14 @@ class MolEditWidget(MolWidget):
         if ringtype != self.ringtype:
             self._ringtype = ringtype
 
-    def setRingType(self, ringtype):
+    def setRing(self, ringtype):
         if ringtype in self.available_rings:
             self._chementitytype = "ring"
             self._chementity = ringtype
         else:
             self.logger.error(f"Currently only {self.available_rings} are supported.")
 
-    def setBondType(self, bondtype):
+    def setBond(self, bondtype):
         if type(bondtype) == Chem.rdchem.BondType:
             self._chementitytype = "bond"
             self._chementity = bondtype
@@ -189,7 +189,7 @@ class MolEditWidget(MolWidget):
         if atomtype != self.atomtype:
             self._atomtype = atomtype
 
-    def setAtomType(self, atomtype):
+    def setAtom(self, atomtype):
         self.logger.debug("Setting atomtype selection to %s" % atomtype)
         if atomtype in self.symboltoint.keys():
             self.logger.debug("Atomtype found in keys")

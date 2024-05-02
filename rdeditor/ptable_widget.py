@@ -36,9 +36,6 @@ class PTable(QtWidgets.QWidget):
             # self.atomActionGroup.addAction(action)
             actionGroup.addAction(action)
             self.atomActions[atomname] = action
-            if action.objectName() == "C":
-                action.setChecked(True)
-
             button = QtWidgets.QToolButton()
             button.setDefaultAction(action)
             button.setFocusPolicy(QtCore.Qt.NoFocus)
