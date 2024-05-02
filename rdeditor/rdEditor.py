@@ -61,7 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setGeometry(100, 100, 200, 150)
 
         self.center = self.editor
-        self.center.setFixedSize(600, 600)
+        self.center.setFixedSize(650, 650)
         self.setCentralWidget(self.center)
         self.fileName = fileName
 
@@ -110,7 +110,7 @@ class MainWindow(QtWidgets.QMainWindow):
         actions_with_icons = list(set(self.getAllIconActions(QApplication)))
         for action in actions_with_icons:
             icon_name = action.icon().name()
-            print(f"reset icon {icon_name}")
+            self.editor.logger.debug(f"reset icon {icon_name}")
             action.setIcon(QIcon.fromTheme(icon_name))
 
     def applySettings(self):
@@ -363,7 +363,7 @@ class MainWindow(QtWidgets.QMainWindow):
         response = self.msgApp("Confirmation", "This will quit the application. Do you want to Continue?")
         if response == "Y":
             self.ptable.close()
-            exit(0)  # TODO, how to exit qapplication from within class instance?
+            exit(0)
         else:
             self.editor.logger.debug("Abort closing")
 
@@ -393,24 +393,25 @@ Version: {rdeditor.__version__}
         self.editor.setAction(sender.objectName())
         self.myStatusBar.showMessage("Action %s selected" % sender.objectName())
 
+    # TODO, the various setTypes could be unified, as the editor now understands a single chementity
     def setRingType(self):
         sender = self.sender()
-        self.editor.setRingType(sender.objectName())
+        self.editor.setChemEntity(sender.objectName())
         self.myStatusBar.showMessage("Ringtype %s selected" % sender.objectName())
 
     def setBondType(self):
         sender = self.sender()
-        self.editor.setBondType(sender.objectName())
+        self.editor.setChemEntity(sender.objectName())
         self.myStatusBar.showMessage("Bondtype %s selected" % sender.objectName())
 
     def setAtomType(self):
         sender = self.sender()
-        self.editor.setAtomType(sender.objectName())
-        self.editor.setRingType(None)
+        self.editor.setChemEntity(sender.objectName())
+        # self.editor.setRingType(None)
         self.myStatusBar.showMessage("Atomtype %s selected" % sender.objectName())
 
     def setAtomTypeName(self, atomname):
-        self.editor.setAtomType(str(atomname))
+        self.editor.setChemEntity(str(atomname))
         self.myStatusBar.showMessage("Atomtype %s selected" % atomname)
 
     def openPtable(self):
@@ -419,7 +420,7 @@ Version: {rdeditor.__version__}
     def setLogLevel(self):
         loglevel = self.sender().objectName().split(":")[-1]  # .upper()
         self.editor.logger.setLevel(loglevel.upper())
-        print(f"Sat loglevel to {loglevel}")
+        self.editor.logger.log(self.editor.logger.getEffectiveLevel(), f"loglevel set to {loglevel}")
         self.settings.setValue("loglevel", loglevel)
         self.settings.sync()
 

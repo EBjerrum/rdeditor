@@ -33,20 +33,21 @@ class MolEditWidget(MolWidget):
         super(MolEditWidget, self).__init__(parent)
         # This sets the window to delete itself when its closed, so it doesn't keep querying the model
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.available_rings = ["ALI6", "ARO6"]
+
         # Properties
         self._prevmol = None  # For undo
         self.coordlist = None  # SVG coords of the current mols atoms
 
-        # Standard atom types
+        # Standard atom, bond and ring types
         self.symboltoint = symboltoint
-
         self.bondtypes = Chem.rdchem.BondType.names  # A dictionary with all available rdkit bondtypes
+        self.available_rings = ["ALI6", "ARO6"]
 
         # Default actions
         self._action = "Add"
-        self._chemEntityType = "bond"
-        self._chemEntitySubType = self.bondtypes["SINGLE"]
+        # self._chemEntityType = "bond"
+        # self._chemEntitySubType = self.bondtypes["SINGLE"]
+        self.chemEntity = self.bondtypes["SINGLE"]
 
         # Points to calculate the SVG to coord scaling
         self.points = [Point2D(0, 0), Point2D(1, 1)]
@@ -74,36 +75,47 @@ class MolEditWidget(MolWidget):
     def setAction(self, actionname):
         self.action = actionname
 
-    bondTypeChanged = QtCore.Signal(name="bondTypeChanged")
+    # bondTypeChanged = QtCore.Signal(name="bondTypeChanged")
 
-    chemEntityTypeChanged = QtCore.Signal(name="chemEntityTypeChanged")
+    # chemEntityTypeChanged = QtCore.Signal(name="chemEntityTypeChanged")
 
+    @property
+    def chemEntity(self):
+        return self._chementity
+
+    @chemEntity.setter
+    def chemEntity(self, chementity):
+        if isinstance(chementity, Chem.rdchem.BondType):  # Bondtypes are also ints, but ints are not BondTypes
+            self.setBondType(chementity)
+        elif isinstance(chementity, int):
+            self.setAtomType(chementity)
+        elif isinstance(chementity, str):
+            if chementity in self.bondtypes:
+                self.setBondType(chementity)
+            elif chementity in self.available_rings:
+                self.setRingType(chementity)
+            elif chementity in symboltoint.keys():
+                self.setAtomType(chementity)
+            else:
+                self.logger.error(f"Unknown string entity type with value {chementity}")
+                return
+        else:
+            self.logger.error(f"Unknown type {type(chementity)}")
+            return
+        # self.logger.debug(f"ChemEntity set for {chementity} of type {type(chementity)}")
+
+    def setChemEntity(self, chementity):
+        self.chemEntity = chementity
+
+    # Readonly, inferred from chemEntity
     @property
     def chemEntityType(self):
-        return self._chemEntityType
-
-    @chemEntityType.setter
-    def chemEntityType(self, chemEntityType):
-        if self._chemEntityType != chemEntityType:
-            self._chemEntityType = chemEntityType
-            self.chemEntityTypeChanged.emit()
-
-    chemEntitySubTypeChanged = QtCore.Signal(name="chemEntitySubTypeChanged")
-
-    @property
-    def chemEntitySubType(self):
-        return self._chemEntitySubType
-
-    @chemEntitySubType.setter
-    def chemEntitySubType(self, subtype):
-        if self._chemEntitySubType != subtype:
-            self._chemEntitySubType = subtype
-            self.chemEntitySubTypeChanged.emit()
+        return self._chementitytype
 
     @property
     def bondtype(self):
         warn(
-            ".bondtype has been deprecated, in favor of .chemEntityType",
+            ".bondtype has been deprecated, in favor of .chemEntityType and setter .chemEntity.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -112,7 +124,7 @@ class MolEditWidget(MolWidget):
     @property
     def ringtype(self):
         warn(
-            ".ringtype has been deprecated, in favor of .chemEntityType",
+            ".ringtype has been deprecated, in favor of .chemEntityType and setter .chemEntity.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -121,18 +133,18 @@ class MolEditWidget(MolWidget):
     @bondtype.setter
     def bondtype(self, bondtype):
         warn(
-            ".bondtype has been deprecated, in favor of .chemEntityType",
+            ".bondtype has been deprecated, in favor of .chemEntityType and setter .chemEntity.",
             DeprecationWarning,
             stacklevel=2,
         )
         if bondtype != self.bondtype:
             self._bondtype = bondtype
-            self.bondTypeChanged.emit()
+            # self.bondTypeChanged.emit()
 
     @ringtype.setter
     def ringtype(self, ringtype):
         warn(
-            ".ringtype has been deprecated, in favor of .chemEntityType",
+            ".ringtype has been deprecated, in favor of .chemEntityType and setter .chemEntity.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -141,27 +153,27 @@ class MolEditWidget(MolWidget):
 
     def setRingType(self, ringtype):
         if ringtype in self.available_rings:
-            self.chemEntityType = "ring"
-            self.chemEntitySubType = ringtype
+            self._chementitytype = "ring"
+            self._chementity = ringtype
         else:
-            self.error(f"Currently only {self.available_rings} are supported.")
+            self.logger.error(f"Currently only {self.available_rings} are supported.")
 
     def setBondType(self, bondtype):
         if type(bondtype) == Chem.rdchem.BondType:
-            self.chemEntityType = "bond"
-            self.chemEntitySubType = bondtype
+            self._chementitytype = "bond"
+            self._chementity = bondtype
 
         elif isinstance(bondtype, str):
             assert bondtype in self.bondtypes.keys(), "Bondtype %s not known" % bondtype
-            self.chemEntityType = "bond"
-            self.chemEntitySubType = self.bondtypes[bondtype]
+            self._chementitytype = "bond"
+            self._chementity = self.bondtypes[bondtype]
         else:
             self.logger.error("Bondtype must be string or rdchem.BondType, not %s" % type(bondtype))
 
     @property
     def atomtype(self):
         warn(
-            ".atomtype has been deprecated, in favor of .chemEntityType",
+            ".atomtype has been deprecated, in favor of .chemEntityType and setter .chemEntity.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -170,7 +182,7 @@ class MolEditWidget(MolWidget):
     @atomtype.setter
     def atomtype(self, atomtype):
         warn(
-            ".atomtype has been deprecated, in favor of .chemEntityType",
+            ".atomtype has been deprecated, in favor of .chemEntityType and setter .chemEntity.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -182,12 +194,12 @@ class MolEditWidget(MolWidget):
         if atomtype in self.symboltoint.keys():
             self.logger.debug("Atomtype found in keys")
             # self.atomtype = self.symboltoint[atomtype]
-            self.chemEntityType = "atom"
-            self.chemEntitySubType = self.symboltoint[atomtype]
+            self._chementitytype = "atom"
+            self._chementity = self.symboltoint[atomtype]
         elif isinstance(atomtype, int):
             if atomtype in self.symboltoint.values():
-                self.chemEntityType = "atom"
-                self.chemEntitySubType = atomtype
+                self._chementitytype = "atom"
+                self._chementity = atomtype
             else:
                 self.logger.error(f"Atom number {atomtype} not known.")
         else:
@@ -349,7 +361,7 @@ class MolEditWidget(MolWidget):
 
     def add_atom_to_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
-        newatom = Chem.rdchem.Atom(self.chemEntitySubType)
+        newatom = Chem.rdchem.Atom(self.chemEntity)
         newidx = rwmol.AddAtom(newatom)
         newbond = rwmol.AddBond(atom.GetIdx(), newidx, Chem.rdchem.BondType.SINGLE)
         self.mol = rwmol
@@ -358,13 +370,13 @@ class MolEditWidget(MolWidget):
         rwmol = Chem.rdchem.RWMol(self.mol)
         newatom = Chem.rdchem.Atom(6)
         newidx = rwmol.AddAtom(newatom)
-        newbond = rwmol.AddBond(atom.GetIdx(), newidx, order=self.chemEntitySubType)
+        newbond = rwmol.AddBond(atom.GetIdx(), newidx, order=self.chemEntity)
         self.mol = rwmol
 
     def add_ring_to_atom(self, atom):
-        if self.chemEntitySubType == "ARO6":
+        if self.chemEntity == "ARO6":
             ring = Chem.MolFromSmiles("c1ccccc1")
-        elif self.chemEntitySubType == "ALI6":
+        elif self.chemEntity == "ALI6":
             ring = Chem.MolFromSmiles("C1CCCCC1")
         combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
         _ = combined.AddBond(atom.GetIdx(), self.mol.GetNumAtoms(), Chem.rdchem.BondType.SINGLE)
@@ -379,10 +391,10 @@ class MolEditWidget(MolWidget):
             self.replace_bond(bond)
 
     def add_ring_to_bond(self, bond):
-        if self.chemEntitySubType == "ARO6":
+        if self.chemEntity == "ARO6":
             ring = Chem.MolFromSmarts("c:c:c:c")
             bondType = Chem.rdchem.BondType.AROMATIC
-        if self.chemEntitySubType == "ALI6":
+        if self.chemEntity == "ALI6":
             ring = Chem.MolFromSmarts("C-C-C-C")
             bondType = Chem.rdchem.BondType.SINGLE
         combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
@@ -398,13 +410,13 @@ class MolEditWidget(MolWidget):
             bondType,
         )
         # if bond to which aromatic ring is added is not aromatic it will be made aromatic
-        if self.chemEntitySubType == "ARO6":
+        if self.chemEntity == "ARO6":
             combined.GetBondWithIdx(bond.GetIdx()).SetIsAromatic(True)
         # the extra sanitization is done to make sure that aromaticity is correctly displayed
         try:
             Chem.SanitizeMol(combined)
             self.mol = Chem.MolFromSmiles(Chem.MolToSmiles(combined))
-        except:
+        except Exception as e:
             self.mol = combined
 
     def add_canvas_entity(self, point):
@@ -420,7 +432,7 @@ class MolEditWidget(MolWidget):
         if rwmol.GetNumAtoms() == 0:
             point.x = 0.0
             point.y = 0.0
-        newatom = Chem.rdchem.Atom(self.chemEntitySubType)
+        newatom = Chem.rdchem.Atom(self.chemEntity)
         newidx = rwmol.AddAtom(newatom)
         # This should only trigger if we have an empty canvas
         if not rwmol.GetNumConformers():
@@ -438,8 +450,8 @@ class MolEditWidget(MolWidget):
 
         atom_0 = rwmol.AddAtom(Chem.rdchem.Atom(6))
         atom_1 = rwmol.AddAtom(Chem.rdchem.Atom(6))
-        print(self.chemEntitySubType)
-        newidx = rwmol.AddBond(atom_0, atom_1, order=self.chemEntitySubType)
+        print(self.chemEntity)
+        newidx = rwmol.AddBond(atom_0, atom_1, order=self.chemEntity)
 
         # This should only trigger if we have an empty canvas
         if not rwmol.GetNumConformers():
@@ -450,9 +462,9 @@ class MolEditWidget(MolWidget):
         self.mol = rwmol
 
     def add_canvas_ring(self, point):
-        if self.chemEntitySubType == "ARO6":
+        if self.chemEntity == "ARO6":
             ring = Chem.MolFromSmiles("c1ccccc1")
-        elif self.chemEntitySubType == "ALI6":
+        elif self.chemEntity == "ALI6":
             ring = Chem.MolFromSmiles("C1CCCCC1")
 
         if self.mol.GetNumAtoms() == 0:
@@ -492,7 +504,7 @@ class MolEditWidget(MolWidget):
 
     def replace_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
-        newatom = Chem.rdchem.Atom(self.chemEntitySubType)
+        newatom = Chem.rdchem.Atom(self.chemEntity)
         rwmol.ReplaceAtom(atom.GetIdx(), newatom)
         self.mol = rwmol
 
@@ -503,7 +515,7 @@ class MolEditWidget(MolWidget):
             rwmol = Chem.rdchem.RWMol(self.mol)
             neighborIdx = [atm.GetIdx() for atm in self.mol.GetAtomWithIdx(selected).GetNeighbors()]
             if atom.GetIdx() not in neighborIdx:  # check if bond already exists
-                bondType = self.chemEntitySubType if self.chemEntityType == "bond" else Chem.rdchem.BondType.SINGLE
+                bondType = self.chemEntity if self.chemEntityType == "bond" else Chem.rdchem.BondType.SINGLE
                 rwmol.AddBond(selected, atom.GetIdx(), order=bondType)
             self.mol = rwmol
             self.selectedAtoms = []
@@ -606,7 +618,7 @@ class MolEditWidget(MolWidget):
     def replace_bond(self, bond):
         self.backupMol()
         self.logger.debug("Replacing bond %s" % bond)
-        bond.SetBondType(self.chemEntitySubType)
+        bond.SetBondType(self.chemEntity)
         self.molChanged.emit()
 
     # self.remove_bond(bond)
