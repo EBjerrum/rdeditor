@@ -98,7 +98,7 @@ class MolEditWidget(MolWidget):
     def chemEntitySubType(self, subtype):
         if self._chemEntitySubType != subtype:
             self._chemEntitySubType = subtype
-            # chemEntitySubTypeChanged.emit()
+            self.chemEntitySubTypeChanged.emit()
 
     @property
     def bondtype(self):
@@ -184,12 +184,14 @@ class MolEditWidget(MolWidget):
             # self.atomtype = self.symboltoint[atomtype]
             self.chemEntityType = "atom"
             self.chemEntitySubType = self.symboltoint[atomtype]
-        elif type(atomtype) == IntType:
-            # Can we assert that its a proper number known by RDKit??
-            self.chemEntityType = "atom"
-            self.chemEntitySubType = atomtype
+        elif isinstance(atomtype, int):
+            if atomtype in self.symboltoint.values():
+                self.chemEntityType = "atom"
+                self.chemEntitySubType = atomtype
+            else:
+                self.logger.error(f"Atom number {atomtype} not known.")
         else:
-            self.error("Atomtype must be string or integer, not %s" % type(atomtype))
+            self.logger.error("Atomtype must be string or integer, not %s" % type(atomtype))
 
     # Function to translate from SVG coords to atom coords using scaling calculated from atomcoords (0,0) and (1,1)
     # Returns rdkit Point2D

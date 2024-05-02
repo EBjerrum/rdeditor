@@ -662,7 +662,7 @@ Version: {rdeditor.__version__}
             objectName="SINGLE",
             checkable=True,
         )
-        self.bondtypeActionGroup.addAction(self.singleBondAction)
+        self.chemEntityActionGroup.addAction(self.singleBondAction)
 
         self.doubleBondAction = QAction(
             QIcon.fromTheme("icons8-Double"),
@@ -674,7 +674,7 @@ Version: {rdeditor.__version__}
             objectName="DOUBLE",
             checkable=True,
         )
-        self.bondtypeActionGroup.addAction(self.doubleBondAction)
+        self.chemEntityActionGroup.addAction(self.doubleBondAction)
 
         self.tripleBondAction = QAction(
             QIcon.fromTheme("icons8-Triple"),
@@ -687,7 +687,8 @@ Version: {rdeditor.__version__}
             checkable=True,
         )
         self.chemEntityActionGroup.addAction(self.tripleBondAction)
-        self.singleBondAction.setChecked(True)
+
+        # self.singleBondAction.setChecked(True)
 
         self.ringAromatic6Action = QAction(
             QIcon.fromTheme("icons8-Benzene"),
