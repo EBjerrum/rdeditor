@@ -1,18 +1,18 @@
 # rdeditor
 
-Simple RDKit molecule editor GUI using PySide2
+Simple RDKit molecule editor GUI using PySide6
 ![rdeditor, the RDKit molecule editor](./Screenshots/Main_window.png)
 
 ## Installation
 
 - requirements
 
-RDKit, NumPy and PySide2 should be automatically pip installed by the setup.py script.
+RDKit, NumPy and PySide6 should be automatically pip installed by the setup.py script.
 
 - installation
 
 ```bash
-python setup.py install
+pip install .
 
 ```
 

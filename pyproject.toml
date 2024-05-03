@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "rdeditor"
+version = "0.1.0"
+description = "An RDKit based molecule editor using PySide"
+authors = ["Esben Jannik Bjerrum <esbenjannik@rocketmail.com>"]
+license = "LICENSE"
+readme = "README.md"
+homepage = "http://github.com/ebjerrum/rdeditor"
+repository = "http://github.com/ebjerrum/rdeditor"
+keywords = ["RDKit molecule editor pyside"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+numpy = "^1.26.4"
+PySide6 = "6.7.0"
+pyqtdarktheme = "0.1.7"
+rdkit = "2023.9.6"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "*"
+setuptools_scm = "*"
+twine = "*"
+wheel = "*"
+
+[options.entry_points]
+rdEditor = "rdeditor.rdEditor:launch"

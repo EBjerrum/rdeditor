@@ -4,7 +4,7 @@ from __future__ import print_function
 import sys
 import logging
 
-from PySide2 import QtGui, QtCore, QtWidgets
+from PySide6 import QtGui, QtCore, QtWidgets
 
 from rdeditor.ptable import ptable
 
@@ -25,7 +25,7 @@ class PTable(QtWidgets.QWidget):
         # for atomname in self.editor.atomtypes.keys(): Gives unsorted list
         for key in self.ptable.keys():
             atomname = self.ptable[key]["Symbol"]
-            action = QtWidgets.QAction(
+            action = QtGui.QAction(
                 "%s" % atomname,
                 self,
                 statusTip="Set atomtype to %s" % atomname,
@@ -41,20 +41,22 @@ class PTable(QtWidgets.QWidget):
             button.setFocusPolicy(QtCore.Qt.NoFocus)
             button.setMaximumWidth(40)
 
-            if self.ptable[key]["Group"] is not None:
-                grid.addWidget(button, self.ptable[key]["Period"], self.ptable[key]["Group"])
-            else:
-                if key < 72:
-                    grid.addWidget(button, 9, key - 54)
-                else:
-                    grid.addWidget(button, 10, key - 86)
+            ## TODO (AR): I could not getting this to work with PySide6
+            # if self.ptable[key]["Group"] is not None:
+            #     grid.addWidget(button, self.ptable[key]["Period"], self.ptable[key]["Group"])
+            # else:
+            #     if key < 72:
+            #         grid.addWidget(button, 9, key - 54)
+            #     else:
+            #         grid.addWidget(button, 10, key - 86)
         # Ensure spacing between main table and actinides/lathanides
-        grid.addWidget(QtWidgets.QLabel(""), 8, 1)
+        ## TODO (AR): I could not getting this to work with PySide6
+        # grid.addWidget(QtWidgets.QLabel(""), 8, 1)
 
-        self.setLayout(grid)
+        # self.setLayout(grid)
 
-        self.move(300, 150)
-        self.setWindowTitle("Periodic Table")
+        # self.move(300, 150)
+        # self.setWindowTitle("Periodic Table")
 
     atomtypeChanged = QtCore.Signal(str, name="atomtypeChanged")
 
