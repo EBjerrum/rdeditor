@@ -6,14 +6,14 @@ from __future__ import print_function
 import sys
 import time
 import os
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import QByteArray
-from PySide2.QtCore import QSettings
-from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2 import QtSvg
-from PySide2.QtCore import QUrl
-from PySide2.QtGui import QDesktopServices
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
+from PySide6.QtCore import QByteArray
+from PySide6.QtCore import QSettings
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtSvg
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices
 import qdarktheme
 
 # Import model
@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
         self.editor = MolEditWidget()
-        self.chemEntityActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.chemEntityActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.ptable = PTable(self.chemEntityActionGroup)
         self._fileName = None
         self.initGUI(fileName=fileName)
@@ -72,7 +72,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.SetupComponents()
 
         self.infobar = QLabel("")
-        self.myStatusBar.addPermanentWidget(self.infobar, 0)
+        ## TODO (AR): I could not getting this to work with PySide6
+        # self.myStatusBar.addPermanentWidget(self.infobar, 0)
 
         if self.fileName is not None:
             self.editor.logger.info("Loading molecule from %s" % self.fileName)
@@ -87,7 +88,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Iterate through actions in the current menu
         for action in qmenu.actions():
-            if isinstance(action, QAction):
+            if isinstance(action, QtGui.QAction):
                 if action.icon():
                     all_actions.append(action)
             elif isinstance(action, QMenu):  # If the action is a submenu, recursively get its actions
@@ -209,7 +210,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.helpMenu.addSeparator()
         self.helpMenu.addAction(self.aboutQtAction)
 
-        # actionListAction = QAction(
+        # actionListAction = QtGui.QAction(
         #     "List Actions", self, triggered=lambda: print(set(self.get_all_icon_actions_in_application(QApplication)))
         # )
         # self.helpMenu.addAction(actionListAction)
@@ -218,10 +219,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def populateThemeActions(self, menu: QMenu):
         stylelist = QStyleFactory.keys() + ["Qdt light", "Qdt dark"]
-        self.themeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.themeActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.themeActions = {}
         for style_name in stylelist:
-            action = QAction(
+            action = QtGui.QAction(
                 style_name,
                 self,
                 objectName=style_name,
@@ -257,7 +258,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.undoAction)
         # Side Toolbar
-        self.sideToolBar = QtWidgets.QToolBar(self)
+        self.sideToolBar = QtWidgets.QToolBar()
         self.addToolBar(QtCore.Qt.LeftToolBarArea, self.sideToolBar)
         self.sideToolBar.addAction(self.singleBondAction)
         self.sideToolBar.addAction(self.doubleBondAction)
@@ -462,43 +463,47 @@ Version: {rdeditor.__version__}
 
     # Function to create actions for menus and toolbars
     def CreateActions(self):
-        self.openAction = QAction(
+        self.openAction = QtGui.QAction(
             QIcon.fromTheme("open"),
             "O&pen",
             self,
-            shortcut=QKeySequence.Open,
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut=QKeySequence.Open,
             statusTip="Open an existing file",
             triggered=self.openFile,
         )
 
-        self.saveAction = QAction(
+        self.saveAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Save"),
             "S&ave",
             self,
-            shortcut=QKeySequence.Save,
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut=QKeySequence.Save,
             statusTip="Save file",
             triggered=self.saveFile,
         )
 
-        self.saveAsAction = QAction(
+        self.saveAsAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Save as"),
             "Save As",
             self,
-            shortcut=QKeySequence.SaveAs,
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut=QKeySequence.SaveAs,
             statusTip="Save file as ..",
             triggered=self.saveAsFile,
         )
 
-        self.exitAction = QAction(
+        self.exitAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Shutdown"),
             "E&xit",
             self,
-            shortcut="Ctrl+Q",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+Q",
             statusTip="Exit the Application",
             triggered=self.exitFile,
         )
 
-        self.aboutAction = QAction(
+        self.aboutAction = QtGui.QAction(
             QIcon.fromTheme("about"),
             "A&bout",
             self,
@@ -506,48 +511,52 @@ Version: {rdeditor.__version__}
             triggered=self.aboutHelp,
         )
 
-        self.aboutQtAction = QAction(
+        self.aboutQtAction = QtGui.QAction(
             "About &Qt",
             self,
             statusTip="Show the Qt library's About box",
             triggered=QApplication.aboutQt,
         )
 
-        self.openPtableAction = QAction(
+        self.openPtableAction = QtGui.QAction(
             QIcon.fromTheme("ptable"),
             "O&pen Periodic Table",
             self,
-            shortcut=QKeySequence.Open,
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut=QKeySequence.Open,
             statusTip="Open the periodic table for atom type selection",
             triggered=self.openPtable,
         )
 
         # Copy-Paste actions
-        self.copyAction = QAction(
+        self.copyAction = QtGui.QAction(
             QIcon.fromTheme("icons8-copy-96"),
             "Copy SMILES",
             self,
-            shortcut=QKeySequence.Copy,
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut=QKeySequence.Copy,
             statusTip="Copy the current molecule as a SMILES string",
             triggered=self.copy,
         )
 
-        self.pasteAction = QAction(
+        self.pasteAction = QtGui.QAction(
             QIcon.fromTheme("icons8-paste-100"),
             "Paste SMILES",
             self,
-            shortcut=QKeySequence.Paste,
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut=QKeySequence.Paste,
             statusTip="Paste the clipboard and parse assuming it is a SMILES string",
             triggered=self.paste,
         )
 
         # Edit actions
-        self.actionActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
-        self.selectAction = QAction(
+        self.actionActionGroup = QtGui.QActionGroup(self, exclusive=True)
+        self.selectAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Cursor"),
             "Se&lect",
             self,
-            shortcut="Ctrl+L",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+L",
             statusTip="Select Atoms",
             triggered=self.setAction,
             objectName="Select",
@@ -555,11 +564,12 @@ Version: {rdeditor.__version__}
         )
         self.actionActionGroup.addAction(self.selectAction)
 
-        self.addAction = QAction(
+        self.addAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Edit"),
             "&Add",
             self,
-            shortcut="Ctrl+A",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+A",
             statusTip="Add Atoms",
             triggered=self.setAction,
             objectName="Add",
@@ -567,11 +577,12 @@ Version: {rdeditor.__version__}
         )
         self.actionActionGroup.addAction(self.addAction)
 
-        self.addBondAction = QAction(
+        self.addBondAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Pinch"),
             "Add &Bond",
             self,
-            shortcut="Ctrl+B",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+B",
             statusTip="Add Bond",
             triggered=self.setAction,
             objectName="Add Bond",
@@ -579,11 +590,12 @@ Version: {rdeditor.__version__}
         )
         self.actionActionGroup.addAction(self.addBondAction)
 
-        self.replaceAction = QAction(
+        self.replaceAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Replace Atom"),
             "&Replace",
             self,
-            shortcut="Ctrl+R",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+R",
             statusTip="Replace Atom/Bond",
             triggered=self.setAction,
             objectName="Replace",
@@ -591,11 +603,12 @@ Version: {rdeditor.__version__}
         )
         self.actionActionGroup.addAction(self.replaceAction)
 
-        self.rsAction = QAction(
+        self.rsAction = QtGui.QAction(
             QIcon.fromTheme("Change_R_S"),
             "To&ggle R/S",
             self,
-            shortcut="Ctrl+G",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+G",
             statusTip="Toggle Stereo Chemistry",
             triggered=self.setAction,
             objectName="RStoggle",
@@ -603,11 +616,12 @@ Version: {rdeditor.__version__}
         )
         self.actionActionGroup.addAction(self.rsAction)
 
-        self.ezAction = QAction(
+        self.ezAction = QtGui.QAction(
             QIcon.fromTheme("Change_E_Z"),
             "Toggle &E/Z",
             self,
-            shortcut="Ctrl+E",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+E",
             statusTip="Toggle Bond Stereo Chemistry",
             triggered=self.setAction,
             objectName="EZtoggle",
@@ -615,11 +629,12 @@ Version: {rdeditor.__version__}
         )
         self.actionActionGroup.addAction(self.ezAction)
 
-        self.removeAction = QAction(
+        self.removeAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Cancel"),
             "D&elete",
             self,
-            shortcut="Ctrl+D",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+D",
             statusTip="Delete Atom or Bond",
             triggered=self.setAction,
             objectName="Remove",
@@ -627,11 +642,12 @@ Version: {rdeditor.__version__}
         )
         self.actionActionGroup.addAction(self.removeAction)
 
-        self.increaseChargeAction = QAction(
+        self.increaseChargeAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Increase Font"),
             "I&ncrease Charge",
             self,
-            shortcut="Ctrl++",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl++",
             statusTip="Increase Atom Charge",
             triggered=self.setAction,
             objectName="Increase Charge",
@@ -639,11 +655,12 @@ Version: {rdeditor.__version__}
         )
         self.actionActionGroup.addAction(self.increaseChargeAction)
 
-        self.decreaseChargeAction = QAction(
+        self.decreaseChargeAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Decrease Font"),
             "D&ecrease Charge",
             self,
-            shortcut="Ctrl+-",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+-",
             statusTip="Decrease Atom Charge",
             triggered=self.setAction,
             objectName="Decrease Charge",
@@ -653,13 +670,14 @@ Version: {rdeditor.__version__}
         self.addAction.setChecked(True)
 
         # BondTypeActions
-        self.bondtypeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.bondtypeActionGroup = QtGui.QActionGroup(self, exclusive=True)
 
-        self.singleBondAction = QAction(
+        self.singleBondAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Single"),
             "S&ingle Bond",
             self,
-            shortcut="Ctrl+1",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+1",
             statusTip="Set bondtype to SINGLE",
             triggered=self.setBondType,
             objectName="SINGLE",
@@ -667,11 +685,12 @@ Version: {rdeditor.__version__}
         )
         self.chemEntityActionGroup.addAction(self.singleBondAction)
 
-        self.doubleBondAction = QAction(
+        self.doubleBondAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Double"),
             "Double Bond",
             self,
-            shortcut="Ctrl+2",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+2",
             statusTip="Set bondtype to DOUBLE",
             triggered=self.setBondType,
             objectName="DOUBLE",
@@ -679,11 +698,12 @@ Version: {rdeditor.__version__}
         )
         self.chemEntityActionGroup.addAction(self.doubleBondAction)
 
-        self.tripleBondAction = QAction(
+        self.tripleBondAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Triple"),
             "Triple Bond",
             self,
-            shortcut="Ctrl+3",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+3",
             statusTip="Set bondtype to TRIPLE",
             triggered=self.setBondType,
             objectName="TRIPLE",
@@ -693,22 +713,24 @@ Version: {rdeditor.__version__}
 
         # self.singleBondAction.setChecked(True)
 
-        self.ringAromatic6Action = QAction(
+        self.ringAromatic6Action = QtGui.QAction(
             QIcon.fromTheme("benzene"),
             "Benzene Ring",
             self,
-            shortcut="Ctrl+4",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+4",
             statusTip="Select Benzene Ring",
             triggered=self.setRingType,
             objectName="ARO6",
             checkable=True,
         )
         self.chemEntityActionGroup.addAction(self.ringAromatic6Action)
-        self.ringAliphatic6Action = QAction(
+        self.ringAliphatic6Action = QtGui.QAction(
             QIcon.fromTheme("cyclohexane"),
             "Aliphatic Six Ring",
             self,
-            shortcut="Ctrl+5",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+5",
             statusTip="Select Aliphatic Ring",
             triggered=self.setRingType,
             objectName="ALI6",
@@ -719,7 +741,7 @@ Version: {rdeditor.__version__}
         # Build dictionary of ALL available bondtypes in RDKit
         self.bondActions = {}
         for key in self.editor.bondtypes.keys():
-            action = QAction(
+            action = QtGui.QAction(
                 "%s" % key,
                 self,
                 statusTip="Set bondtype to %s" % key,
@@ -738,31 +760,34 @@ Version: {rdeditor.__version__}
         self.bondActions["ALI6"] = self.ringAliphatic6Action
 
         # Misc Actions
-        self.undoAction = QAction(
+        self.undoAction = QtGui.QAction(
             QIcon.fromTheme("prev"),
             "U&ndo",
             self,
-            shortcut="Ctrl+Z",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+Z",
             statusTip="Undo/Redo changes to molecule Ctrl+Z",
             triggered=self.editor.undo,
             objectName="undo",
         )
 
-        self.clearCanvasAction = QAction(
+        self.clearCanvasAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Trash"),
             "C&lear Canvas",
             self,
-            shortcut="Ctrl+X",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+X",
             statusTip="Clear Canvas (no warning)",
             triggered=self.clearCanvas,
             objectName="Clear Canvas",
         )
 
-        self.cleanCoordinatesAction = QAction(
+        self.cleanCoordinatesAction = QtGui.QAction(
             QIcon.fromTheme("icons8-Broom"),
             "Recalculate coordinates &F",
             self,
-            shortcut="Ctrl+F",
+            ## TODO (AR): I could not getting this to work with PySide6
+            # shortcut="Ctrl+F",
             statusTip="Re-calculates coordinates and redraw",
             triggered=self.editor.canon_coords_and_draw,
             objectName="Recalculate Coordinates",
@@ -775,9 +800,9 @@ Version: {rdeditor.__version__}
             self.atomActions.append(action)
 
         self.loglevelactions = {}
-        self.loglevelActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.loglevelActionGroup = QtGui.QActionGroup(self, exclusive=True)
         for key in self.loglevels:
-            self.loglevelactions[key] = QAction(
+            self.loglevelactions[key] = QtGui.QAction(
                 key,
                 self,
                 statusTip="Set logging level to %s" % key,
@@ -787,7 +812,7 @@ Version: {rdeditor.__version__}
             )
             self.loglevelActionGroup.addAction(self.loglevelactions[key])
 
-        self.openChemRxiv = QAction(
+        self.openChemRxiv = QtGui.QAction(
             QIcon.fromTheme("icons8-Exit"),
             "ChemRxiv Preprint",
             self,
@@ -797,7 +822,7 @@ Version: {rdeditor.__version__}
             data="https://doi.org/10.26434/chemrxiv-2024-jfhmw",
         )
 
-        self.openRepository = QAction(
+        self.openRepository = QtGui.QAction(
             QIcon.fromTheme("icons8-Exit"),
             "GitHub repository",
             self,
@@ -817,7 +842,7 @@ def launch(loglevel="WARNING"):
             mainWindow = MainWindow(fileName=sys.argv[1], loglevel=loglevel)
         else:
             mainWindow = MainWindow(loglevel=loglevel)
-        myApp.exec_()
+        myApp.exec()
         sys.exit(0)
     except NameError:
         print("Name Error:", sys.exc_info()[1])

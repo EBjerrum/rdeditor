@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Import required modules
 from __future__ import print_function
-from PySide2 import QtCore, QtGui, QtSvg, QtWidgets
+from PySide6 import QtCore, QtGui, QtSvg, QtWidgets
 import sys
 import logging
 from warnings import warn
