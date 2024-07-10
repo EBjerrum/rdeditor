@@ -4,7 +4,7 @@
 
 ### Prerequisites
 
-rdkit, numpy, pyside2 are installed by default.
+rdkit, numpy, pyside and pqtdarktheme are installed by default.
 ruff is installed using the dev tag as described below
 
 ### Installation Steps

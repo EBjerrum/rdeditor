@@ -1,27 +1,22 @@
 # rdeditor
 
-Simple RDKit molecule editor GUI using PySide2
+Simple RDKit molecule editor GUI using PySide6
 ![rdeditor, the RDKit molecule editor](./Screenshots/Main_window.png)
 
 ## Installation
 
 - requirements
 
-RDKit, NumPy and PySide2 should be automatically pip installed by the setup.py script.
+RDKit, NumPy, PySide6 and pyqtdarktheme should be automatically pip installed by the setup.py script.
 
 - installation
 
 ```bash
-python setup.py install
+pip install rdeditor
 
 ```
 
-A launch script will also be added so that it can be started from the command line via the rdEditor command.
-
-## Alternative install
-
-Install PySide and RDKit yourself, save the content of rdeditor folder to somewhere you like and start it with
-`python rdEditor.py`
+A launch script will also be added so that it can be started from the command line via the `rdEditor` command.
 
 ## Usage
 
@@ -59,6 +54,17 @@ Most commonly used bond types, and atom types can be selected. A Periodic table 
 
 Access to all standard operations as well as less used atom types and bond-types.
 
+#### Settings
+
+Themes can be selected from the ones available on your platform (Mac/Linux/Windows)
+
+The debug level can be selected
+
+## Development
+
+Instructions to set it up in editable modes and instructions for eventual contributions can be found in the DEVELOPER.md file.
+Please reach out first, there may be a relevant development branch.
+
 ## Additional Reading
 
 I wrote a blog post with an overview of the structure of the code.
@@ -70,3 +76,5 @@ We also published a preprint on ChemRxiv: [https://chemrxiv.org/engage/chemrxiv/
 
 - Not possible to distinguish undefined and trans when editing cis/trans double bonds
 - Aromaticity perception hides double-single bonds (kekulization can do likewise)
+
+please report issues at GitHub, it's tough getting all corners of a GUI tested.
