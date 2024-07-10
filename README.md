@@ -68,7 +68,5 @@ We also published a preprint on ChemRxiv: [https://chemrxiv.org/engage/chemrxiv/
 
 ## ISSUES
 
-- Not possible to set undefined R/S (no wiggly bond rendered)
 - Not possible to distinguish undefined and trans when editing cis/trans double bonds
 - Aromaticity perception hides double-single bonds (kekulization can do likewise)
-- Molecule jumping now more limited, but atom placement may not be optimal as rest og structure kept fixed (and ignored?)

@@ -15,6 +15,8 @@ from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Geometry.rdGeometry import Point2D
 
+from rdeditor.utilities import validate_rgb
+
 
 # The Viewer Class
 class MolWidget(QtSvgWidgets.QSvgWidget):
@@ -36,9 +38,16 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         self._selectedAtoms = []  # List of selected atoms
         self._darkmode = False
 
+        # Color settings
+        self._unsanitizable_background_colour = None  # (1, 0.75, 0.75)
+        self._last_selected_highlight_colour = (1, 0.2, 0.2)
+        self._selected_highlight_colour = (1, 0.5, 0.5)
+
         # Bind signales to slots for automatic actions
         self.molChanged.connect(self.sanitize_draw)
         self.selectionChanged.connect(self.draw)
+        self.drawSettingsChanged.connect(self.draw)
+        self.sanitizeSignal.connect(self.changeSanitizeStatus)
 
         # Initialize class with the mol passed
         self.mol = mol
@@ -118,6 +127,42 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
     def setSelectedAtoms(self, atomlist):
         self.selectedAtoms = atomlist
 
+    drawSettingsChanged = QtCore.Signal(name="drawSettingsChanged")
+
+    @property
+    def unsanitizable_background_colour(self):
+        return self._unsanitizable_background_colour
+
+    @unsanitizable_background_colour.setter
+    def unsanitizable_background_colour(self, colour):
+        if colour != self._unsanitizable_background_colour:
+            if colour is not None:
+                assert validate_rgb(colour)
+            self._unsanitizable_background_colour = colour
+            self.drawSettingsChanged.emit()
+
+    @property
+    def last_selected_highlight_colour(self):
+        return self._last_selected_highlight_colour
+
+    @last_selected_highlight_colour.setter
+    def last_selected_highlight_colour(self, colour):
+        assert validate_rgb(colour)
+        if colour != self._last_selected_highlight_colour:
+            self._last_selected_highlight_colour = colour
+            self.drawSettingsChanged.emit()
+
+    @property
+    def selected_highlight_colour(self):
+        return self._selected_highlight_colour
+
+    @selected_highlight_colour.setter
+    def selected_highlight_colour(self, colour):
+        if colour != self._selected_highlight_colour:
+            assert validate_rgb(colour)
+            self._selected_highlight_colour = colour
+            self.drawSettingsChanged.emit()
+
     # Actions and functions
     @QtCore.Slot()
     def draw(self):
@@ -129,6 +174,14 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
     def sanitize_draw(self):
         self.sanitizeMol()
         self.draw()
+
+    @QtCore.Slot()
+    def changeSanitizeStatus(self, value):
+        self.logger.debug(f"changeBorder called with value {value}")
+        if value.upper() == "SANITIZABLE":
+            self.molecule_sanitizable = True
+        else:
+            self.molecule_sanitizable = False
 
     def computeNewCoords(self, ignoreExisting=False, canonOrient=False):
         """Computes new coordinates for the molecule taking into account all
@@ -201,11 +254,16 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
             opts = self.drawer.drawOptions()
             if self._darkmode:
                 rdMolDraw2D.SetDarkMode(opts)
+            if (not self.molecule_sanitizable) and self.unsanitizable_background_colour:
+                opts.setBackgroundColour(self.unsanitizable_background_colour)
             for tag in chiraltags:
                 idx = tag[0]
                 opts.atomLabels[idx] = self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
             if len(self._selectedAtoms) > 0:
-                colors = {self._selectedAtoms[-1]: (1, 0.2, 0.2)}  # Color lastly selected a different color
+                colors = {atom_idx: self.selected_highlight_colour for atom_idx in self._selectedAtoms}
+                colors[self._selectedAtoms[-1]] = (
+                    self.last_selected_highlight_colour
+                )  # Color lastly selected an optionally different color
                 self.drawer.DrawMolecule(
                     self._drawmol,
                     highlightAtoms=self._selectedAtoms,
