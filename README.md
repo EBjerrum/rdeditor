@@ -62,7 +62,7 @@ The debug level can be selected
 
 ## Development
 
-Instructions to set it up in editable modes and instructions for eventual contributions can be found in the DEVELOPER.md file.
+Instructions to set it up in editable modes and instructions for eventual contributions can be found in the [DEVELOPER.md](./DEVELOPER.md) file.
 Please reach out first, there may be a relevant development branch.
 
 ## Additional Reading
