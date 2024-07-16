@@ -28,8 +28,9 @@ import qdarktheme
 # The main window class
 class MainWindow(QtWidgets.QMainWindow):
     # Constructor function
-    def __init__(self, fileName=None, loglevel="WARNING"):
+    def __init__(self, fileName=None, loglevel="Warning", themed=True):
         super(MainWindow, self).__init__()
+        self.themed = themed
         self.pixmappath = os.path.abspath(os.path.dirname(__file__)) + "/pixmaps/"
         QtGui.QIcon.setThemeSearchPaths(
             # QtGui.QIcon.themeSearchPaths() +
@@ -37,6 +38,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
         self.editor = MolEditWidget()
+        self.editor.logger.setLevel(loglevel.upper())
         self.chemEntityActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.ptable = PTable(self.chemEntityActionGroup)
         self._fileName = None
@@ -117,13 +119,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def applySettings(self):
         self.settings = QSettings("Cheminformania.com", "rdEditor")
-        theme_name = self.settings.value("theme_name", "Fusion")
 
-        self.applyTheme(theme_name)
-        self.themeActions[theme_name].setChecked(True)
+        if self.themed:
+            theme_name = self.settings.value("theme_name", "Fusion")
+            self.themeActions[theme_name].setChecked(True)
+            self.applyTheme(theme_name)
+        else:
+            pass
 
         loglevel = self.settings.value("loglevel", "Error")
-
         action = self.loglevelactions.get(loglevel, None)
         if action:
             action.trigger()
@@ -194,8 +198,9 @@ class MainWindow(QtWidgets.QMainWindow):
         for key in self.bondActions.keys():
             self.specialbondMenu.addAction(self.bondActions[key])
         # Settings menu
-        self.themeMenu = self.settingsMenu.addMenu("Theme")
-        self.populateThemeActions(self.themeMenu)
+        if self.themed:
+            self.themeMenu = self.settingsMenu.addMenu("Theme")
+            self.populateThemeActions(self.themeMenu)
         self.loglevelMenu = self.settingsMenu.addMenu("Logging Level")
         for loglevel in self.loglevels:
             self.loglevelMenu.addAction(self.loglevelactions[loglevel])
@@ -832,14 +837,15 @@ Version: {rdeditor.__version__}
 
 
 def launch(loglevel="WARNING"):
+    themed = False
     "Function that launches the mainWindow Application"
     # Exception Handling
     try:
         myApp = QApplication(sys.argv)
         if len(sys.argv) > 1:
-            mainWindow = MainWindow(fileName=sys.argv[1], loglevel=loglevel)
+            mainWindow = MainWindow(fileName=sys.argv[1], loglevel=loglevel, themed=themed)
         else:
-            mainWindow = MainWindow(loglevel=loglevel)
+            mainWindow = MainWindow(loglevel=loglevel, themed=themed)
         myApp.exec()
         sys.exit(0)
     except NameError:
