@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rdeditor"
+description = "An RDKit based molecule editor using PySide"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "LGPL"}
+authors = [
+    {name = "Esben Jannik Bjerrum", email = "esbenjannik@rocketmail.com"},
+]
+keywords = ["RDKit", "molecule", "editor", "pyside"]
+dependencies = [
+    "PySide6",
+    "numpy",
+    "rdkit",
+    "pyqtdarktheme",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "http://github.com/ebjerrum/rdeditor"
+
+[project.optional-dependencies]
+dev = ["ruff", "wheel", "twine", "setuptools_scm"]
+
+[project.scripts]
+rdEditor = "rdeditor.rdEditor:launch"
+
+[tool.setuptools]
+packages = ["rdeditor"]
+zip-safe = false
+
+[tool.setuptools.package-data]
+rdeditor = [
+    "icon_themes/dark/*",
+    "icon_themes/dark/application/*",
+    "icon_themes/light/*",
+    "icon_themes/light/application/*",
+]
+
+[tool.setuptools_scm]
+write_to = "rdeditor/_version.py"
