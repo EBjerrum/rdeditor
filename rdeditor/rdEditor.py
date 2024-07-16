@@ -1,19 +1,19 @@
 #!/usr/bin/env python
-from __future__ import print_function
-
 
 # Import required modules
 import sys
 import time
 import os
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import QByteArray
-from PySide2.QtCore import QSettings
-from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2 import QtSvg
-from PySide2.QtCore import QUrl
-from PySide2.QtGui import QDesktopServices
+
+from PySide6.QtWidgets import QMenu, QApplication, QStatusBar, QMessageBox, QFileDialog
+from PySide6.QtCore import QByteArray
+from PySide6.QtCore import QSettings
+from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtSvg
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices, QIcon, QAction, QKeySequence
+
+import darkdetect
 import qdarktheme
 
 # Import model
@@ -37,7 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
         self.editor = MolEditWidget()
-        self.chemEntityActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.chemEntityActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.ptable = PTable(self.chemEntityActionGroup)
         self._fileName = None
         self.initGUI(fileName=fileName)
@@ -71,7 +71,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.SetupComponents()
 
-        self.infobar = QLabel("")
+        self.infobar = QtWidgets.QLabel("")
         self.myStatusBar.addPermanentWidget(self.infobar, 0)
 
         if self.fileName is not None:
@@ -217,8 +217,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Debug level sub menu
 
     def populateThemeActions(self, menu: QMenu):
-        stylelist = QStyleFactory.keys() + ["Qdt light", "Qdt dark"]
-        self.themeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        stylelist = QtWidgets.QStyleFactory.keys() + ["Qdt light", "Qdt dark"]
+        self.themeActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.themeActions = {}
         for style_name in stylelist:
             action = QAction(
@@ -434,19 +434,32 @@ Version: {rdeditor.__version__}
         self.settings.setValue("theme_name", theme_name)
         self.settings.sync()
 
+    def is_dark_mode(self):
+        """Hack to detect if we have a dark mode running"""
+        app = QApplication.instance()
+        palette = app.palette()
+        # Get the color of the window background
+        background_color = palette.color(QtGui.QPalette.Window)
+        # Calculate the luminance (brightness) of the color
+        luminance = (
+            0.299 * background_color.red() + 0.587 * background_color.green() + 0.114 * background_color.blue()
+        ) / 255
+        # If the luminance is below a certain threshold, it's considered dark mode
+        return luminance < 0.5
+
     def applyTheme(self, theme_name):
         if "dark" in theme_name:
-            QIcon.setThemeName("dark")
-            self.editor.darkmode = True
-            self.editor.logger.info("Resetting theme for dark theme")
+            self.set_dark()
+        elif "light" in theme_name:
+            self.set_light()
+        elif self.is_dark_mode():
+            self.set_dark()
         else:
-            QIcon.setThemeName("light")
-            self.editor.darkmode = False
-            self.editor.logger.info("Resetting theme for light theme")
+            self.set_light()
 
         app = QApplication.instance()
         app.setStyleSheet("")  # resets style
-        if theme_name in QStyleFactory.keys():
+        if theme_name in QtWidgets.QStyleFactory.keys():
             app.setStyle(theme_name)
         else:
             if theme_name == "Qdt light":
@@ -455,6 +468,16 @@ Version: {rdeditor.__version__}
                 qdarktheme.setup_theme("dark")
 
         self.resetActionIcons()
+
+    def set_light(self):
+        QIcon.setThemeName("light")
+        self.editor.darkmode = False
+        self.editor.logger.info("Resetting theme for light theme")
+
+    def set_dark(self):
+        QIcon.setThemeName("dark")
+        self.editor.darkmode = True
+        self.editor.logger.info("Resetting theme for dark theme")
 
     def openUrl(self):
         url = self.sender().data()
@@ -542,7 +565,7 @@ Version: {rdeditor.__version__}
         )
 
         # Edit actions
-        self.actionActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.actionActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.selectAction = QAction(
             QIcon.fromTheme("icons8-Cursor"),
             "Se&lect",
@@ -653,7 +676,7 @@ Version: {rdeditor.__version__}
         self.addAction.setChecked(True)
 
         # BondTypeActions
-        self.bondtypeActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.bondtypeActionGroup = QtGui.QActionGroup(self, exclusive=True)
 
         self.singleBondAction = QAction(
             QIcon.fromTheme("icons8-Single"),
@@ -775,7 +798,7 @@ Version: {rdeditor.__version__}
             self.atomActions.append(action)
 
         self.loglevelactions = {}
-        self.loglevelActionGroup = QtWidgets.QActionGroup(self, exclusive=True)
+        self.loglevelActionGroup = QtGui.QActionGroup(self, exclusive=True)
         for key in self.loglevels:
             self.loglevelactions[key] = QAction(
                 key,
@@ -817,7 +840,7 @@ def launch(loglevel="WARNING"):
             mainWindow = MainWindow(fileName=sys.argv[1], loglevel=loglevel)
         else:
             mainWindow = MainWindow(loglevel=loglevel)
-        myApp.exec_()
+        myApp.exec()
         sys.exit(0)
     except NameError:
         print("Name Error:", sys.exc_info()[1])

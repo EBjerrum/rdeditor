@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rdeditor"
+description = "An RDKit based molecule editor using PySide"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "LGPL"}
+authors = [
+    {name = "Esben Jannik Bjerrum", email = "esbenjannik@rocketmail.com"},
+]
+keywords = ["RDKit", "molecule", "editor", "pyside"]
+
+dependencies = [
+    "PySide6",
+    "numpy",
+    "rdkit",
+    "pyqtdarktheme",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "http://github.com/ebjerrum/rdeditor"
+"Bug Tracker" = "https://github.com/ebjerrum/rdeditor/issues"
+Documentation = "https://github.com/ebjerrum/rdeditor/blob/master/README.md"
+"Source Code" = "https://github.com/ebjerrum/rdeditor"
+"Citation" = "https://github.com/ebjerrum/rdeditor/blob/master/CITATION.md"
+"ChemRxiv Preprint" = "https://chemrxiv.org/engage/chemrxiv/article-details/65e6dcfa9138d23161b2979c"
+"Developer Guide" = "https://github.com/ebjerrum/rdeditor/blob/master/DEVELOPER.md"
+
+[project.optional-dependencies]
+dev = ["ruff", "wheel", "twine", "setuptools_scm"]
+
+[project.scripts]
+rdEditor = "rdeditor.rdEditor:launch"
+
+[tool.setuptools]
+packages = ["rdeditor"]
+zip-safe = false
+
+[tool.setuptools.package-data]
+rdeditor = [
+    "icon_themes/dark/*",
+    "icon_themes/dark/application/*",
+    "icon_themes/light/*",
+    "icon_themes/light/application/*",
+]
+
+[tool.setuptools_scm]
+write_to = "rdeditor/_version.py"
+
+[tool.ruff]
+extend = "ruff.toml"
