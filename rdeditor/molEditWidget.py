@@ -158,7 +158,7 @@ class MolEditWidget(MolWidget):
             self.logger.error(f"Currently only {self.available_rings} are supported.")
 
     def setBond(self, bondtype):
-        if type(bondtype) == Chem.rdchem.BondType:
+        if isinstance(bondtype, Chem.rdchem.BondType):
             self._chementitytype = "bond"
             self._chementity = bondtype
 
@@ -285,21 +285,23 @@ class MolEditWidget(MolWidget):
             return self.SVG_to_coord(x_svg, y_svg)
 
     def mousePressEvent(self, event):
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() is QtCore.Qt.LeftButton:
             clicked = self.get_molobject(event)
-            if type(clicked) == Chem.rdchem.Atom:
+            if isinstance(clicked, Chem.rdchem.Atom):
                 self.logger.debug(
                     "You clicked atom %i, with atomic number %i" % (clicked.GetIdx(), clicked.GetAtomicNum())
                 )
                 # Call the atom_click function
                 self.atom_click(clicked)
                 # self.add_atom(self.pen, clicked)
-            elif type(clicked) == Chem.rdchem.Bond:
+            elif isinstance(clicked, Chem.rdchem.Bond):
                 self.logger.debug("You clicked bond %i with type %s" % (clicked.GetIdx(), clicked.GetBondType()))
                 self.bond_click(clicked)
-            elif type(clicked) == Point2D:
+            elif isinstance(clicked, Point2D):
                 self.logger.debug("Canvas Click")
                 self.canvas_click(clicked)
+            else:
+                self.logger.error(f"Clicked entity, {clicked} of unknown type {type(clicked)}")
 
     # Lookup tables to relate actions to context type with action type #TODO more clean to use Dictionaries??
     def atom_click(self, atom):
