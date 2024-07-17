@@ -837,7 +837,7 @@ Version: {rdeditor.__version__}
 
 
 def launch(loglevel="WARNING"):
-    themed = False
+    themed = True  # Switch to False to not use theme and disable theme menu.
     "Function that launches the mainWindow Application"
     # Exception Handling
     try:
