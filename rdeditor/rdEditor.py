@@ -340,12 +340,12 @@ class MainWindow(QtWidgets.QMainWindow):
     def paste(self):
         clipboard = QApplication.clipboard()
         text = clipboard.text()
-        mol = Chem.MolFromSmiles(text, sanitize=True)
-        if not mol:
-            mol = Chem.MolFromSmiles(text, sanitize=False)
-            if mol:
-                self.editor.logger.warning("Pasted SMILES is not sanitizable")
+        mol = Chem.MolFromSmiles(text, sanitize=False)
         if mol:
+            try:
+                Chem.SanitizeMol(Chem.Mol(mol.ToBinary()))
+            except:
+                self.editor.logger.warning("Pasted SMILES is not sanitizable")
             self.editor.mol = mol
         else:
             self.editor.logger.warning(f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}")
