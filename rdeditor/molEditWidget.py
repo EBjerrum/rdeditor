@@ -4,6 +4,7 @@ from PySide6 import QtCore, QtGui, QtSvg, QtWidgets
 import sys
 import logging
 from warnings import warn
+import copy
 
 
 import numpy as np
@@ -558,37 +559,60 @@ class MolEditWidget(MolWidget):
                 stereoatoms.append(neighboridx)
             # Set the bondstereoatoms
             bond.SetStereoAtoms(stereoatoms[0], stereoatoms[1])
+            self.logger.debug(f"Setting StereoAtoms to {stereoatoms}")
         else:
             pass
 
-    def toogleEZ(self, bond):
+    def assign_stereo_atoms(self, mol: Chem.Mol):
+        self.logger.debug("Identifying stereo atoms")
+        mol_copy = copy.deepcopy(mol)
+        Chem.SanitizeMol(mol_copy, sanitizeOps=Chem.rdmolops.SanitizeFlags.SANITIZE_SYMMRINGS)
+        Chem.rdmolops.FindPotentialStereoBonds(mol_copy, cleanIt=True)
+        for i, bond in enumerate(mol_copy.GetBonds()):
+            stereoatoms = list(
+                set(bond.GetStereoAtoms())
+            )  # Is FindPotentialStereoBonds are run successively, the list is simply expanded.
+            if stereoatoms:
+                mol.GetBondWithIdx(i).SetStereoAtoms(stereoatoms[0], stereoatoms[1])
+
+    def updateMolStereo(self, mol):
+        self.logger.debug("Updating stereo info")
+        Chem.rdmolops.SetDoubleBondNeighborDirections(mol)
+        mol.UpdatePropertyCache()
+        Chem.rdCIPLabeler.AssignCIPLabels(mol)
+
+    def toogleEZ(self, bond: Chem.Bond):
         self.backupMol()
-        # Chem.rdmolops.AssignStereochemistry(self._mol,cleanIt=True,force=False)
-        stereotype = bond.GetStereo()
-        self.assert_stereo_atoms(bond)
+
+        stereotype = bond.GetStereo()  # TODO, when editing the molecule, we could change the CIP rules? so stereo assignment need to be updated on other edits as well?
         self.logger.debug("Current stereotype of clicked atom %s" % stereotype)
-        # TODO: what if molecule already contain STEREOE or STEREOZ
-        stereotypes = [
-            Chem.rdchem.BondStereo.STEREONONE,
-            Chem.rdchem.BondStereo.STEREOCIS,
-            Chem.rdchem.BondStereo.STEREOTRANS,
-            Chem.rdchem.BondStereo.STEREOANY,
-            Chem.rdchem.BondStereo.STEREONONE,
-        ]
-        newidx = np.argmax(np.array(stereotypes) == stereotype) + 1
-        bond.SetStereo(stereotypes[newidx])
+        self.logger.debug(f"StereoAtoms are {list(bond.GetStereoAtoms())}")
+        self.logger.debug(f"Bond properties are {bond.GetPropsAsDict(includePrivate=True, includeComputed=True)}")
+
+        self.assign_stereo_atoms(self._mol)  # TODO, make something that ONLY works on a single bond?
+
+        stereocycler = {
+            Chem.rdchem.BondStereo.STEREONONE: Chem.rdchem.BondStereo.STEREOTRANS,
+            Chem.rdchem.BondStereo.STEREOE: Chem.rdchem.BondStereo.STEREOCIS,
+            Chem.rdchem.BondStereo.STEREOTRANS: Chem.rdchem.BondStereo.STEREOCIS,
+            Chem.rdchem.BondStereo.STEREOZ: Chem.rdchem.BondStereo.STEREOANY,
+            Chem.rdchem.BondStereo.STEREOCIS: Chem.rdchem.BondStereo.STEREOANY,
+            Chem.rdchem.BondStereo.STEREOANY: Chem.rdchem.BondStereo.STEREONONE,
+        }
+
+        newstereotype = stereocycler[stereotype]
+        bond.SetStereo(newstereotype)
+
         self.logger.debug("New stereotype set to %s" % bond.GetStereo())
-        try:
-            self.logger.debug(
-                "StereoAtoms are %s and %s" % bond.GetStereoAtoms()[0],
-                bond.GetStereoAtoms()[1],
-            )
-        except Exception as e:
-            self.logger.warning("StereoAtoms not defined")
-        self._mol.ClearComputedProps()
-        # Chem.rdmolops.AssignStereochemistry(self._mol,cleanIt=True,force=False)
-        self._mol.UpdatePropertyCache()
-        rdDepictor.Compute2DCoords(self._mol)
+        self.logger.debug(f"StereoAtoms are {list(bond.GetStereoAtoms())}")
+        self.logger.debug(f"Bond properties are {bond.GetPropsAsDict(includePrivate=True, includeComputed=True)}")
+
+        bond.ClearProp("_CIPCode")
+        self.updateMolStereo(self._mol)
+
+        self.logger.debug(f"StereoAtoms are {list(bond.GetStereoAtoms())}")
+        self.logger.debug(f"Bond properties are {bond.GetPropsAsDict(includePrivate=True, includeComputed=True)}")
+
         self.molChanged.emit()
 
     # Bond actions
@@ -646,7 +670,7 @@ class MolEditWidget(MolWidget):
         self.mol = self._prevmol
 
     def backupMol(self):
-        self._prevmol = Chem.Mol(self.mol.ToBinary())
+        self._prevmol = copy.deepcopy(self.mol)  # Chem.Mol(self.mol.ToBinary())
 
 
 if __name__ == "__main__":

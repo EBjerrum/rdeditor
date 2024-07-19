@@ -3,6 +3,7 @@
 from __future__ import print_function
 from PySide6 import QtCore, QtGui, QtSvg, QtWidgets, QtSvgWidgets
 import sys
+import copy
 
 # from types import *
 import logging
@@ -46,7 +47,7 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         # Sanitization Settings
         self._kekulize = False
         self._sanitize = False
-        self._updatepropertycache = True
+        self._updatepropertycache = False
 
         # Bind signales to slots for automatic actions
         self.molChanged.connect(self.sanitize_draw)
@@ -89,19 +90,20 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         if mol != self._mol:
             # assert isinstance(mol, Chem.Mol)
             if self._mol is not None:
-                self._prevmol = Chem.Mol(self._mol.ToBinary())  # Copy
+                self._prevmol = copy.deepcopy(self._mol)  # Chem.Mol(self._mol.ToBinary())  # Copy
 
-            # TODO make this failsafe
-            if self._updatepropertycache:
-                try:
-                    mol.UpdatePropertyCache(strict=False)
-                except Exception as e:
-                    self.sanitizeSignal.emit("UpdatePropertyCache FAIL")
-                    self.logger.error("Update Property Cache failed")
-            if self._sanitize:
-                Chem.SanitizeMol(mol)
-            if self._kekulize:
-                Chem.Kekulize(mol)
+            # # TODO make this failsafe
+            # if self._updatepropertycache:
+            #     try:
+            #         mol.UpdatePropertyCache(strict=False)
+            #     except Exception as e:
+            #         self.sanitizeSignal.emit("UpdatePropertyCache FAIL")
+            #         self.logger.error("Update Property Cache failed")
+
+            # if self._sanitize:
+            #     Chem.SanitizeMol(mol)
+            # if self._kekulize:
+            #     Chem.Kekulize(mol)
             self._mol = mol
             self.molChanged.emit()
 
@@ -190,7 +192,7 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
     @QtCore.Slot()
     def sanitize_draw(self):
         # self.computeNewCoords()
-        self.sanitizeMol()
+        self.sanitizeDrawMol()
         self.draw()
 
     @QtCore.Slot()
@@ -230,16 +232,18 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
     def canon_coords_and_draw(self):
         self.logger.debug("Recalculating coordinates")
         self.computeNewCoords(canonOrient=True, ignoreExisting=True)
-        self._drawmol = Chem.Mol(self._mol.ToBinary())
+        self._drawmol = copy.deepcopy(self._mol)  # Chem.Mol(self._mol.ToBinary())
         self.draw()
 
     sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
 
     @QtCore.Slot()
-    def sanitizeMol(self, kekulize=False, drawkekulize=False):
+    def sanitizeDrawMol(self, kekulize=False, drawkekulize=False):
         self.computeNewCoords()
-        self._drawmol_test = Chem.Mol(self._mol.ToBinary())  # Is this necessary?
-        self._drawmol = Chem.Mol(self._mol.ToBinary())  # Is this necessary?
+        # self._drawmol_test = Chem.Mol(self._mol.ToBinary())  # Is this necessary?
+        # self._drawmol = Chem.Mol(self._mol.ToBinary())  # Is this necessary?
+        self._drawmol_test = copy.deepcopy(self._mol)  # Is this necessary?
+        self._drawmol = copy.deepcopy(self._mol)  # Is this necessary?
         try:
             Chem.SanitizeMol(self._drawmol_test)
             self.sanitizeSignal.emit("Sanitizable")
@@ -270,7 +274,7 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         # TODO, what if self._drawmol doesn't exist?
         if self._drawmol is not None:
             # Chiral tags on R/S
-            chiraltags = Chem.FindMolChiralCenters(self._drawmol)
+            # chiraltags = Chem.FindMolChiralCenters(self._drawmol)
             opts = self.drawer.drawOptions()
             if self._darkmode:
                 rdMolDraw2D.SetDarkMode(opts)

@@ -4,6 +4,7 @@
 import sys
 import time
 import os
+import copy
 
 from PySide6.QtWidgets import QMenu, QApplication, QStatusBar, QMessageBox, QFileDialog
 from PySide6.QtCore import QByteArray
@@ -333,7 +334,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.statusBar().showMessage("Invalid file format", 2000)
 
     def copy(self):
-        selected_text = Chem.MolToSmiles(self.editor.mol)
+        selected_text = Chem.MolToSmiles(self.editor.mol, isomericSmiles=True)
         clipboard = QApplication.clipboard()
         clipboard.setText(selected_text)
 
@@ -343,9 +344,16 @@ class MainWindow(QtWidgets.QMainWindow):
         mol = Chem.MolFromSmiles(text, sanitize=False)
         if mol:
             try:
-                Chem.SanitizeMol(Chem.Mol(mol.ToBinary()))
+                Chem.SanitizeMol(copy.deepcopy(mol))  # ).ToBinary()))
             except:
                 self.editor.logger.warning("Pasted SMILES is not sanitizable")
+
+            self.editor.assign_stereo_atoms(mol)
+            Chem.rdmolops.SetBondStereoFromDirections(mol)
+
+            self.editor.updateMolStereo(mol)
+            # except Exception as e:
+            #     self.editor.logger.warning(f"Issue setting E/Z stereo infor from SMILES: {e}")
             self.editor.mol = mol
         else:
             self.editor.logger.warning(f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}")
