@@ -18,6 +18,7 @@ from rdkit.Geometry.rdGeometry import Point2D, Point3D
 # from rdkit.Chem.AllChem import GenerateDepictionMatching3DStructure
 
 from rdeditor.molViewWidget import MolWidget
+from rdeditor.templatehandler import TemplateHandler
 
 # from types import *
 
@@ -34,6 +35,9 @@ class MolEditWidget(MolWidget):
         # This sets the window to delete itself when its closed, so it doesn't keep querying the model
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
+        # Templater handler
+        self.templatehandler = TemplateHandler()
+
         # Properties
         self._prevmol = None  # For undo
         self.coordlist = None  # SVG coords of the current mols atoms
@@ -41,7 +45,7 @@ class MolEditWidget(MolWidget):
         # Standard atom, bond and ring types
         self.symboltoint = symboltoint
         self.bondtypes = Chem.rdchem.BondType.names  # A dictionary with all available rdkit bondtypes
-        self.available_rings = ["ALI6", "ARO6"]
+        self.available_rings = self.templatehandler.templateslabels  # ["ALI6", "ARO6"]
 
         # Default actions
         self._action = "Add"
@@ -376,15 +380,17 @@ class MolEditWidget(MolWidget):
         self.mol = rwmol
 
     def add_ring_to_atom(self, atom):
-        if self.chemEntity == "ARO6":
-            ring = Chem.MolFromSmiles(
-                "c1ccccc1"
-            )  # TODO, this should be either aromatic or Kekulized, depending on setting.
-        elif self.chemEntity == "ALI6":
-            ring = Chem.MolFromSmiles("C1CCCCC1")
-        combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        _ = combined.AddBond(atom.GetIdx(), self.mol.GetNumAtoms(), Chem.rdchem.BondType.SINGLE)
-        self.mol = combined
+        mol = self.templatehandler.apply_template_to_atom(atom, self.chemEntity)
+        self.mol = mol
+        # if self.chemEntity == "ARO6":
+        #     ring = Chem.MolFromSmiles(
+        #         "c1ccccc1"
+        #     )  # TODO, this should be either aromatic or Kekulized, depending on setting.
+        # elif self.chemEntity == "ALI6":
+        #     ring = Chem.MolFromSmiles("C1CCCCC1")
+        # combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
+        # _ = combined.AddBond(atom.GetIdx(), self.mol.GetNumAtoms(), Chem.rdchem.BondType.SINGLE)
+        # self.mol = combined
 
     def add_to_bond(self, bond):
         if self.chemEntityType == "atom":
@@ -395,33 +401,35 @@ class MolEditWidget(MolWidget):
             self.replace_bond(bond)
 
     def add_ring_to_bond(self, bond):
-        if self.chemEntity == "ARO6":
-            ring = Chem.MolFromSmarts("c:c:c:c")
-            bondType = Chem.rdchem.BondType.AROMATIC
-        if self.chemEntity == "ALI6":
-            ring = Chem.MolFromSmarts("C-C-C-C")
-            bondType = Chem.rdchem.BondType.SINGLE
-        combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        combined.AddBond(
-            bond.GetEndAtomIdx(),
-            self.mol.GetNumAtoms() + 3,
-            bondType,
-        )
+        mol = self.templatehandler.apply_template_to_bond(bond, self.chemEntity)
+        self.mol = mol
+        # if self.chemEntity == "ARO6":
+        #     ring = Chem.MolFromSmarts("c:c:c:c")
+        #     bondType = Chem.rdchem.BondType.AROMATIC
+        # if self.chemEntity == "ALI6":
+        #     ring = Chem.MolFromSmarts("C-C-C-C")
+        #     bondType = Chem.rdchem.BondType.SINGLE
+        # combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
+        # combined.AddBond(
+        #     bond.GetEndAtomIdx(),
+        #     self.mol.GetNumAtoms() + 3,
+        #     bondType,
+        # )
 
-        combined.AddBond(
-            bond.GetBeginAtomIdx(),
-            self.mol.GetNumAtoms(),
-            bondType,
-        )
-        # if bond to which aromatic ring is added is not aromatic it will be made aromatic
-        if self.chemEntity == "ARO6":
-            combined.GetBondWithIdx(bond.GetIdx()).SetIsAromatic(True)
-        # the extra sanitization is done to make sure that aromaticity is correctly displayed
-        try:
-            Chem.SanitizeMol(combined)
-            self.mol = Chem.MolFromSmiles(Chem.MolToSmiles(combined))
-        except Exception as e:
-            self.mol = combined
+        # combined.AddBond(
+        #     bond.GetBeginAtomIdx(),
+        #     self.mol.GetNumAtoms(),
+        #     bondType,
+        # )
+        # # if bond to which aromatic ring is added is not aromatic it will be made aromatic
+        # if self.chemEntity == "ARO6":
+        #     combined.GetBondWithIdx(bond.GetIdx()).SetIsAromatic(True)
+        # # the extra sanitization is done to make sure that aromaticity is correctly displayed
+        # try:
+        #     Chem.SanitizeMol(combined)
+        #     self.mol = Chem.MolFromSmiles(Chem.MolToSmiles(combined))
+        # except Exception as e:
+        #     self.mol = combined
 
     def add_canvas_entity(self, point):
         if self.chemEntityType == "atom":
@@ -466,22 +474,24 @@ class MolEditWidget(MolWidget):
         self.mol = rwmol
 
     def add_canvas_ring(self, point):
-        if self.chemEntity == "ARO6":
-            ring = Chem.MolFromSmiles("c1ccccc1")
-        elif self.chemEntity == "ALI6":
-            ring = Chem.MolFromSmiles("C1CCCCC1")
+        mol = self.templatehandler.apply_template_to_canvas(self.mol, point, self.chemEntity)
+        self.mol = mol
+        # if self.chemEntity == "ARO6":
+        #     ring = Chem.MolFromSmiles("c1ccccc1")
+        # elif self.chemEntity == "ALI6":
+        #     ring = Chem.MolFromSmiles("C1CCCCC1")
 
-        if self.mol.GetNumAtoms() == 0:
-            point.x = 0.0
-            point.y = 0.0
-        combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        # This should only trigger if we have an empty canvas
-        if not combined.GetNumConformers():
-            rdDepictor.Compute2DCoords(combined)
-        conf = combined.GetConformer(0)
-        p3 = Point3D(point.x, point.y, 0)
-        conf.SetAtomPosition(self.mol.GetNumAtoms(), p3)
-        self.mol = combined
+        # if self.mol.GetNumAtoms() == 0:
+        #     point.x = 0.0
+        #     point.y = 0.0
+        # combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
+        # # This should only trigger if we have an empty canvas
+        # if not combined.GetNumConformers():
+        #     rdDepictor.Compute2DCoords(combined)
+        # conf = combined.GetConformer(0)
+        # p3 = Point3D(point.x, point.y, 0)
+        # conf.SetAtomPosition(self.mol.GetNumAtoms(), p3)
+        # self.mol = combined
 
     def remove_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)

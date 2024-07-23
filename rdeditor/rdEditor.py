@@ -731,7 +731,7 @@ Version: {rdeditor.__version__}
             shortcut="Ctrl+4",
             statusTip="Select Benzene Ring",
             triggered=self.setRingType,
-            objectName="ARO6",
+            objectName="benzene",
             checkable=True,
         )
         self.chemEntityActionGroup.addAction(self.ringAromatic6Action)
@@ -742,7 +742,7 @@ Version: {rdeditor.__version__}
             shortcut="Ctrl+5",
             statusTip="Select Aliphatic Ring",
             triggered=self.setRingType,
-            objectName="ALI6",
+            objectName="cyclohexane",
             checkable=True,
         )
         self.chemEntityActionGroup.addAction(self.ringAliphatic6Action)
@@ -765,8 +765,8 @@ Version: {rdeditor.__version__}
         self.bondActions["SINGLE"] = self.singleBondAction
         self.bondActions["DOUBLE"] = self.doubleBondAction
         self.bondActions["TRIPLE"] = self.tripleBondAction
-        self.bondActions["ARO6"] = self.ringAromatic6Action
-        self.bondActions["ALI6"] = self.ringAliphatic6Action
+        # self.bondActions["ARO6"] = self.ringAromatic6Action
+        # self.bondActions["ALI6"] = self.ringAliphatic6Action
 
         # Misc Actions
         self.undoAction = QAction(
