@@ -149,6 +149,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu = self.menuBar().addMenu("&Tools")
         self.atomtypeMenu = self.menuBar().addMenu("&AtomTypes")
         self.bondtypeMenu = self.menuBar().addMenu("&BondTypes")
+        self.templateMenu = self.menuBar().addMenu("Tem&plates")
         self.settingsMenu = self.menuBar().addMenu("&Settings")
         self.helpMenu = self.menuBar().addMenu("&Help")
 
@@ -194,6 +195,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.specialbondMenu = self.bondtypeMenu.addMenu("Special Bonds")
         for key in self.bondActions.keys():
             self.specialbondMenu.addAction(self.bondActions[key])
+
+        # Templates menu
+        for key in self.templateActions.keys():
+            self.templateMenu.addAction(self.templateActions[key])
+
         # Settings menu
         self.themeMenu = self.settingsMenu.addMenu("Theme")
         self.populateThemeActions(self.themeMenu)
@@ -264,8 +270,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sideToolBar.addAction(self.doubleBondAction)
         self.sideToolBar.addAction(self.tripleBondAction)
         self.sideToolBar.addSeparator()
-        self.sideToolBar.addAction(self.ringAliphatic6Action)
-        self.sideToolBar.addAction(self.ringAromatic6Action)
+        self.sideToolBar.addAction(self.templateActions["benzene"])
+        self.sideToolBar.addAction(self.templateActions["cyclohexane"])
         self.sideToolBar.addSeparator()
         for action in self.atomActions:
             self.sideToolBar.addAction(action)
@@ -722,31 +728,6 @@ Version: {rdeditor.__version__}
         )
         self.chemEntityActionGroup.addAction(self.tripleBondAction)
 
-        # self.singleBondAction.setChecked(True)
-
-        self.ringAromatic6Action = QAction(
-            QIcon.fromTheme("benzene"),
-            "Benzene Ring",
-            self,
-            shortcut="Ctrl+4",
-            statusTip="Select Benzene Ring",
-            triggered=self.setRingType,
-            objectName="benzene",
-            checkable=True,
-        )
-        self.chemEntityActionGroup.addAction(self.ringAromatic6Action)
-        self.ringAliphatic6Action = QAction(
-            QIcon.fromTheme("cyclohexane"),
-            "Aliphatic Six Ring",
-            self,
-            shortcut="Ctrl+5",
-            statusTip="Select Aliphatic Ring",
-            triggered=self.setRingType,
-            objectName="cyclohexane",
-            checkable=True,
-        )
-        self.chemEntityActionGroup.addAction(self.ringAliphatic6Action)
-
         # Build dictionary of ALL available bondtypes in RDKit
         self.bondActions = {}
         for key in self.editor.bondtypes.keys():
@@ -765,8 +746,49 @@ Version: {rdeditor.__version__}
         self.bondActions["SINGLE"] = self.singleBondAction
         self.bondActions["DOUBLE"] = self.doubleBondAction
         self.bondActions["TRIPLE"] = self.tripleBondAction
-        # self.bondActions["ARO6"] = self.ringAromatic6Action
-        # self.bondActions["ALI6"] = self.ringAliphatic6Action
+
+        # self.singleBondAction.setChecked(True)
+
+        # Template Actions
+        self.templateActions = {}
+
+        # TODO can we add these automatically, i.e. if theres a similar named icon available?
+        self.templateActions["benzene"] = QAction(
+            QIcon.fromTheme("benzene"),
+            "Benzene Ring",
+            self,
+            shortcut="Ctrl+4",
+            statusTip="Select Benzene Ring",
+            triggered=self.setRingType,
+            objectName="benzene",
+            checkable=True,
+        )
+
+        self.templateActions["cyclohexane"] = QAction(
+            QIcon.fromTheme("cyclohexane"),
+            "Aliphatic Six Ring",
+            self,
+            shortcut="Ctrl+5",
+            statusTip="Select Aliphatic Ring",
+            triggered=self.setRingType,
+            objectName="cyclohexane",
+            checkable=True,
+        )
+
+        for key in self.editor.available_rings:
+            if key not in self.templateActions:
+                action = QAction(
+                    key,
+                    self,
+                    statusTip=f"Set template to {key}",
+                    triggered=self.setRingType,
+                    objectName=key,
+                    checkable=True,
+                )
+                self.templateActions[key] = action
+
+        for action in self.templateActions.values():
+            self.chemEntityActionGroup.addAction(action)
 
         # Misc Actions
         self.undoAction = QAction(
