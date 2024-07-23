@@ -377,7 +377,9 @@ class MolEditWidget(MolWidget):
 
     def add_ring_to_atom(self, atom):
         if self.chemEntity == "ARO6":
-            ring = Chem.MolFromSmiles("c1ccccc1")
+            ring = Chem.MolFromSmiles(
+                "c1ccccc1"
+            )  # TODO, this should be either aromatic or Kekulized, depending on setting.
         elif self.chemEntity == "ALI6":
             ring = Chem.MolFromSmiles("C1CCCCC1")
         combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
@@ -531,7 +533,7 @@ class MolEditWidget(MolWidget):
         self.logger.debug("Current stereotype of clicked atom %s" % stereotype)
         stereotypes = [
             Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW,
-            #                        Chem.rdchem.ChiralType.CHI_OTHER, this one doesn't show a wiggly bond
+            # Chem.rdchem.ChiralType.CHI_OTHER, this one doesn't show a wiggly bond
             Chem.rdchem.ChiralType.CHI_UNSPECIFIED,
             Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW,
             Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW,

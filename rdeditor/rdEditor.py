@@ -14,7 +14,7 @@ from PySide6 import QtSvg
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices, QIcon, QAction, QKeySequence
 
-import darkdetect
+# import darkdetect
 import qdarktheme
 
 # Import model
