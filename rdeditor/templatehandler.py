@@ -85,16 +85,18 @@ class TemplateHandler:
 
         templateaddition = AllChem.ReactionFromSmarts(template)
 
-        products = templateaddition.RunReactants((beginatom.GetOwningMol(),))
+        newmol = self.react_and_keep_fragments(beginatom.GetOwningMol(), templateaddition)
 
-        if len(products) != 1:
-            print(f"Warning: number of products of template addition different than expected, was {len(products)}")
+        # products = templateaddition.RunReactants((beginatom.GetOwningMol(),))
 
-        product = products[0][0]
+        # if len(products) != 1:
+        #     print(f"Warning: number of products of template addition different than expected, was {len(products)}")
+
+        # product = products[0][0]
 
         beginatom.SetIsotope(beginisotope)
 
-        return product
+        return newmol
 
     def apply_template_to_bond(self, bond: Chem.rdchem.Bond, templatelabel: str) -> Chem.Mol:
         """Apply to a bond"""
@@ -125,17 +127,25 @@ class TemplateHandler:
 
         templateaddition = AllChem.ReactionFromSmarts(template)
 
-        products = templateaddition.RunReactants((bond.GetOwningMol(),))
+        mol = bond.GetOwningMol()
 
-        if len(products) != 1:
-            print(f"Warning: number of products of template addition different than expected, was {len(products)}")
+        # We need to split fragments, then find the one with the isotopes and react them, then recombine
 
-        product = products[0][0]
+        newmol = self.react_and_keep_fragments(mol, templateaddition)
+
+        # templateaddition.RunReactantInPlace(mol, removeUnmatchedAtoms=False)
+
+        # products = templateaddition.RunReactants()
+
+        # if len(products) != 1:
+        #     print(f"Warning: number of products of template addition different than expected, was {len(products)}")
+
+        # product = products[0][0]
 
         beginatom.SetIsotope(beginisotope)
         endatom.SetIsotope(endisotope)
 
-        return product
+        return newmol
 
     def apply_template_to_canvas(self, mol: Chem.Mol, point: Point2D, templatelabel: str) -> Chem.Mol:
         """Apply to canvas"""
@@ -153,3 +163,48 @@ class TemplateHandler:
         p3 = Point3D(point.x, point.y, 0)
         conf.SetAtomPosition(mol.GetNumAtoms(), p3)
         return combined
+
+    def react_and_keep_fragments(self, mol, rxn):
+        # Split the molecule into fragments
+        fragments = Chem.GetMolFrags(mol, asMols=True)
+
+        # Identify the fragment that will react (you may need to modify this logic)
+        # reacting_fragment = fragments[0]  # Assume the first fragment is the one reacting
+
+        # Perform the reaction on the reacting fragment
+        for i, reacting_fragment in enumerate(fragments):
+            products = rxn.RunReactants((reacting_fragment,))
+            if products:
+                fragments.pop(i)
+                break
+
+        if products:
+            # Combine the reacted product with the unchanged fragments
+            result = products[0][0]
+            for frag in fragments:
+                result = Chem.CombineMols(result, frag)
+
+            return result
+        else:
+            return None
+
+    def react_and_keep_fragments(self, mol, rxn):
+        # Split the molecule into fragments
+        fragments = list(Chem.GetMolFrags(mol, asMols=True))
+
+        # Perform the reaction on the reacting fragment
+        for i, reacting_fragment in enumerate(fragments):
+            products = rxn.RunReactants((reacting_fragment,))
+            if products:
+                fragments.pop(i)
+                break
+
+        if products:
+            # Combine the reacted product with the unchanged fragments
+            result = products[0][0]
+            for frag in fragments:
+                result = Chem.CombineMols(result, frag)
+
+            return result
+        else:
+            return None
