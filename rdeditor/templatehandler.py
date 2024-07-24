@@ -8,7 +8,7 @@ class TemplateHandler:
     reverse = False
     templates = {
         "benzene": {
-            "canvas": "c1ccccc1",
+            "canvas": "C1=CC=CC=C1",
             "atom": "[998*:1]>>[beginisotope*:1]-C1=C-C=C-C=C-1",
             Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]=C-C=C-C=1",
             Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1=[endisotope*:2]-C=C-C=C-1",
@@ -42,7 +42,8 @@ class TemplateHandler:
             Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1=[endisotope*:2]-C-1",
             Chem.BondType.AROMATIC: "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-1",
         },
-        # These types of templates need more work, if an NC bond is clicked, the addition can be non-sanitizable due to the explicit H (or vice versa!)
+        # These types of templates need more work, i.e. if an NC bond is clicked, the addition can be non-sanitizable due to
+        # the explicit H (or vice versa!)
         # "0-pyrrole": {
         #     "atom": "[998*:1]>>[beginisotope*:1]-[N]1-C=C-C=C-1",
         #     Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotopeN:2]-C=C-C=1",
@@ -87,13 +88,6 @@ class TemplateHandler:
 
         newmol = self.react_and_keep_fragments(beginatom.GetOwningMol(), templateaddition)
 
-        # products = templateaddition.RunReactants((beginatom.GetOwningMol(),))
-
-        # if len(products) != 1:
-        #     print(f"Warning: number of products of template addition different than expected, was {len(products)}")
-
-        # product = products[0][0]
-
         beginatom.SetIsotope(beginisotope)
 
         return newmol
@@ -107,7 +101,7 @@ class TemplateHandler:
 
         beginisotope = (
             beginatom.GetIsotope()
-        )  # TODO, hmm we are manipulating the parent molecule here. Can it be avoided?
+        )  # TODO, we are in principle manipulating the parent molecule here. Can it be avoided?
         endisotope = endatom.GetIsotope()
 
         # TODO assert that the molecule doesnt have these isotope numbers!
@@ -129,18 +123,7 @@ class TemplateHandler:
 
         mol = bond.GetOwningMol()
 
-        # We need to split fragments, then find the one with the isotopes and react them, then recombine
-
         newmol = self.react_and_keep_fragments(mol, templateaddition)
-
-        # templateaddition.RunReactantInPlace(mol, removeUnmatchedAtoms=False)
-
-        # products = templateaddition.RunReactants()
-
-        # if len(products) != 1:
-        #     print(f"Warning: number of products of template addition different than expected, was {len(products)}")
-
-        # product = products[0][0]
 
         beginatom.SetIsotope(beginisotope)
         endatom.SetIsotope(endisotope)
@@ -165,46 +148,20 @@ class TemplateHandler:
         return combined
 
     def react_and_keep_fragments(self, mol, rxn):
+        """RDKit only returns the fragment of Mol object that is reacted,
+        hence this function to keep all other fragments."""
         # Split the molecule into fragments
-        fragments = Chem.GetMolFrags(mol, asMols=True)
-
-        # Identify the fragment that will react (you may need to modify this logic)
-        # reacting_fragment = fragments[0]  # Assume the first fragment is the one reacting
+        fragments = list(Chem.GetMolFrags(mol, asMols=True, sanitizeFrags=False))
 
         # Perform the reaction on the reacting fragment
         for i, reacting_fragment in enumerate(fragments):
             products = rxn.RunReactants((reacting_fragment,))
             if products:
                 fragments.pop(i)
-                break
+                result = products[0][0]
+                for frag in fragments:
+                    result = Chem.CombineMols(result, frag)
 
-        if products:
-            # Combine the reacted product with the unchanged fragments
-            result = products[0][0]
-            for frag in fragments:
-                result = Chem.CombineMols(result, frag)
-
-            return result
-        else:
-            return None
-
-    def react_and_keep_fragments(self, mol, rxn):
-        # Split the molecule into fragments
-        fragments = list(Chem.GetMolFrags(mol, asMols=True))
-
-        # Perform the reaction on the reacting fragment
-        for i, reacting_fragment in enumerate(fragments):
-            products = rxn.RunReactants((reacting_fragment,))
-            if products:
-                fragments.pop(i)
-                break
-
-        if products:
-            # Combine the reacted product with the unchanged fragments
-            result = products[0][0]
-            for frag in fragments:
-                result = Chem.CombineMols(result, frag)
-
-            return result
+                return result
         else:
             return None
