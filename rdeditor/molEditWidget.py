@@ -641,8 +641,8 @@ class MolEditWidget(MolWidget):
             Chem.SanitizeMol(mol)
         if self.kekulize_on_cleanup:
             Chem.Kekulize(mol)
-        if Chem.MolToCXSmiles(self.mol) != Chem.MolToCXSmiles(mol):
-            self.mol = mol
+        # if Chem.MolToCXSmiles(self.mol) != Chem.MolToCXSmiles(mol):
+        self.mol = mol
 
 
 if __name__ == "__main__":

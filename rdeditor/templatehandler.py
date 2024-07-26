@@ -10,57 +10,57 @@ class TemplateHandler:
         "benzene": {
             "canvas": "C1=CC=CC=C1",
             "atom": "[998*:1]>>[beginisotope*:1]-C1=C-C=C-C=C-1",
-            Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]=C-C=C-C=1",
-            Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1=[endisotope*:2]-C=C-C=C-1",
-            Chem.BondType.AROMATIC: "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]:C:C:C:C:1",
+            "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]=C-C=C-C=1",
+            "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C=C-C=C-1",
+            "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]:C:C:C:C:1",
         },
         "cyclohexane": {
             "canvas": "C1CCCCC1",
             "atom": "[998*:1]>>[beginisotope*:1]-C1CCCCC1",
-            Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-C-C-C-1",
-            Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1=[endisotope*:2]-C-C-C-C-1",
-            Chem.BondType.AROMATIC: "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-C-C-C-1",
+            "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-C-C-C-1",
+            "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C-C-C-C-1",
+            "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-C-C-C-1",
         },
         "cyclopentane": {
             "canvas": "C1CCCC1",
             "atom": "[998*:1]>>[beginisotope*:1]-C1CCCC1",
-            Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-C-C-1",
-            Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1=[endisotope*:2]-C-C-C-1",
-            Chem.BondType.AROMATIC: "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-C-C-1",
+            "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-C-C-1",
+            "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C-C-C-1",
+            "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-C-C-1",
         },
         "cyclobutane": {
             "canvas": "C1CCC1",
             "atom": "[998*:1]>>[beginisotope*:1]-C1CCC1",
-            Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-C-1",
-            Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1=[endisotope*:2]-C-C-1",
-            Chem.BondType.AROMATIC: "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-C-1",
+            "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-C-1",
+            "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C-C-1",
+            "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-C-1",
         },
         "cyclopropane": {
             "canvas": "C1CC1",
             "atom": "[998*:1]>>[beginisotope*:1]-C1CC1",
-            Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-1",
-            Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1=[endisotope*:2]-C-1",
-            Chem.BondType.AROMATIC: "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-1",
+            "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-1",
+            "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C-1",
+            "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-1",
         },
         # These types of templates need more work, i.e. if an NC bond is clicked, the addition can be non-sanitizable due to
         # the explicit H (or vice versa!)
         # "0-pyrrole": {
         #     "atom": "[998*:1]>>[beginisotope*:1]-[N]1-C=C-C=C-1",
-        #     Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotopeN:2]-C=C-C=1",
-        #     Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1:[endisotopeN:2]:C:C:C:1",  # Not Kekulized
-        #     Chem.BondType.AROMATIC: "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotopeN:2]:c:c:c:1",
+        #     "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotopeN:2]-C=C-C=1",
+        #     "sp2": "[998*:1]=[999*:2]>>[beginisotope*:1]1:[endisotopeN:2]:C:C:C:1",  # Not Kekulized
+        #     "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotopeN:2]:c:c:c:1",
         # },
         # "1-pyrrole": {
         #     "atom": "[998*:1]>>[beginisotope*:1]-C1=C-C=C-[NH]1",
         #     Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1:[endisotope*:2]:[NH]:C:C:1",  # Not kekulized
-        #     Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1=[endisotope*:2]-[NH]-C=C-1",
-        #     Chem.BondType.AROMATIC: "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]:[nH]:c:c:1",
+        #     "sp2": "[998*:1]=[999*:2]>>[beginisotope*:1]1=[endisotope*:2]-[NH]-C=C-1",
+        #     "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]:[nH]:c:c:1",
         # },
         # "2-pyrrole": {
         #     "atom": "[998*:1]>>[beginisotope*:1]-C1-C=C-[NH]-C=1",
         #     Chem.BondType.SINGLE: "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]=C-[NH]-C=1",
-        #     Chem.BondType.DOUBLE: "[998*:1]=[999*:2]>>[beginisotope*:1]1:[endisotope*:2]:C:[NH]:C:1",  # Not kekulized
-        #     Chem.BondType.AROMATIC: "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]:c:[nH]:c:1",
+        #     "sp2": "[998*:1]=[999*:2]>>[beginisotope*:1]1:[endisotope*:2]:C:[NH]:C:1",  # Not kekulized
+        #     "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]:c:[nH]:c:1",
         # },
     }
 
@@ -95,6 +95,10 @@ class TemplateHandler:
     def apply_template_to_bond(self, bond: Chem.rdchem.Bond, templatelabel: str) -> Chem.Mol:
         """Apply to a bond"""
         # Reverse is for future usage for unsymmetric templates. Ctrl-Z and reapply to add the template reversed
+        mol = bond.GetOwningMol()
+        # mol.UpdatePropertyCache()
+        Chem.SetHybridization(mol)
+
         beginatom = bond.GetEndAtom() if self.reverse else bond.GetBeginAtom()
         endatom = bond.GetBeginAtom() if self.reverse else bond.GetEndAtom()
         self.reverse = not self.reverse
@@ -110,12 +114,25 @@ class TemplateHandler:
 
         bondtype = bond.GetBondType()
 
+        # TODO, what if we encounter Chem.rdchem.HybridizationType.SP2D, SP3D or Other. When do we have these?
+        if bondtype == Chem.BondType.AROMATIC:
+            templatesubtype = "aromatic"
+        elif Chem.rdchem.HybridizationType.SP2 in (
+            bond.GetBeginAtom().GetHybridization(),
+            bond.GetEndAtom().GetHybridization(),
+        ):
+            templatesubtype = "sp2"
+        elif (bond.GetBeginAtom().GetHybridization() == Chem.rdchem.HybridizationType.SP3) and (
+            bond.GetEndAtom().GetHybridization() == Chem.rdchem.HybridizationType.SP3
+        ):
+            templatesubtype = "sp3"
+        else:
+            raise ValueError(
+                f"Bondtype {bondtype} or Atomhybridizations {(bond.GetBeginAtom().GetHybridization(), bond.GetEndAtom().GetHybridization())} not supported"
+            )
+
         template_set = self.templates[templatelabel]
-
-        if bondtype not in template_set:
-            raise ValueError(f"Template {templatelabel} not supported by clicked bondtype {bondtype}")
-
-        template = template_set[bondtype]
+        template = template_set[templatesubtype]
 
         template = template.replace("beginisotope", str(beginisotope)).replace("endisotope", str(endisotope))
 
@@ -128,7 +145,10 @@ class TemplateHandler:
         beginatom.SetIsotope(beginisotope)
         endatom.SetIsotope(endisotope)
 
-        return newmol
+        if newmol:
+            return newmol
+        else:
+            raise RuntimeWarning(f"Applying template returned no molecule!")
 
     def apply_template_to_canvas(self, mol: Chem.Mol, point: Point2D, templatelabel: str) -> Chem.Mol:
         """Apply to canvas"""
