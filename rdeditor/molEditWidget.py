@@ -37,6 +37,8 @@ class MolEditWidget(MolWidget):
 
         # Templater handler
         self.templatehandler = TemplateHandler()
+        self.sanitize_on_cleanup = True
+        self.kekulize_on_cleanup = True
 
         # Properties
         self._prevmol = None  # For undo
@@ -382,15 +384,6 @@ class MolEditWidget(MolWidget):
     def add_ring_to_atom(self, atom):
         mol = self.templatehandler.apply_template_to_atom(atom, self.chemEntity)
         self.mol = mol
-        # if self.chemEntity == "ARO6":
-        #     ring = Chem.MolFromSmiles(
-        #         "c1ccccc1"
-        #     )  # TODO, this should be either aromatic or Kekulized, depending on setting.
-        # elif self.chemEntity == "ALI6":
-        #     ring = Chem.MolFromSmiles("C1CCCCC1")
-        # combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        # _ = combined.AddBond(atom.GetIdx(), self.mol.GetNumAtoms(), Chem.rdchem.BondType.SINGLE)
-        # self.mol = combined
 
     def add_to_bond(self, bond):
         if self.chemEntityType == "atom":
@@ -403,33 +396,6 @@ class MolEditWidget(MolWidget):
     def add_ring_to_bond(self, bond):
         mol = self.templatehandler.apply_template_to_bond(bond, self.chemEntity)
         self.mol = mol
-        # if self.chemEntity == "ARO6":
-        #     ring = Chem.MolFromSmarts("c:c:c:c")
-        #     bondType = Chem.rdchem.BondType.AROMATIC
-        # if self.chemEntity == "ALI6":
-        #     ring = Chem.MolFromSmarts("C-C-C-C")
-        #     bondType = Chem.rdchem.BondType.SINGLE
-        # combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        # combined.AddBond(
-        #     bond.GetEndAtomIdx(),
-        #     self.mol.GetNumAtoms() + 3,
-        #     bondType,
-        # )
-
-        # combined.AddBond(
-        #     bond.GetBeginAtomIdx(),
-        #     self.mol.GetNumAtoms(),
-        #     bondType,
-        # )
-        # # if bond to which aromatic ring is added is not aromatic it will be made aromatic
-        # if self.chemEntity == "ARO6":
-        #     combined.GetBondWithIdx(bond.GetIdx()).SetIsAromatic(True)
-        # # the extra sanitization is done to make sure that aromaticity is correctly displayed
-        # try:
-        #     Chem.SanitizeMol(combined)
-        #     self.mol = Chem.MolFromSmiles(Chem.MolToSmiles(combined))
-        # except Exception as e:
-        #     self.mol = combined
 
     def add_canvas_entity(self, point):
         if self.chemEntityType == "atom":
@@ -476,22 +442,6 @@ class MolEditWidget(MolWidget):
     def add_canvas_ring(self, point):
         mol = self.templatehandler.apply_template_to_canvas(self.mol, point, self.chemEntity)
         self.mol = mol
-        # if self.chemEntity == "ARO6":
-        #     ring = Chem.MolFromSmiles("c1ccccc1")
-        # elif self.chemEntity == "ALI6":
-        #     ring = Chem.MolFromSmiles("C1CCCCC1")
-
-        # if self.mol.GetNumAtoms() == 0:
-        #     point.x = 0.0
-        #     point.y = 0.0
-        # combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        # # This should only trigger if we have an empty canvas
-        # if not combined.GetNumConformers():
-        #     rdDepictor.Compute2DCoords(combined)
-        # conf = combined.GetConformer(0)
-        # p3 = Point3D(point.x, point.y, 0)
-        # conf.SetAtomPosition(self.mol.GetNumAtoms(), p3)
-        # self.mol = combined
 
     def remove_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
@@ -596,7 +546,8 @@ class MolEditWidget(MolWidget):
     def toogleEZ(self, bond: Chem.Bond):
         self.backupMol()
 
-        stereotype = bond.GetStereo()  # TODO, when editing the molecule, we could change the CIP rules? so stereo assignment need to be updated on other edits as well?
+        stereotype = bond.GetStereo()  # TODO, when editing the molecule, we could change the CIP rules?
+        # so stereo assignment need to be updated on other edits as well?
         self.logger.debug("Current stereotype of clicked atom %s" % stereotype)
         self.logger.debug(f"StereoAtoms are {list(bond.GetStereoAtoms())}")
         self.logger.debug(f"Bond properties are {bond.GetPropsAsDict(includePrivate=True, includeComputed=True)}")
@@ -682,7 +633,16 @@ class MolEditWidget(MolWidget):
         self.mol = self._prevmol
 
     def backupMol(self):
-        self._prevmol = copy.deepcopy(self.mol)  # Chem.Mol(self.mol.ToBinary())
+        self._prevmol = copy.deepcopy(self.mol)
+
+    def cleanup_mol(self):
+        mol = copy.deepcopy(self.mol)
+        if self.sanitize_on_cleanup:
+            Chem.SanitizeMol(mol)
+        if self.kekulize_on_cleanup:
+            Chem.Kekulize(mol)
+        if Chem.MolToCXSmiles(self.mol) != Chem.MolToCXSmiles(mol):
+            self.mol = mol
 
 
 if __name__ == "__main__":

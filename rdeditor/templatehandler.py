@@ -132,7 +132,7 @@ class TemplateHandler:
 
     def apply_template_to_canvas(self, mol: Chem.Mol, point: Point2D, templatelabel: str) -> Chem.Mol:
         """Apply to canvas"""
-        template = Chem.MolFromSmiles(self.templates[templatelabel]["canvas"])
+        template = Chem.MolFromSmiles(self.templates[templatelabel]["canvas"], sanitize=False)
 
         if mol.GetNumAtoms() == 0:
             point.x = 0.0

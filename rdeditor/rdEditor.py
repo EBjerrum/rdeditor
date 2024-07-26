@@ -129,6 +129,14 @@ class MainWindow(QtWidgets.QMainWindow):
         if action:
             action.trigger()
 
+        sanitize_on_cleanup = self.settings.value("sanitize_on_cleanup", True, type=bool)
+        self.editor.sanitize_on_cleanup = sanitize_on_cleanup
+        self.cleanupSettingActions["sanitize_on_cleanup"].setChecked(sanitize_on_cleanup)
+
+        kekulize_on_cleanup = self.settings.value("kekulize_on_cleanup", True, type=bool)
+        self.editor.kekulize_on_cleanup = kekulize_on_cleanup
+        self.cleanupSettingActions["kekulize_on_cleanup"].setChecked(kekulize_on_cleanup)
+
     # Function to setup status bar, central widget, menu bar, tool bar
     def SetupComponents(self):
         self.myStatusBar = QStatusBar()
@@ -206,9 +214,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.loglevelMenu = self.settingsMenu.addMenu("Logging Level")
         for loglevel in self.loglevels:
             self.loglevelMenu.addAction(self.loglevelactions[loglevel])
+        self.cleanupMenu = self.settingsMenu.addMenu("Cleanup")
+        for key, action in self.cleanupSettingActions.items():
+            self.cleanupMenu.addAction(action)
 
         # Help menu
-
         self.helpMenu.addAction(self.aboutAction)
         self.helpMenu.addSeparator()
         self.helpMenu.addAction(self.openChemRxiv)
@@ -256,6 +266,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolBar.addAction(self.decreaseChargeAction)
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.cleanCoordinatesAction)
+        self.mainToolBar.addAction(self.cleanupMolAction)
 
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.removeAction)
@@ -351,8 +362,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if mol:
             try:
                 Chem.SanitizeMol(copy.deepcopy(mol))  # ).ToBinary()))
-            except:
-                self.editor.logger.warning("Pasted SMILES is not sanitizable")
+            except Exception as e:
+                self.editor.logger.warning(f"Pasted SMILES is not sanitizable: {e}")
 
             self.editor.assign_stereo_atoms(mol)
             Chem.rdmolops.SetBondStereoFromDirections(mol)
@@ -496,6 +507,19 @@ Version: {rdeditor.__version__}
     def openUrl(self):
         url = self.sender().data()
         QDesktopServices.openUrl(QUrl(url))
+
+    def set_setting(self):
+        action = self.sender()
+        if isinstance(action, QAction):
+            setting_name = action.objectName()
+            if hasattr(self.editor, setting_name):
+                if getattr(self.editor, setting_name) != action.isChecked():
+                    setattr(self.editor, setting_name, action.isChecked())
+                    self.editor.logger.error(f"Changed editor setting {setting_name} to {action.isChecked()}")
+                    self.settings.setValue(setting_name, action.isChecked(), type=bool)
+                    self.settings.sync()
+            else:
+                self.editor.logger.error(f"Error, could not find setting, {setting_name}, on editor object!")
 
     # Function to create actions for menus and toolbars
     def CreateActions(self):
@@ -812,7 +836,7 @@ Version: {rdeditor.__version__}
         )
 
         self.cleanCoordinatesAction = QAction(
-            QIcon.fromTheme("icons8-Broom"),
+            QIcon.fromTheme("RecalcCoord"),
             "Recalculate coordinates &F",
             self,
             shortcut="Ctrl+F",
@@ -820,6 +844,44 @@ Version: {rdeditor.__version__}
             triggered=self.editor.canon_coords_and_draw,
             objectName="Recalculate Coordinates",
         )
+
+        self.cleanupMolAction = QAction(
+            QIcon.fromTheme("CleanupChem"),
+            "Cleanup Chemistry",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Sanitizes and Kekulizes molecule according to settings",
+            triggered=self.editor.cleanup_mol,
+            objectName="Cleanup Mol",
+        )
+
+        self.cleanupSettingActions = {}
+
+        self.sanitizeSettingAction = QAction(
+            # QIcon.fromTheme("icons8-Broom"),
+            "Sanitize molecule on sanitization",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Perform Sanitization during Sanitization",
+            triggered=self.set_setting,
+            checkable=True,
+            checked=self.editor.sanitize_on_cleanup,
+            objectName="sanitize_on_cleanup",
+        )
+        self.cleanupSettingActions["sanitize_on_cleanup"] = self.sanitizeSettingAction
+
+        self.kekulizeSettingAction = QAction(
+            # QIcon.fromTheme("icons8-Broom"),
+            "Kekulize molecule on sanitization",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Perform Kekulization after Sanitization",
+            triggered=self.set_setting,
+            checkable=True,
+            checked=self.editor.kekulize_on_cleanup,
+            objectName="kekulize_on_cleanup",
+        )
+        self.cleanupSettingActions["kekulize_on_cleanup"] = self.kekulizeSettingAction
 
         # Atom Actions in actiongroup, reuse from ptable widget
         self.atomActions = []
