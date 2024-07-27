@@ -294,22 +294,59 @@ class MolEditWidget(MolWidget):
 
     def mousePressEvent(self, event):
         if event.button() is QtCore.Qt.LeftButton:
-            clicked = self.get_molobject(event)
-            if isinstance(clicked, Chem.rdchem.Atom):
-                self.logger.debug(
-                    "You clicked atom %i, with atomic number %i" % (clicked.GetIdx(), clicked.GetAtomicNum())
-                )
-                # Call the atom_click function
-                self.atom_click(clicked)
-                # self.add_atom(self.pen, clicked)
-            elif isinstance(clicked, Chem.rdchem.Bond):
-                self.logger.debug("You clicked bond %i with type %s" % (clicked.GetIdx(), clicked.GetBondType()))
-                self.bond_click(clicked)
-            elif isinstance(clicked, Point2D):
-                self.logger.debug("Canvas Click")
-                self.canvas_click(clicked)
+            self.start_molobject = self.get_molobject(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() is QtCore.Qt.LeftButton:
+            end_mol_object = self.get_molobject(event)
+            if self.is_same_object(self.start_molobject, end_mol_object):
+                self.clicked_handler(self.start_molobject)
             else:
-                self.logger.error(f"Clicked entity, {clicked} of unknown type {type(clicked)}")
+                self.drag_handler(self.start_molobject, end_mol_object)
+            self.start_molobject = None
+
+    def is_same_object(self, object1, object2):
+        if isinstance(object1, Chem.rdchem.Atom) and isinstance(object2, Chem.rdchem.Atom):
+            return object1.GetIdx() == object2.GetIdx()
+        if isinstance(object1, Chem.rdchem.Bond) and isinstance(object2, Chem.rdchem.Bond):
+            return object1.GetIdx() == object2.GetIdx()
+        if isinstance(object1, Point2D) and isinstance(object2, Point2D):
+            distance = (object1 - object2).Length()
+            self.logger.debug(f"Dragged distance on Canvas {distance}")
+            if distance < 0.1:
+                return True
+        return False
+
+    def clicked_handler(self, clicked):
+        if isinstance(clicked, Chem.rdchem.Atom):
+            self.logger.debug("You clicked atom %i, with atomic number %i" % (clicked.GetIdx(), clicked.GetAtomicNum()))
+            # Call the atom_click function
+            self.atom_click(clicked)
+            # self.add_atom(self.pen, clicked)
+        elif isinstance(clicked, Chem.rdchem.Bond):
+            self.logger.debug("You clicked bond %i with type %s" % (clicked.GetIdx(), clicked.GetBondType()))
+            self.bond_click(clicked)
+        elif isinstance(clicked, Point2D):
+            self.logger.debug("Canvas Click")
+            self.canvas_click(clicked)
+        else:
+            self.logger.error(f"Clicked entity, {clicked} of unknown type {type(clicked)}")
+
+    def drag_handler(self, object1, object2):
+        self.logger.debug(f"Drag Event {object1} -> {object2}")
+        if isinstance(object1, Chem.rdchem.Atom) and isinstance(
+            object2, Point2D
+        ):  # TODO, this could potentially be used for creating bonds from the atom.
+            self.atom_click(object1)
+        elif isinstance(object1, Chem.rdchem.Bond) and isinstance(object2, Point2D):
+            self.bond_click(object1)
+        elif isinstance(object1, Point2D) and isinstance(object2, Point2D):
+            self.canvas_click(object1)  # TODO, maybe a canvas click with a bond can set a direction for coords?
+        elif isinstance(object1, Chem.rdchem.Atom) and isinstance(object2, Chem.rdchem.Atom):
+            # self.logger.debug("These two atoms should be bonded")
+            self.add_bond_between_atoms(object1, object2)
+        else:
+            self.logger.info(f"Unhandled drag event between {object1} -> {object2}")
 
     # Lookup tables to relate actions to context type with action type #TODO more clean to use Dictionaries??
     def atom_click(self, atom):
@@ -322,7 +359,7 @@ class MolEditWidget(MolWidget):
         elif self.action == "Replace":
             self.replace_on_atom(atom)
         elif self.action == "Add Bond":
-            self.add_bond(atom)
+            self.add_bond_to_last_selected(atom)
         elif self.action == "Increase Charge":
             self.increase_charge(atom)
         elif self.action == "Decrease Charge":
@@ -474,7 +511,7 @@ class MolEditWidget(MolWidget):
         self.mol = rwmol
 
     # Double step action
-    def add_bond(self, atom):
+    def add_bond_to_last_selected(self, atom):
         if len(self.selectedAtoms) > 0:
             selected = self.selectedAtoms[-1]
             rwmol = Chem.rdchem.RWMol(self.mol)
@@ -486,6 +523,14 @@ class MolEditWidget(MolWidget):
             self.selectedAtoms = []
         else:
             self.select_atom(atom)
+
+    def add_bond_between_atoms(self, atom1, atom2):
+        rwmol = Chem.rdchem.RWMol(self.mol)
+        neighborIdx = [atm.GetIdx() for atm in atom1.GetNeighbors()]
+        if atom2.GetIdx() not in neighborIdx:  # check if bond already exists
+            bondType = self.chemEntity if self.chemEntityType == "bond" else Chem.rdchem.BondType.SINGLE
+            rwmol.AddBond(atom1.GetIdx(), atom2.GetIdx(), order=bondType)
+        self.mol = rwmol
 
     def toogleRS(self, atom):
         self.backupMol()
