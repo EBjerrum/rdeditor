@@ -539,7 +539,12 @@ class MolEditWidget(MolWidget):
                 set(bond.GetStereoAtoms())
             )  # Is FindPotentialStereoBonds are run successively, the list is simply expanded.
             if stereoatoms:
-                mol.GetBondWithIdx(i).SetStereoAtoms(stereoatoms[0], stereoatoms[1])
+                try:
+                    mol.GetBondWithIdx(i).SetStereoAtoms(stereoatoms[0], stereoatoms[1])
+                except:
+                    mol.GetBondWithIdx(i).SetStereoAtoms(
+                        stereoatoms[1], stereoatoms[0]
+                    )  # Not sure why this can get the wrong way. Seem to work correctly for Absisic Acid
 
     def updateMolStereo(self, mol):
         self.logger.debug("Updating stereo info")
