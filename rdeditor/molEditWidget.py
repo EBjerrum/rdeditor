@@ -4,6 +4,7 @@ from PySide6 import QtCore, QtGui, QtSvg, QtWidgets
 import sys
 import logging
 from warnings import warn
+import copy
 
 
 import numpy as np
@@ -17,6 +18,7 @@ from rdkit.Geometry.rdGeometry import Point2D, Point3D
 # from rdkit.Chem.AllChem import GenerateDepictionMatching3DStructure
 
 from rdeditor.molViewWidget import MolWidget
+from rdeditor.templatehandler import TemplateHandler
 
 # from types import *
 
@@ -33,6 +35,11 @@ class MolEditWidget(MolWidget):
         # This sets the window to delete itself when its closed, so it doesn't keep querying the model
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
+        # Templater handler
+        self.templatehandler = TemplateHandler()
+        self.sanitize_on_cleanup = True
+        self.kekulize_on_cleanup = True
+
         # Properties
         self._prevmol = None  # For undo
         self.coordlist = None  # SVG coords of the current mols atoms
@@ -40,7 +47,7 @@ class MolEditWidget(MolWidget):
         # Standard atom, bond and ring types
         self.symboltoint = symboltoint
         self.bondtypes = Chem.rdchem.BondType.names  # A dictionary with all available rdkit bondtypes
-        self.available_rings = ["ALI6", "ARO6"]
+        self.available_rings = self.templatehandler.templateslabels  # ["ALI6", "ARO6"]
 
         # Default actions
         self._action = "Add"
@@ -240,7 +247,7 @@ class MolEditWidget(MolWidget):
             return None, 1e10  # Return ridicilous long distance so that its not chosen
 
     def get_nearest_bond(self, x_svg, y_svg):
-        if self.mol is not None and self.mol.GetNumAtoms() > 2:
+        if self.mol is not None and len(self.mol.GetBonds()) > 0:
             bondlist = []
             for bond in self.mol.GetBonds():
                 bi = bond.GetBeginAtomIdx()
@@ -249,7 +256,8 @@ class MolEditWidget(MolWidget):
                 bondlist.append(avgcoords)
 
             bondlist = np.array(bondlist)
-
+            # if not bondlist:  # If there's no bond
+            #     return None, 1e10
             atomsvgcoords = np.array([x_svg, y_svg])
             deltas = bondlist - atomsvgcoords
             dist_2 = np.einsum("ij,ij->i", deltas, deltas)
@@ -375,13 +383,8 @@ class MolEditWidget(MolWidget):
         self.mol = rwmol
 
     def add_ring_to_atom(self, atom):
-        if self.chemEntity == "ARO6":
-            ring = Chem.MolFromSmiles("c1ccccc1")
-        elif self.chemEntity == "ALI6":
-            ring = Chem.MolFromSmiles("C1CCCCC1")
-        combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        _ = combined.AddBond(atom.GetIdx(), self.mol.GetNumAtoms(), Chem.rdchem.BondType.SINGLE)
-        self.mol = combined
+        mol = self.templatehandler.apply_template_to_atom(atom, self.chemEntity)
+        self.mol = mol
 
     def add_to_bond(self, bond):
         if self.chemEntityType == "atom":
@@ -392,33 +395,8 @@ class MolEditWidget(MolWidget):
             self.replace_bond(bond)
 
     def add_ring_to_bond(self, bond):
-        if self.chemEntity == "ARO6":
-            ring = Chem.MolFromSmarts("c:c:c:c")
-            bondType = Chem.rdchem.BondType.AROMATIC
-        if self.chemEntity == "ALI6":
-            ring = Chem.MolFromSmarts("C-C-C-C")
-            bondType = Chem.rdchem.BondType.SINGLE
-        combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        combined.AddBond(
-            bond.GetEndAtomIdx(),
-            self.mol.GetNumAtoms() + 3,
-            bondType,
-        )
-
-        combined.AddBond(
-            bond.GetBeginAtomIdx(),
-            self.mol.GetNumAtoms(),
-            bondType,
-        )
-        # if bond to which aromatic ring is added is not aromatic it will be made aromatic
-        if self.chemEntity == "ARO6":
-            combined.GetBondWithIdx(bond.GetIdx()).SetIsAromatic(True)
-        # the extra sanitization is done to make sure that aromaticity is correctly displayed
-        try:
-            Chem.SanitizeMol(combined)
-            self.mol = Chem.MolFromSmiles(Chem.MolToSmiles(combined))
-        except Exception as e:
-            self.mol = combined
+        mol = self.templatehandler.apply_template_to_bond(bond, self.chemEntity)
+        self.mol = mol
 
     def add_canvas_entity(self, point):
         if self.chemEntityType == "atom":
@@ -463,22 +441,8 @@ class MolEditWidget(MolWidget):
         self.mol = rwmol
 
     def add_canvas_ring(self, point):
-        if self.chemEntity == "ARO6":
-            ring = Chem.MolFromSmiles("c1ccccc1")
-        elif self.chemEntity == "ALI6":
-            ring = Chem.MolFromSmiles("C1CCCCC1")
-
-        if self.mol.GetNumAtoms() == 0:
-            point.x = 0.0
-            point.y = 0.0
-        combined = Chem.rdchem.RWMol(Chem.CombineMols(self.mol, ring))
-        # This should only trigger if we have an empty canvas
-        if not combined.GetNumConformers():
-            rdDepictor.Compute2DCoords(combined)
-        conf = combined.GetConformer(0)
-        p3 = Point3D(point.x, point.y, 0)
-        conf.SetAtomPosition(self.mol.GetNumAtoms(), p3)
-        self.mol = combined
+        mol = self.templatehandler.apply_template_to_canvas(self.mol, point, self.chemEntity)
+        self.mol = mol
 
     def remove_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
@@ -530,7 +494,7 @@ class MolEditWidget(MolWidget):
         self.logger.debug("Current stereotype of clicked atom %s" % stereotype)
         stereotypes = [
             Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW,
-            #                        Chem.rdchem.ChiralType.CHI_OTHER, this one doesn't show a wiggly bond
+            # Chem.rdchem.ChiralType.CHI_OTHER, this one doesn't show a wiggly bond
             Chem.rdchem.ChiralType.CHI_UNSPECIFIED,
             Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CW,
             Chem.rdchem.ChiralType.CHI_TETRAHEDRAL_CCW,
@@ -542,6 +506,9 @@ class MolEditWidget(MolWidget):
         # self._mol.ClearComputedProps()
         self._mol.UpdatePropertyCache()
         rdDepictor.Compute2DCoords(self._mol)
+        if atom.HasProp("_CIPCode"):
+            atom.ClearProp("_CIPCode")
+        Chem.rdCIPLabeler.AssignCIPLabels(self._mol)
         self.molChanged.emit()
 
     def assert_stereo_atoms(self, bond):
@@ -558,37 +525,66 @@ class MolEditWidget(MolWidget):
                 stereoatoms.append(neighboridx)
             # Set the bondstereoatoms
             bond.SetStereoAtoms(stereoatoms[0], stereoatoms[1])
+            self.logger.debug(f"Setting StereoAtoms to {stereoatoms}")
         else:
             pass
 
-    def toogleEZ(self, bond):
+    def assign_stereo_atoms(self, mol: Chem.Mol):
+        self.logger.debug("Identifying stereo atoms")
+        mol_copy = copy.deepcopy(mol)
+        Chem.SanitizeMol(mol_copy, sanitizeOps=Chem.rdmolops.SanitizeFlags.SANITIZE_SYMMRINGS)
+        Chem.rdmolops.FindPotentialStereoBonds(mol_copy, cleanIt=True)
+        for i, bond in enumerate(mol_copy.GetBonds()):
+            stereoatoms = list(
+                set(bond.GetStereoAtoms())
+            )  # Is FindPotentialStereoBonds are run successively, the list is simply expanded.
+            if stereoatoms:
+                try:
+                    mol.GetBondWithIdx(i).SetStereoAtoms(stereoatoms[0], stereoatoms[1])
+                except RuntimeError:
+                    mol.GetBondWithIdx(i).SetStereoAtoms(
+                        stereoatoms[1], stereoatoms[0]
+                    )  # Not sure why this can get the wrong way. Seem to now work correctly for Absisic Acid
+
+    def updateMolStereo(self, mol):
+        self.logger.debug("Updating stereo info")
+        Chem.rdmolops.SetDoubleBondNeighborDirections(mol)
+        mol.UpdatePropertyCache()
+        Chem.rdCIPLabeler.AssignCIPLabels(mol)
+
+    def toogleEZ(self, bond: Chem.Bond):
         self.backupMol()
-        # Chem.rdmolops.AssignStereochemistry(self._mol,cleanIt=True,force=False)
-        stereotype = bond.GetStereo()
-        self.assert_stereo_atoms(bond)
+
+        stereotype = bond.GetStereo()  # TODO, when editing the molecule, we could change the CIP rules?
+        # so stereo assignment need to be updated on other edits as well?
         self.logger.debug("Current stereotype of clicked atom %s" % stereotype)
-        # TODO: what if molecule already contain STEREOE or STEREOZ
-        stereotypes = [
-            Chem.rdchem.BondStereo.STEREONONE,
-            Chem.rdchem.BondStereo.STEREOCIS,
-            Chem.rdchem.BondStereo.STEREOTRANS,
-            Chem.rdchem.BondStereo.STEREOANY,
-            Chem.rdchem.BondStereo.STEREONONE,
-        ]
-        newidx = np.argmax(np.array(stereotypes) == stereotype) + 1
-        bond.SetStereo(stereotypes[newidx])
+        self.logger.debug(f"StereoAtoms are {list(bond.GetStereoAtoms())}")
+        self.logger.debug(f"Bond properties are {bond.GetPropsAsDict(includePrivate=True, includeComputed=True)}")
+
+        self.assign_stereo_atoms(self._mol)  # TODO, make something that ONLY works on a single bond?
+
+        stereocycler = {
+            Chem.rdchem.BondStereo.STEREONONE: Chem.rdchem.BondStereo.STEREOTRANS,
+            Chem.rdchem.BondStereo.STEREOE: Chem.rdchem.BondStereo.STEREOCIS,
+            Chem.rdchem.BondStereo.STEREOTRANS: Chem.rdchem.BondStereo.STEREOCIS,
+            Chem.rdchem.BondStereo.STEREOZ: Chem.rdchem.BondStereo.STEREOANY,
+            Chem.rdchem.BondStereo.STEREOCIS: Chem.rdchem.BondStereo.STEREOANY,
+            Chem.rdchem.BondStereo.STEREOANY: Chem.rdchem.BondStereo.STEREONONE,
+        }
+
+        newstereotype = stereocycler[stereotype]
+        bond.SetStereo(newstereotype)
+
         self.logger.debug("New stereotype set to %s" % bond.GetStereo())
-        try:
-            self.logger.debug(
-                "StereoAtoms are %s and %s" % bond.GetStereoAtoms()[0],
-                bond.GetStereoAtoms()[1],
-            )
-        except Exception as e:
-            self.logger.warning("StereoAtoms not defined")
-        self._mol.ClearComputedProps()
-        # Chem.rdmolops.AssignStereochemistry(self._mol,cleanIt=True,force=False)
-        self._mol.UpdatePropertyCache()
-        rdDepictor.Compute2DCoords(self._mol)
+        self.logger.debug(f"StereoAtoms are {list(bond.GetStereoAtoms())}")
+        self.logger.debug(f"Bond properties are {bond.GetPropsAsDict(includePrivate=True, includeComputed=True)}")
+
+        bond.ClearProp("_CIPCode")
+        self.updateMolStereo(self._mol)
+
+        self.logger.debug(f"StereoAtoms are {list(bond.GetStereoAtoms())}")
+        self.logger.debug(f"Bond properties are {bond.GetPropsAsDict(includePrivate=True, includeComputed=True)}")
+
         self.molChanged.emit()
 
     # Bond actions
@@ -646,7 +642,16 @@ class MolEditWidget(MolWidget):
         self.mol = self._prevmol
 
     def backupMol(self):
-        self._prevmol = Chem.Mol(self.mol.ToBinary())
+        self._prevmol = copy.deepcopy(self.mol)
+
+    def cleanup_mol(self):
+        mol = copy.deepcopy(self.mol)
+        if self.sanitize_on_cleanup:
+            Chem.SanitizeMol(mol)
+        if self.kekulize_on_cleanup:
+            Chem.Kekulize(mol)
+        # if Chem.MolToCXSmiles(self.mol) != Chem.MolToCXSmiles(mol):
+        self.mol = mol
 
 
 if __name__ == "__main__":

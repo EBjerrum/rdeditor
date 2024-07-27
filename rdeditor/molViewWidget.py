@@ -3,6 +3,7 @@
 from __future__ import print_function
 from PySide6 import QtCore, QtGui, QtSvg, QtWidgets, QtSvgWidgets
 import sys
+import copy
 
 # from types import *
 import logging
@@ -43,6 +44,11 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         self._last_selected_highlight_colour = (1, 0.2, 0.2)
         self._selected_highlight_colour = (1, 0.5, 0.5)
 
+        # Sanitization Settings
+        self._kekulize = False
+        self._sanitize = False
+        self._updatepropertycache = False
+
         # Bind signales to slots for automatic actions
         self.molChanged.connect(self.sanitize_draw)
         self.selectionChanged.connect(self.draw)
@@ -82,9 +88,22 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         if mol is None:
             mol = Chem.MolFromSmiles("")
         if mol != self._mol:
-            # TODO assert that this is a RDKit mol
+            # assert isinstance(mol, Chem.Mol)
             if self._mol is not None:
-                self._prevmol = Chem.Mol(self._mol.ToBinary())  # Copy
+                self._prevmol = copy.deepcopy(self._mol)  # Chem.Mol(self._mol.ToBinary())  # Copy
+
+            # # TODO make this failsafe
+            # if self._updatepropertycache:
+            #     try:
+            #         mol.UpdatePropertyCache(strict=False)
+            #     except Exception as e:
+            #         self.sanitizeSignal.emit("UpdatePropertyCache FAIL")
+            #         self.logger.error("Update Property Cache failed")
+
+            # if self._sanitize:
+            #     Chem.SanitizeMol(mol)
+            # if self._kekulize:
+            #     Chem.Kekulize(mol)
             self._mol = mol
             self.molChanged.emit()
 
@@ -172,7 +191,8 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
 
     @QtCore.Slot()
     def sanitize_draw(self):
-        self.sanitizeMol()
+        # self.computeNewCoords()
+        self.sanitizeDrawMol()
         self.draw()
 
     @QtCore.Slot()
@@ -195,10 +215,10 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         if self._mol.GetNumConformers() == 0:
             self.logger.debug("No Conformers found, computing all 2D coords")
         elif ignoreExisting:
-            self.logger.debug("Ignoring existing conformers, computing all " "2D coords")
+            self.logger.debug("Ignoring existing conformers, computing all 2D coords")
         else:
             assert self._mol.GetNumConformers() == 1
-            self.logger.debug("1 Conformer found, computing 2D coords not in " "found conformer")
+            self.logger.debug("1 Conformer found, computing 2D coords not in found conformer")
             conf = self._mol.GetConformer(0)
             for a in self._mol.GetAtoms():
                 pos3d = conf.GetAtomPosition(a.GetIdx())
@@ -212,36 +232,40 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
     def canon_coords_and_draw(self):
         self.logger.debug("Recalculating coordinates")
         self.computeNewCoords(canonOrient=True, ignoreExisting=True)
-        self._drawmol = Chem.Mol(self._mol.ToBinary())
+        self._drawmol = copy.deepcopy(self._mol)  # Chem.Mol(self._mol.ToBinary())
         self.draw()
 
     sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
 
     @QtCore.Slot()
-    def sanitizeMol(self, kekulize=False, drawkekulize=False):
+    def sanitizeDrawMol(self, kekulize=False, drawkekulize=False):
         self.computeNewCoords()
-        self._drawmol = Chem.Mol(self._mol.ToBinary())  # Is this necessary?
+        # self._drawmol_test = Chem.Mol(self._mol.ToBinary())  # Is this necessary?
+        # self._drawmol = Chem.Mol(self._mol.ToBinary())  # Is this necessary?
+        self._drawmol_test = copy.deepcopy(self._mol)  # Is this necessary?
+        self._drawmol = copy.deepcopy(self._mol)  # Is this necessary?
         try:
-            Chem.SanitizeMol(self._drawmol)
+            Chem.SanitizeMol(self._drawmol_test)
             self.sanitizeSignal.emit("Sanitizable")
         except Exception as e:
             self.sanitizeSignal.emit("UNSANITIZABLE")
             self.logger.warning("Unsanitizable")
-            try:
-                self._drawmol.UpdatePropertyCache(strict=False)
-            except Exception as e:
-                self.sanitizeSignal.emit("UpdatePropertyCache FAIL")
-                self.logger.error("Update Property Cache failed")
-        # Kekulize
-        if kekulize:
-            try:
-                Chem.Kekulize(self._drawmol)
-            except Exception as e:
-                self.logger.warning("Unkekulizable")
-        try:
-            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=drawkekulize)
-        except ValueError:  # <- can happen on a kekulization failure
-            self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=False)
+            # try:
+            #     self._drawmol.UpdatePropertyCache(strict=False)
+            # except Exception as e:
+            #     self.sanitizeSignal.emit("UpdatePropertyCache FAIL")
+            #     self.logger.error("Update Property Cache failed")
+        # # Kekulize
+        # if kekulize:
+        #     try:
+        #         Chem.Kekulize(self._drawmol)
+        #     except Exception as e:
+        #         self.logger.warning("Unkekulizable")
+        # try:
+        #     self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=drawkekulize)
+        # except ValueError:  # <- can happen on a kekulization failure
+        #     self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=False)
+        self._drawmol = rdMolDraw2D.PrepareMolForDrawing(self._drawmol, kekulize=False)
 
     finishedDrawing = QtCore.Signal(name="finishedDrawing")
 
@@ -250,15 +274,18 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         # TODO, what if self._drawmol doesn't exist?
         if self._drawmol is not None:
             # Chiral tags on R/S
-            chiraltags = Chem.FindMolChiralCenters(self._drawmol)
+            # chiraltags = Chem.FindMolChiralCenters(self._drawmol)
             opts = self.drawer.drawOptions()
             if self._darkmode:
                 rdMolDraw2D.SetDarkMode(opts)
             if (not self.molecule_sanitizable) and self.unsanitizable_background_colour:
                 opts.setBackgroundColour(self.unsanitizable_background_colour)
-            for tag in chiraltags:
-                idx = tag[0]
-                opts.atomLabels[idx] = self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
+            opts.prepareMolsBeforeDrawing = False
+            opts.addStereoAnnotation = True  # Show R/S and E/Z
+            # for tag in chiraltags:
+            #     idx = tag[0]
+            #     opts.atomLabels[idx] = self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
+
             if len(self._selectedAtoms) > 0:
                 colors = {atom_idx: self.selected_highlight_colour for atom_idx in self._selectedAtoms}
                 colors[self._selectedAtoms[-1]] = (

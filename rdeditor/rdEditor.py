@@ -2,18 +2,15 @@
 
 # Import required modules
 import sys
-import time
 import os
+import copy
 
 from PySide6.QtWidgets import QMenu, QApplication, QStatusBar, QMessageBox, QFileDialog
-from PySide6.QtCore import QByteArray
 from PySide6.QtCore import QSettings
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6 import QtSvg
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices, QIcon, QAction, QKeySequence
 
-import darkdetect
 import qdarktheme
 
 # Import model
@@ -132,6 +129,14 @@ class MainWindow(QtWidgets.QMainWindow):
         if action:
             action.trigger()
 
+        sanitize_on_cleanup = self.settings.value("sanitize_on_cleanup", True, type=bool)
+        self.editor.sanitize_on_cleanup = sanitize_on_cleanup
+        self.cleanupSettingActions["sanitize_on_cleanup"].setChecked(sanitize_on_cleanup)
+
+        kekulize_on_cleanup = self.settings.value("kekulize_on_cleanup", True, type=bool)
+        self.editor.kekulize_on_cleanup = kekulize_on_cleanup
+        self.cleanupSettingActions["kekulize_on_cleanup"].setChecked(kekulize_on_cleanup)
+
     # Function to setup status bar, central widget, menu bar, tool bar
     def SetupComponents(self):
         self.myStatusBar = QStatusBar()
@@ -152,6 +157,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu = self.menuBar().addMenu("&Tools")
         self.atomtypeMenu = self.menuBar().addMenu("&AtomTypes")
         self.bondtypeMenu = self.menuBar().addMenu("&BondTypes")
+        self.templateMenu = self.menuBar().addMenu("Tem&plates")
         self.settingsMenu = self.menuBar().addMenu("&Settings")
         self.helpMenu = self.menuBar().addMenu("&Help")
 
@@ -175,10 +181,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.cleanCoordinatesAction)
+        self.toolMenu.addAction(self.cleanupMolAction)
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.undoAction)
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.removeAction)
+        self.toolMenu.addAction(self.clearCanvasAction)
 
         # Atomtype menu
         for action in self.atomActions:
@@ -197,6 +205,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.specialbondMenu = self.bondtypeMenu.addMenu("Special Bonds")
         for key in self.bondActions.keys():
             self.specialbondMenu.addAction(self.bondActions[key])
+
+        # Templates menu
+        for key in self.templateActions.keys():
+            self.templateMenu.addAction(self.templateActions[key])
+
         # Settings menu
         if self.themed:
             self.themeMenu = self.settingsMenu.addMenu("Theme")
@@ -204,9 +217,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.loglevelMenu = self.settingsMenu.addMenu("Logging Level")
         for loglevel in self.loglevels:
             self.loglevelMenu.addAction(self.loglevelactions[loglevel])
+        self.cleanupMenu = self.settingsMenu.addMenu("Cleanup")
+        for key, action in self.cleanupSettingActions.items():
+            self.cleanupMenu.addAction(action)
 
         # Help menu
-
         self.helpMenu.addAction(self.aboutAction)
         self.helpMenu.addSeparator()
         self.helpMenu.addAction(self.openChemRxiv)
@@ -254,6 +269,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolBar.addAction(self.decreaseChargeAction)
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.cleanCoordinatesAction)
+        self.mainToolBar.addAction(self.cleanupMolAction)
 
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.removeAction)
@@ -268,8 +284,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sideToolBar.addAction(self.doubleBondAction)
         self.sideToolBar.addAction(self.tripleBondAction)
         self.sideToolBar.addSeparator()
-        self.sideToolBar.addAction(self.ringAliphatic6Action)
-        self.sideToolBar.addAction(self.ringAromatic6Action)
+        self.sideToolBar.addAction(self.templateActions["benzene"])
+        self.sideToolBar.addAction(self.templateActions["cyclohexane"])
         self.sideToolBar.addSeparator()
         for action in self.atomActions:
             self.sideToolBar.addAction(action)
@@ -338,19 +354,25 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.statusBar().showMessage("Invalid file format", 2000)
 
     def copy(self):
-        selected_text = Chem.MolToSmiles(self.editor.mol)
+        selected_text = Chem.MolToSmiles(self.editor.mol, isomericSmiles=True)
         clipboard = QApplication.clipboard()
         clipboard.setText(selected_text)
 
     def paste(self):
         clipboard = QApplication.clipboard()
         text = clipboard.text()
-        mol = Chem.MolFromSmiles(text, sanitize=True)
-        if not mol:
-            mol = Chem.MolFromSmiles(text, sanitize=False)
-            if mol:
-                self.editor.logger.warning("Pasted SMILES is not sanitizable")
+        mol = Chem.MolFromSmiles(text, sanitize=False)
         if mol:
+            try:
+                Chem.SanitizeMol(copy.deepcopy(mol))  # ).ToBinary()))
+            except Exception as e:
+                self.editor.logger.warning(f"Pasted SMILES is not sanitizable: {e}")
+
+            self.editor.assign_stereo_atoms(mol)
+            Chem.rdmolops.SetBondStereoFromDirections(mol)
+
+            self.editor.updateMolStereo(mol)
+
             self.editor.mol = mol
         else:
             self.editor.logger.warning(f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}")
@@ -487,6 +509,19 @@ Version: {rdeditor.__version__}
     def openUrl(self):
         url = self.sender().data()
         QDesktopServices.openUrl(QUrl(url))
+
+    def set_setting(self):
+        action = self.sender()
+        if isinstance(action, QAction):
+            setting_name = action.objectName()
+            if hasattr(self.editor, setting_name):
+                if getattr(self.editor, setting_name) != action.isChecked():
+                    setattr(self.editor, setting_name, action.isChecked())
+                    self.editor.logger.error(f"Changed editor setting {setting_name} to {action.isChecked()}")
+                    self.settings.setValue(setting_name, action.isChecked(), type=bool)
+                    self.settings.sync()
+            else:
+                self.editor.logger.error(f"Error, could not find setting, {setting_name}, on editor object!")
 
     # Function to create actions for menus and toolbars
     def CreateActions(self):
@@ -719,31 +754,6 @@ Version: {rdeditor.__version__}
         )
         self.chemEntityActionGroup.addAction(self.tripleBondAction)
 
-        # self.singleBondAction.setChecked(True)
-
-        self.ringAromatic6Action = QAction(
-            QIcon.fromTheme("benzene"),
-            "Benzene Ring",
-            self,
-            shortcut="Ctrl+4",
-            statusTip="Select Benzene Ring",
-            triggered=self.setRingType,
-            objectName="ARO6",
-            checkable=True,
-        )
-        self.chemEntityActionGroup.addAction(self.ringAromatic6Action)
-        self.ringAliphatic6Action = QAction(
-            QIcon.fromTheme("cyclohexane"),
-            "Aliphatic Six Ring",
-            self,
-            shortcut="Ctrl+5",
-            statusTip="Select Aliphatic Ring",
-            triggered=self.setRingType,
-            objectName="ALI6",
-            checkable=True,
-        )
-        self.chemEntityActionGroup.addAction(self.ringAliphatic6Action)
-
         # Build dictionary of ALL available bondtypes in RDKit
         self.bondActions = {}
         for key in self.editor.bondtypes.keys():
@@ -762,8 +772,49 @@ Version: {rdeditor.__version__}
         self.bondActions["SINGLE"] = self.singleBondAction
         self.bondActions["DOUBLE"] = self.doubleBondAction
         self.bondActions["TRIPLE"] = self.tripleBondAction
-        self.bondActions["ARO6"] = self.ringAromatic6Action
-        self.bondActions["ALI6"] = self.ringAliphatic6Action
+
+        # self.singleBondAction.setChecked(True)
+
+        # Template Actions
+        self.templateActions = {}
+
+        # TODO can we add these automatically, i.e. if theres a similar named icon available?
+        self.templateActions["benzene"] = QAction(
+            QIcon.fromTheme("benzene"),
+            "Benzene Ring",
+            self,
+            shortcut="Ctrl+4",
+            statusTip="Draw Benzene",
+            triggered=self.setRingType,
+            objectName="benzene",
+            checkable=True,
+        )
+
+        self.templateActions["cyclohexane"] = QAction(
+            QIcon.fromTheme("cyclohexane"),
+            "Cyclohexane",
+            self,
+            shortcut="Ctrl+5",
+            statusTip="Draw Cyclohexane",
+            triggered=self.setRingType,
+            objectName="cyclohexane",
+            checkable=True,
+        )
+
+        for key in self.editor.available_rings:
+            if key not in self.templateActions:
+                action = QAction(
+                    key,
+                    self,
+                    statusTip=f"Set template to {key}",
+                    triggered=self.setRingType,
+                    objectName=key,
+                    checkable=True,
+                )
+                self.templateActions[key] = action
+
+        for action in self.templateActions.values():
+            self.chemEntityActionGroup.addAction(action)
 
         # Misc Actions
         self.undoAction = QAction(
@@ -787,7 +838,7 @@ Version: {rdeditor.__version__}
         )
 
         self.cleanCoordinatesAction = QAction(
-            QIcon.fromTheme("icons8-Broom"),
+            QIcon.fromTheme("RecalcCoord"),
             "Recalculate coordinates &F",
             self,
             shortcut="Ctrl+F",
@@ -795,6 +846,44 @@ Version: {rdeditor.__version__}
             triggered=self.editor.canon_coords_and_draw,
             objectName="Recalculate Coordinates",
         )
+
+        self.cleanupMolAction = QAction(
+            QIcon.fromTheme("CleanupChem"),
+            "Cleanup Chemistry",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Sanitizes and Kekulizes molecule according to settings",
+            triggered=self.editor.cleanup_mol,
+            objectName="Cleanup Mol",
+        )
+
+        self.cleanupSettingActions = {}
+
+        self.sanitizeSettingAction = QAction(
+            # QIcon.fromTheme("icons8-Broom"),
+            "Sanitize molecule on cleanup",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Perform Sanitization during chemistry cleanup",
+            triggered=self.set_setting,
+            checkable=True,
+            checked=self.editor.sanitize_on_cleanup,
+            objectName="sanitize_on_cleanup",
+        )
+        self.cleanupSettingActions["sanitize_on_cleanup"] = self.sanitizeSettingAction
+
+        self.kekulizeSettingAction = QAction(
+            # QIcon.fromTheme("icons8-Broom"),
+            "Kekulize molecule on cleanup",
+            self,
+            # shortcut="Ctrl+F",
+            statusTip="Perform Kekulization after chemistry cleanup",
+            triggered=self.set_setting,
+            checkable=True,
+            checked=self.editor.kekulize_on_cleanup,
+            objectName="kekulize_on_cleanup",
+        )
+        self.cleanupSettingActions["kekulize_on_cleanup"] = self.kekulizeSettingAction
 
         # Atom Actions in actiongroup, reuse from ptable widget
         self.atomActions = []
