@@ -215,10 +215,10 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         if self._mol.GetNumConformers() == 0:
             self.logger.debug("No Conformers found, computing all 2D coords")
         elif ignoreExisting:
-            self.logger.debug("Ignoring existing conformers, computing all " "2D coords")
+            self.logger.debug("Ignoring existing conformers, computing all 2D coords")
         else:
             assert self._mol.GetNumConformers() == 1
-            self.logger.debug("1 Conformer found, computing 2D coords not in " "found conformer")
+            self.logger.debug("1 Conformer found, computing 2D coords not in found conformer")
             conf = self._mol.GetConformer(0)
             for a in self._mol.GetAtoms():
                 pos3d = conf.GetAtomPosition(a.GetIdx())

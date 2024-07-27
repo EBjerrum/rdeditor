@@ -367,8 +367,7 @@ class MainWindow(QtWidgets.QMainWindow):
             Chem.rdmolops.SetBondStereoFromDirections(mol)
 
             self.editor.updateMolStereo(mol)
-            # except Exception as e:
-            #     self.editor.logger.warning(f"Issue setting E/Z stereo infor from SMILES: {e}")
+
             self.editor.mol = mol
         else:
             self.editor.logger.warning(f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}")

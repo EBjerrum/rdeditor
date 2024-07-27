@@ -46,8 +46,8 @@ class TemplateHandler:
             "canvas": "C(=O)[O]",
             "atom": "[998*:1]>>[beginisotope*:1]-C(=O)[O]",
         },
-        # These types of templates need more work, i.e. if an NC bond is clicked, the addition can be non-sanitizable due to
-        # the explicit H (or vice versa!)
+        # These types of templates need more work, i.e. if an NC bond is clicked, the addition can be non-sanitizable
+        # due to the explicit H (or vice versa!)
         # "0-pyrrole": {
         #     "atom": "[998*:1]>>[beginisotope*:1]-[N]1-C=C-C=C-1",
         #     "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotopeN:2]-C=C-C=1",
@@ -132,7 +132,9 @@ class TemplateHandler:
             templatesubtype = "sp3"
         else:
             raise ValueError(
-                f"Bondtype {bondtype} or Atomhybridizations {(bond.GetBeginAtom().GetHybridization(), bond.GetEndAtom().GetHybridization())} not supported"
+                f"""Bondtype {bondtype} or Atomhybridizations {
+                    (bond.GetBeginAtom().GetHybridization(), bond.GetEndAtom().GetHybridization())
+                    } not supported"""
             )
 
         template_set = self.templates[templatelabel]
