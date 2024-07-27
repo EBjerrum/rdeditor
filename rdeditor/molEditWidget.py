@@ -506,6 +506,9 @@ class MolEditWidget(MolWidget):
         # self._mol.ClearComputedProps()
         self._mol.UpdatePropertyCache()
         rdDepictor.Compute2DCoords(self._mol)
+        if atom.HasProp("_CIPCode"):
+            atom.ClearProp("_CIPCode")
+        Chem.rdCIPLabeler.AssignCIPLabels(self._mol)
         self.molChanged.emit()
 
     def assert_stereo_atoms(self, bond):
