@@ -782,7 +782,7 @@ Version: {rdeditor.__version__}
             "Benzene Ring",
             self,
             shortcut="Ctrl+4",
-            statusTip="Select Benzene Ring",
+            statusTip="Draw Benzene",
             triggered=self.setRingType,
             objectName="benzene",
             checkable=True,
@@ -790,10 +790,10 @@ Version: {rdeditor.__version__}
 
         self.templateActions["cyclohexane"] = QAction(
             QIcon.fromTheme("cyclohexane"),
-            "Aliphatic Six Ring",
+            "Cyclohexane",
             self,
             shortcut="Ctrl+5",
-            statusTip="Select Aliphatic Ring",
+            statusTip="Draw Cyclohexane",
             triggered=self.setRingType,
             objectName="cyclohexane",
             checkable=True,
@@ -859,7 +859,7 @@ Version: {rdeditor.__version__}
 
         self.sanitizeSettingAction = QAction(
             # QIcon.fromTheme("icons8-Broom"),
-            "Sanitize molecule on sanitization",
+            "Sanitize molecule on cleanup",
             self,
             # shortcut="Ctrl+F",
             statusTip="Perform Sanitization during chemistry cleanup",
@@ -872,7 +872,7 @@ Version: {rdeditor.__version__}
 
         self.kekulizeSettingAction = QAction(
             # QIcon.fromTheme("icons8-Broom"),
-            "Kekulize molecule on sanitization",
+            "Kekulize molecule on cleanup",
             self,
             # shortcut="Ctrl+F",
             statusTip="Perform Kekulization after chemistry cleanup",

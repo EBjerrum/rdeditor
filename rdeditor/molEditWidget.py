@@ -247,7 +247,7 @@ class MolEditWidget(MolWidget):
             return None, 1e10  # Return ridicilous long distance so that its not chosen
 
     def get_nearest_bond(self, x_svg, y_svg):
-        if self.mol is not None and self.mol.GetNumAtoms() > 2:
+        if self.mol is not None and len(self.mol.GetBonds()) > 0:
             bondlist = []
             for bond in self.mol.GetBonds():
                 bi = bond.GetBeginAtomIdx()
@@ -256,7 +256,8 @@ class MolEditWidget(MolWidget):
                 bondlist.append(avgcoords)
 
             bondlist = np.array(bondlist)
-
+            # if not bondlist:  # If there's no bond
+            #     return None, 1e10
             atomsvgcoords = np.array([x_svg, y_svg])
             deltas = bondlist - atomsvgcoords
             dist_2 = np.einsum("ij,ij->i", deltas, deltas)
