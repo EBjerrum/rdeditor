@@ -2,19 +2,15 @@
 
 # Import required modules
 import sys
-import time
 import os
 import copy
 
 from PySide6.QtWidgets import QMenu, QApplication, QStatusBar, QMessageBox, QFileDialog
-from PySide6.QtCore import QByteArray
 from PySide6.QtCore import QSettings
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6 import QtSvg
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices, QIcon, QAction, QKeySequence
 
-# import darkdetect
 import qdarktheme
 
 # Import model
@@ -181,10 +177,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.cleanCoordinatesAction)
+        self.toolMenu.addAction(self.cleanupMolAction)
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.undoAction)
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.removeAction)
+        self.toolMenu.addAction(self.clearCanvasAction)
 
         # Atomtype menu
         for action in self.atomActions:
