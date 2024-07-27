@@ -74,7 +74,4 @@ We also published a preprint on ChemRxiv: [https://chemrxiv.org/engage/chemrxiv/
 
 ## ISSUES
 
-- Not possible to distinguish undefined and trans when editing cis/trans double bonds
-- Aromaticity perception hides double-single bonds (kekulization can do likewise)
-
-please report issues at GitHub, it's tough getting all corners of a GUI tested.
+Please report issues at GitHub, it's tough getting all corners of a GUI tested.
