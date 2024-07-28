@@ -513,7 +513,7 @@ Version: {rdeditor.__version__}
                 if getattr(self.editor, setting_name) != action.isChecked():
                     setattr(self.editor, setting_name, action.isChecked())
                     self.editor.logger.error(f"Changed editor setting {setting_name} to {action.isChecked()}")
-                    self.settings.setValue(setting_name, action.isChecked(), type=bool)
+                    self.settings.setValue(setting_name, action.isChecked())
                     self.settings.sync()
             else:
                 self.editor.logger.error(f"Error, could not find setting, {setting_name}, on editor object!")
@@ -862,7 +862,7 @@ Version: {rdeditor.__version__}
             statusTip="Perform Sanitization during chemistry cleanup",
             triggered=self.set_setting,
             checkable=True,
-            checked=self.editor.sanitize_on_cleanup,
+            # checked=self.editor.sanitize_on_cleanup,
             objectName="sanitize_on_cleanup",
         )
         self.cleanupSettingActions["sanitize_on_cleanup"] = self.sanitizeSettingAction
@@ -875,7 +875,7 @@ Version: {rdeditor.__version__}
             statusTip="Perform Kekulization after chemistry cleanup",
             triggered=self.set_setting,
             checkable=True,
-            checked=self.editor.kekulize_on_cleanup,
+            # checked=self.editor.kekulize_on_cleanup,
             objectName="kekulize_on_cleanup",
         )
         self.cleanupSettingActions["kekulize_on_cleanup"] = self.kekulizeSettingAction
