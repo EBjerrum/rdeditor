@@ -373,7 +373,7 @@ class MolEditWidget(MolWidget):
         if isinstance(object1, Chem.rdchem.Atom) and isinstance(
             object2, Point2D
         ):  # TODO, this could potentially be used for creating bonds from the atom.
-            self.atom_click(object1)
+            self.atom_drag(object1)
         elif isinstance(object1, Chem.rdchem.Bond) and isinstance(object2, Point2D):
             self.bond_click(object1)
         elif isinstance(object1, Point2D) and isinstance(object2, Point2D):
@@ -387,13 +387,19 @@ class MolEditWidget(MolWidget):
     # Lookup tables to relate actions to context type with action type #TODO more clean to use Dictionaries??
     def atom_click(self, atom):
         if self.action == "Add":
-            self.add_to_atom(atom)
+            # self.add_to_atom(atom)
+            if self.chemEntityType == "atom":
+                self.replace_on_atom(atom)
+            if self.chemEntityType == "ring":
+                self.add_ring_to_atom(atom)  # Make variant for drag or click, to make spirocyclic or additions.
+            if self.chemEntityType == "bond":
+                self.add_bond_to_atom(atom)
         elif self.action == "Remove":
             self.remove_atom(atom)
         elif self.action == "Select":
             self.select_atom_add(atom)
-        elif self.action == "Replace":
-            self.replace_on_atom(atom)
+        # elif self.action == "Replace":
+        #     self.replace_on_atom(atom)
         elif self.action == "Add Bond":
             self.add_bond_to_last_selected(atom)
         elif self.action == "Increase Charge":
@@ -404,6 +410,26 @@ class MolEditWidget(MolWidget):
             self.toogleRS(atom)
         else:
             self.logger.warning("The combination of Atom click and Action %s undefined" % self.action)
+
+    def atom_drag(self, atom):
+        if self.action == "Add":
+            self.add_to_atom(atom)
+        # elif self.action == "Remove":
+        #     self.remove_atom(atom)
+        # elif self.action == "Select":
+        #     self.select_atom_add(atom)
+        # elif self.action == "Replace":
+        #     self.replace_on_atom(atom)
+        # elif self.action == "Add Bond":
+        #     self.add_bond_to_last_selected(atom)
+        # elif self.action == "Increase Charge":
+        #     self.increase_charge(atom)
+        # elif self.action == "Decrease Charge":
+        #     self.decrease_charge(atom)
+        # elif self.action == "RStoggle":
+        #     self.toogleRS(atom)
+        else:
+            self.logger.warning("The combination of Atom click and drag and Action %s undefined" % self.action)
 
     def bond_click(self, bond):
         if self.action == "Add":
@@ -435,18 +461,22 @@ class MolEditWidget(MolWidget):
 
     def add_to_atom(self, atom):
         if self.chemEntityType == "atom":
-            self.add_atom_to_atom(atom)
+            return self.add_atom_to_atom(atom)
         if self.chemEntityType == "ring":
-            self.add_ring_to_atom(atom)
+            new_atom = self.add_atom_to_atom(atom, chemEntity="C")
+            self.add_ring_to_atom(new_atom)
         if self.chemEntityType == "bond":
             self.add_bond_to_atom(atom)
 
-    def add_atom_to_atom(self, atom):
+    def add_atom_to_atom(self, atom, chemEntity=None):
+        if not chemEntity:
+            chemEntity = self.chemEntity
         rwmol = Chem.rdchem.RWMol(self.mol)
-        newatom = Chem.rdchem.Atom(self.chemEntity)
+        newatom = Chem.rdchem.Atom(chemEntity)
         newidx = rwmol.AddAtom(newatom)
         newbond = rwmol.AddBond(atom.GetIdx(), newidx, Chem.rdchem.BondType.SINGLE)
         self.mol = rwmol
+        return self.mol.GetAtomWithIdx(newidx)
 
     def add_bond_to_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)

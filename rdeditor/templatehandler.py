@@ -9,42 +9,42 @@ class TemplateHandler:
     templates = {
         "benzene": {
             "canvas": "C1=CC=CC=C1",
-            "atom": "[998*:1]>>[beginisotope*:1]-C1=C-C=C-C=C-1",
+            "atom": "[998*:1]>>[beginisotope*:1]1=C-C=C-C=C-1",
             "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]=C-C=C-C=1",
             "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C=C-C=C-1",
             "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]:C:C:C:C:1",
         },
         "cyclohexane": {
             "canvas": "C1CCCCC1",
-            "atom": "[998*:1]>>[beginisotope*:1]-C1CCCCC1",
+            "atom": "[998*:1]>>[beginisotope*:1]1CCCCC1",
             "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-C-C-C-1",
             "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C-C-C-C-1",
             "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-C-C-C-1",
         },
         "cyclopentane": {
             "canvas": "C1CCCC1",
-            "atom": "[998*:1]>>[beginisotope*:1]-C1CCCC1",
+            "atom": "[998*:1]>>[beginisotope*:1]1CCCC1",
             "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-C-C-1",
             "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C-C-C-1",
             "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-C-C-1",
         },
         "cyclobutane": {
             "canvas": "C1CCC1",
-            "atom": "[998*:1]>>[beginisotope*:1]-C1CCC1",
+            "atom": "[998*:1]>>[beginisotope*:1]1CCC1",
             "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-C-1",
             "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C-C-1",
             "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-C-1",
         },
         "cyclopropane": {
             "canvas": "C1CC1",
-            "atom": "[998*:1]>>[beginisotope*:1]-C1CC1",
+            "atom": "[998*:1]>>[beginisotope*:1]1CC1",
             "sp3": "[998*:1]-[999*:2]>>[beginisotope*:1]1-[endisotope*:2]-C-1",
             "sp2": "[998*:1]~[999*:2]>>[beginisotope*:1]1~[endisotope*:2]-C-1",
             "aromatic": "[998*:1]~[999*:2]>>[beginisotope*:1]1:[beginisotope*:2]-C-1",
         },
         "carboxylic acid": {
             "canvas": "C(=O)[O]",
-            "atom": "[998*:1]>>[beginisotope*:1]-C(=O)[O]",
+            "atom": "[998*:1]>>[beginisotope*:1](=O)[O]",
         },
         # These types of templates need more work, i.e. if an NC bond is clicked, the addition can be non-sanitizable
         # due to the explicit H (or vice versa!)
