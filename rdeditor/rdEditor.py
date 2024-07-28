@@ -168,9 +168,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.toolMenu.addAction(self.selectAction)
         self.toolMenu.addAction(self.addAction)
-        self.toolMenu.addAction(self.addBondAction)
-        self.toolMenu.addAction(self.replaceAction)
-        self.toolMenu.addAction(self.rsAction)
+        # self.toolMenu.addAction(self.addBondAction)
+        # self.toolMenu.addAction(self.replaceAction)
+        self.toolMenu.addAction(
+            self.rsAction
+        )  # TODO, R/S and E/Z could be changed for a single action? it really depends if an atom or a bond is clicked!
         self.toolMenu.addAction(self.ezAction)
         self.toolMenu.addAction(self.increaseChargeAction)
         self.toolMenu.addAction(self.decreaseChargeAction)
@@ -256,8 +258,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.selectAction)
         self.mainToolBar.addAction(self.addAction)
-        self.mainToolBar.addAction(self.addBondAction)
-        self.mainToolBar.addAction(self.replaceAction)
+        # self.mainToolBar.addAction(self.addBondAction)
+        # self.mainToolBar.addAction(self.replaceAction)
         self.mainToolBar.addAction(self.rsAction)
         self.mainToolBar.addAction(self.ezAction)
         self.mainToolBar.addAction(self.increaseChargeAction)

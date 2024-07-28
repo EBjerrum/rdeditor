@@ -82,7 +82,7 @@ class MolEditWidget(MolWidget):
     def action(self):
         return self._action
 
-    @action.setter
+    @action.setter  # TODO make it more explicit what actions are available here.
     def action(self, actionname):
         if actionname != self.action:
             self._action = actionname
@@ -384,14 +384,14 @@ class MolEditWidget(MolWidget):
         else:
             self.logger.info(f"Unhandled drag event between {object1} -> {object2}")
 
-    # Lookup tables to relate actions to context type with action type #TODO more clean to use Dictionaries??
+    # Lookup tables to relate actions to context type with action type #TODO more clean to use Dictionaries?? Or a switch statement??
     def atom_click(self, atom):
         if self.action == "Add":
             # self.add_to_atom(atom)
             if self.chemEntityType == "atom":
                 self.replace_on_atom(atom)
             if self.chemEntityType == "ring":
-                self.add_ring_to_atom(atom)  # Make variant for drag or click, to make spirocyclic or additions.
+                self.add_ring_to_atom(atom)
             if self.chemEntityType == "bond":
                 self.add_bond_to_atom(atom)
         elif self.action == "Remove":
