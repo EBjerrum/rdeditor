@@ -321,7 +321,9 @@ class MolEditWidget(MolWidget):
         if isinstance(clicked, Chem.rdchem.Atom):
             self.logger.debug("You clicked atom %i, with atomic number %i" % (clicked.GetIdx(), clicked.GetAtomicNum()))
             # Call the atom_click function
-            self.atom_click(clicked)
+            self.atom_click(
+                clicked
+            )  # TODO, if dragged from atom is make a bond to new atom type, then this can be used for replace instead.
             # self.add_atom(self.pen, clicked)
         elif isinstance(clicked, Chem.rdchem.Bond):
             self.logger.debug("You clicked bond %i with type %s" % (clicked.GetIdx(), clicked.GetBondType()))
