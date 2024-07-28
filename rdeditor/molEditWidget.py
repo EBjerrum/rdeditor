@@ -1,6 +1,14 @@
 #!/usr/bin/python
 # Import required modules
 from PySide6 import QtCore, QtGui, QtSvg, QtWidgets
+
+from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtSvgWidgets import QSvgWidget
+from PySide6.QtCore import Qt, QPointF
+from PySide6.QtGui import QMouseEvent, QPainter, QPen
+import math
+
+
 import sys
 import logging
 from warnings import warn
@@ -24,6 +32,7 @@ from rdeditor.templatehandler import TemplateHandler
 
 from rdeditor.ptable import symboltoint
 
+
 debug = True
 
 
@@ -34,6 +43,7 @@ class MolEditWidget(MolWidget):
         super(MolEditWidget, self).__init__(parent)
         # This sets the window to delete itself when its closed, so it doesn't keep querying the model
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.is_dragging = False  # If a drag event is being performed
 
         # Templater handler
         self.templatehandler = TemplateHandler()
@@ -294,7 +304,18 @@ class MolEditWidget(MolWidget):
 
     def mousePressEvent(self, event):
         if event.button() is QtCore.Qt.LeftButton:
+            # For visual feedback on the dragging event
+            self.press_pos = event.position()
+            self.current_pos = event.position()
+            self.is_dragging = True
+
+            # For chemistry
             self.start_molobject = self.get_molobject(event)
+
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if self.is_dragging:
+            self.current_pos = event.position()
+            self.update()
 
     def mouseReleaseEvent(self, event):
         if event.button() is QtCore.Qt.LeftButton:
@@ -304,6 +325,19 @@ class MolEditWidget(MolWidget):
             else:
                 self.drag_handler(self.start_molobject, end_mol_object)
             self.start_molobject = None
+
+            self.is_dragging = False
+            self.update()  # Final repaint to clear the line
+
+    def paintEvent(self, event):
+        super().paintEvent(event)  # Render the SVG (Molecule)
+
+        # Paint a line from where the canvas was clicked to the current position.
+        if self.is_dragging:
+            painter = QPainter(self)
+            pen = QPen(Qt.gray, 4, Qt.SolidLine)
+            painter.setPen(pen)
+            painter.drawLine(self.press_pos, self.current_pos)
 
     def is_same_object(self, object1, object2):
         if isinstance(object1, Chem.rdchem.Atom) and isinstance(object2, Chem.rdchem.Atom):
