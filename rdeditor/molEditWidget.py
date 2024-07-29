@@ -504,11 +504,8 @@ class MolEditWidget(MolWidget):
         self.logger.debug("New stereotype set to %s" % atom.GetChiralTag())
         # rdDepictor.Compute2DCoords(self._mol)
         # self._mol.ClearComputedProps()
-        self._mol.UpdatePropertyCache()
+        self._mol.UpdatePropertyCache(strict=False)
         rdDepictor.Compute2DCoords(self._mol)
-        if atom.HasProp("_CIPCode"):
-            atom.ClearProp("_CIPCode")
-        Chem.rdCIPLabeler.AssignCIPLabels(self._mol)
         self.molChanged.emit()
 
     def assert_stereo_atoms(self, bond):
@@ -546,12 +543,6 @@ class MolEditWidget(MolWidget):
                         stereoatoms[1], stereoatoms[0]
                     )  # Not sure why this can get the wrong way. Seem to now work correctly for Absisic Acid
 
-    def updateMolStereo(self, mol):
-        self.logger.debug("Updating stereo info")
-        Chem.rdmolops.SetDoubleBondNeighborDirections(mol)
-        mol.UpdatePropertyCache()
-        Chem.rdCIPLabeler.AssignCIPLabels(mol)
-
     def toogleEZ(self, bond: Chem.Bond):
         self.backupMol()
 
@@ -578,9 +569,6 @@ class MolEditWidget(MolWidget):
         self.logger.debug("New stereotype set to %s" % bond.GetStereo())
         self.logger.debug(f"StereoAtoms are {list(bond.GetStereoAtoms())}")
         self.logger.debug(f"Bond properties are {bond.GetPropsAsDict(includePrivate=True, includeComputed=True)}")
-
-        bond.ClearProp("_CIPCode")
-        self.updateMolStereo(self._mol)
 
         self.logger.debug(f"StereoAtoms are {list(bond.GetStereoAtoms())}")
         self.logger.debug(f"Bond properties are {bond.GetPropsAsDict(includePrivate=True, includeComputed=True)}")
