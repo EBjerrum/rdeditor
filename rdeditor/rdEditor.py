@@ -368,8 +368,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.editor.assign_stereo_atoms(mol)
             Chem.rdmolops.SetBondStereoFromDirections(mol)
 
-            self.editor.updateMolStereo(mol)
-
             self.editor.mol = mol
         else:
             self.editor.logger.warning(f"Failed to parse the content of the clipboard as a SMILES: {repr(text)}")

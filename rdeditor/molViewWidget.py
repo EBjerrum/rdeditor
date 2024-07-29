@@ -237,8 +237,21 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
 
     sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
 
+    def updateStereo(self):
+        self.logger.debug("Updating stereo info")
+        for atom in self.mol.GetAtoms():
+            if atom.HasProp("_CIPCode"):
+                atom.ClearProp("_CIPCode")
+        for bond in self.mol.GetBonds():
+            if bond.HasProp("_CIPCode"):
+                bond.ClearProp("_CIPCode")
+        Chem.rdmolops.SetDoubleBondNeighborDirections(self.mol)
+        self.mol.UpdatePropertyCache(strict=False)
+        Chem.rdCIPLabeler.AssignCIPLabels(self.mol)
+
     @QtCore.Slot()
     def sanitizeDrawMol(self, kekulize=False, drawkekulize=False):
+        self.updateStereo()
         self.computeNewCoords()
         # self._drawmol_test = Chem.Mol(self._mol.ToBinary())  # Is this necessary?
         # self._drawmol = Chem.Mol(self._mol.ToBinary())  # Is this necessary?
