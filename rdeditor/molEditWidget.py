@@ -327,6 +327,8 @@ class MolEditWidget(MolWidget):
             self.increase_charge(atom)
         elif self.action == "Decrease Charge":
             self.decrease_charge(atom)
+        elif self.action == "Number Atom":
+            self.number_atom(atom)
         elif self.action == "RStoggle":
             self.toogleRS(atom)
         else:
@@ -368,9 +370,15 @@ class MolEditWidget(MolWidget):
         if self.chemEntityType == "bond":
             self.add_bond_to_atom(atom)
 
+    def getNewAtom(self):
+        newatom = Chem.rdchem.Atom(self.chemEntity)
+        if newatom.GetAtomicNum() == 0:
+            newatom.SetProp("dummyLabel", "R")
+        return newatom
+
     def add_atom_to_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
-        newatom = Chem.rdchem.Atom(self.chemEntity)
+        newatom = self.getNewAtom()
         newidx = rwmol.AddAtom(newatom)
         newbond = rwmol.AddBond(atom.GetIdx(), newidx, Chem.rdchem.BondType.SINGLE)
         self.mol = rwmol
@@ -411,7 +419,7 @@ class MolEditWidget(MolWidget):
         if rwmol.GetNumAtoms() == 0:
             point.x = 0.0
             point.y = 0.0
-        newatom = Chem.rdchem.Atom(self.chemEntity)
+        newatom = self.getNewAtom()
         newidx = rwmol.AddAtom(newatom)
         # This should only trigger if we have an empty canvas
         if not rwmol.GetNumConformers():
@@ -469,7 +477,7 @@ class MolEditWidget(MolWidget):
 
     def replace_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
-        newatom = Chem.rdchem.Atom(self.chemEntity)
+        newatom = self.getNewAtom()
         rwmol.ReplaceAtom(atom.GetIdx(), newatom)
         self.mol = rwmol
 
@@ -620,6 +628,20 @@ class MolEditWidget(MolWidget):
     def decrease_charge(self, atom):
         self.backupMol()
         atom.SetFormalCharge(atom.GetFormalCharge() - 1)
+        self.molChanged.emit()
+
+    def number_atom(self, atom: Chem.Atom):
+        atomMapNumber = atom.GetIntProp("molAtomMapNumber") if atom.HasProp("molAtomMapNumber") else 0
+        (atomMapNumber, ok) = QtWidgets.QInputDialog.getInt(self, "Number Atom", "Atom number", value=atomMapNumber)
+
+        if not ok:
+            return
+
+        self.backupMol()
+        if atomMapNumber == 0:
+            atom.ClearProp("molAtomMapNumber")
+        else:
+            atom.SetProp("molAtomMapNumber", str(atomMapNumber))
         self.molChanged.emit()
 
     # self.select_bond(bond)
