@@ -14,9 +14,9 @@ from PySide6.QtGui import QDesktopServices, QIcon, QAction, QKeySequence
 import qdarktheme
 
 # Import model
-import rdeditor
-from rdeditor.molEditWidget import MolEditWidget
-from rdeditor.ptable_widget import PTable
+from . import __version__
+from .molEditWidget import MolEditWidget
+from .ptable_widget import PTable
 
 from rdkit import Chem
 import qdarktheme
@@ -406,7 +406,7 @@ class MainWindow(QtWidgets.QMainWindow):
 Based on RDKit! http://www.rdkit.org/\n
 Some icons from http://icons8.com\n
 Source code: https://github.com/EBjerrum/rdeditor\n
-Version: {rdeditor.__version__}
+Version: {__version__}
             """,
         )
 
