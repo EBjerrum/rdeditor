@@ -595,7 +595,8 @@ class MolEditWidget(MolWidget):
             self.canvas_drag_bond(point1, point2)
 
     def canvas_drag_atom(self, point1, point2):
-        # In essence adding a bond, but can be between non-carbon atoms, and make behaviour more consistent (i.e. if drag-drawing)
+        # In essence adding a bond, but can be between non-carbon atoms, and make behaviour more consistent
+        # i.e. if drag-drawing)
         rwmol = Chem.rdchem.RWMol(self.mol)
         newatom = self.getNewAtom(self.chemEntity)
         newatom2 = self.getNewAtom(self.chemEntity)
