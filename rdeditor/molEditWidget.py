@@ -25,12 +25,12 @@ from rdkit.Geometry.rdGeometry import Point2D, Point3D
 
 # from rdkit.Chem.AllChem import GenerateDepictionMatching3DStructure
 
-from rdeditor.molViewWidget import MolWidget
-from rdeditor.templatehandler import TemplateHandler
+from .molViewWidget import MolWidget
+from .templatehandler import TemplateHandler
 
 # from types import *
 
-from rdeditor.ptable import symboltoint
+from .ptable import symboltoint
 
 
 debug = True
@@ -406,6 +406,8 @@ class MolEditWidget(MolWidget):
             self.increase_charge(atom)
         elif self.action == "Decrease Charge":
             self.decrease_charge(atom)
+        elif self.action == "Number Atom":
+            self.number_atom(atom)
         elif self.action == "RStoggle":
             self.toogleRS(atom)
         else:
@@ -468,11 +470,17 @@ class MolEditWidget(MolWidget):
         if self.chemEntityType == "bond":
             self.add_bond_to_atom(atom)
 
+    def getNewAtom(self, chemEntity):
+        newatom = Chem.rdchem.Atom(chemEntity)
+        if newatom.GetAtomicNum() == 0:
+            newatom.SetProp("dummyLabel", "R")
+        return newatom
+
     def add_atom_to_atom(self, atom, chemEntity=None):
         if not chemEntity:
             chemEntity = self.chemEntity
         rwmol = Chem.rdchem.RWMol(self.mol)
-        newatom = Chem.rdchem.Atom(chemEntity)
+        newatom = self.getNewAtom(chemEntity)
         newidx = rwmol.AddAtom(newatom)
         newbond = rwmol.AddBond(atom.GetIdx(), newidx, Chem.rdchem.BondType.SINGLE)
         self.mol = rwmol
@@ -514,7 +522,7 @@ class MolEditWidget(MolWidget):
         if rwmol.GetNumAtoms() == 0:
             point.x = 0.0
             point.y = 0.0
-        newatom = Chem.rdchem.Atom(self.chemEntity)
+        newatom = self.getNewAtom()
         newidx = rwmol.AddAtom(newatom)
         # This should only trigger if we have an empty canvas
         if not rwmol.GetNumConformers():
@@ -572,7 +580,7 @@ class MolEditWidget(MolWidget):
 
     def replace_atom(self, atom):
         rwmol = Chem.rdchem.RWMol(self.mol)
-        newatom = Chem.rdchem.Atom(self.chemEntity)
+        newatom = self.getNewAtom(self.chemEntity)
         rwmol.ReplaceAtom(atom.GetIdx(), newatom)
         self.mol = rwmol
 
@@ -615,9 +623,8 @@ class MolEditWidget(MolWidget):
         self.logger.debug("New stereotype set to %s" % atom.GetChiralTag())
         # rdDepictor.Compute2DCoords(self._mol)
         # self._mol.ClearComputedProps()
-        self._mol.UpdatePropertyCache()
+        self._mol.UpdatePropertyCache(strict=False)
         rdDepictor.Compute2DCoords(self._mol)
-
         self.molChanged.emit()
 
     def assert_stereo_atoms(self, bond):
@@ -732,6 +739,20 @@ class MolEditWidget(MolWidget):
     def decrease_charge(self, atom):
         self.backupMol()
         atom.SetFormalCharge(atom.GetFormalCharge() - 1)
+        self.molChanged.emit()
+
+    def number_atom(self, atom: Chem.Atom):
+        atomMapNumber = atom.GetIntProp("molAtomMapNumber") if atom.HasProp("molAtomMapNumber") else 0
+        (atomMapNumber, ok) = QtWidgets.QInputDialog.getInt(self, "Number Atom", "Atom number", value=atomMapNumber)
+
+        if not ok:
+            return
+
+        self.backupMol()
+        if atomMapNumber == 0:
+            atom.ClearProp("molAtomMapNumber")
+        else:
+            atom.SetProp("molAtomMapNumber", str(atomMapNumber))
         self.molChanged.emit()
 
     # self.select_bond(bond)

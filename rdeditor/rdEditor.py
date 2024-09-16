@@ -14,9 +14,9 @@ from PySide6.QtGui import QDesktopServices, QIcon, QAction, QKeySequence
 import qdarktheme
 
 # Import model
-import rdeditor
-from rdeditor.molEditWidget import MolEditWidget
-from rdeditor.ptable_widget import PTable
+from . import __version__
+from .molEditWidget import MolEditWidget
+from .ptable_widget import PTable
 
 from rdkit import Chem
 import qdarktheme
@@ -176,6 +176,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu.addAction(self.ezAction)
         self.toolMenu.addAction(self.increaseChargeAction)
         self.toolMenu.addAction(self.decreaseChargeAction)
+        self.toolMenu.addAction(self.numberAtom)
 
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.cleanCoordinatesAction)
@@ -264,6 +265,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolBar.addAction(self.ezAction)
         self.mainToolBar.addAction(self.increaseChargeAction)
         self.mainToolBar.addAction(self.decreaseChargeAction)
+        self.mainToolBar.addAction(self.numberAtom)
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.cleanCoordinatesAction)
         self.mainToolBar.addAction(self.cleanupMolAction)
@@ -283,6 +285,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sideToolBar.addSeparator()
         self.sideToolBar.addAction(self.templateActions["benzene"])
         self.sideToolBar.addAction(self.templateActions["cyclohexane"])
+        self.sideToolBar.addSeparator()
+        self.sideToolBar.addAction(self.ptable.atomActions["R"])
         self.sideToolBar.addSeparator()
         for action in self.atomActions:
             self.sideToolBar.addAction(action)
@@ -408,7 +412,7 @@ class MainWindow(QtWidgets.QMainWindow):
 Based on RDKit! http://www.rdkit.org/\n
 Some icons from http://icons8.com\n
 Source code: https://github.com/EBjerrum/rdeditor\n
-Version: {rdeditor.__version__}
+Version: {__version__}
             """,
         )
 
@@ -708,6 +712,17 @@ Version: {rdeditor.__version__}
             checkable=True,
         )
         self.actionActionGroup.addAction(self.decreaseChargeAction)
+
+        self.numberAtom = QAction(
+            QIcon.fromTheme("atommapnumber"),
+            "Set atommap or R-group number",
+            self,
+            statusTip="Set atommap or R-group number",
+            triggered=self.setAction,
+            objectName="Number Atom",
+            checkable=True,
+        )
+        self.actionActionGroup.addAction(self.numberAtom)
         self.addAction.setChecked(True)
 
         # BondTypeActions

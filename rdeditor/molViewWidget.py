@@ -16,7 +16,7 @@ from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Geometry.rdGeometry import Point2D
 
-from rdeditor.utilities import validate_rgb
+from .utilities import validate_rgb
 
 
 # The Viewer Class
@@ -91,6 +91,15 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
             # assert isinstance(mol, Chem.Mol)
             if self._mol is not None:
                 self._prevmol = copy.deepcopy(self._mol)  # Chem.Mol(self._mol.ToBinary())  # Copy
+
+            # Fix pseudo atoms
+            atom: Chem.Atom
+            for atom in mol.GetAtoms():
+                if atom.GetAtomicNum() == 0:
+                    if not atom.HasProp("dummyLabel") or atom.GetProp("dummyLabel") == "*":
+                        atom.SetProp("dummyLabel", "R")
+                    else:
+                        print(atom.GetPropsAsDict())
 
             # # TODO make this failsafe
             # if self._updatepropertycache:
@@ -234,6 +243,18 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         self.computeNewCoords(canonOrient=True, ignoreExisting=True)
         self._drawmol = copy.deepcopy(self._mol)  # Chem.Mol(self._mol.ToBinary())
         self.draw()
+
+    def updateStereo(self):
+        self.logger.debug("Updating stereo info")
+        for atom in self.mol.GetAtoms():
+            if atom.HasProp("_CIPCode"):
+                atom.ClearProp("_CIPCode")
+        for bond in self.mol.GetBonds():
+            if bond.HasProp("_CIPCode"):
+                bond.ClearProp("_CIPCode")
+        Chem.rdmolops.SetDoubleBondNeighborDirections(self.mol)
+        self.mol.UpdatePropertyCache(strict=False)
+        Chem.rdCIPLabeler.AssignCIPLabels(self.mol)
 
     sanitizeSignal = QtCore.Signal(str, name="sanitizeSignal")
 

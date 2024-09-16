@@ -5,7 +5,7 @@ import logging
 
 from PySide6 import QtGui, QtCore, QtWidgets
 
-from rdeditor.ptable import ptable
+from .ptable import ptable
 
 
 class PTable(QtWidgets.QWidget):
@@ -47,6 +47,15 @@ class PTable(QtWidgets.QWidget):
                     grid.addWidget(button, 9, key - 54)
                 else:
                     grid.addWidget(button, 10, key - 86)
+        self.atomActions["R"] = QtGui.QAction(
+            "R",
+            self,
+            statusTip="Set atomtype to R",
+            triggered=self.atomtypePush,
+            objectName="R",
+            checkable=True,
+        )
+        actionGroup.addAction(self.atomActions["R"])
         # Ensure spacing between main table and actinides/lathanides
         grid.addWidget(QtWidgets.QLabel(""), 8, 1)
 

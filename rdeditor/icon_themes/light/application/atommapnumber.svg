@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="100mm"
+   height="100mm"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="atommapnumber.svg"
+   inkscape:export-filename="/home/esben/git/rdeditor/rdeditor/icon_themes/light/application/atommapnumber.png"
+   inkscape:export-xdpi="25.4"
+   inkscape:export-ydpi="25.4"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.77771465"
+     inkscape:cx="-114.43786"
+     inkscape:cy="532.97183"
+     inkscape:window-width="1656"
+     inkscape:window-height="1091"
+     inkscape:window-x="404"
+     inkscape:window-y="210"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1"
+     fit-margin-top="1"
+     fit-margin-left="1"
+     fit-margin-right="1"
+     fit-margin-bottom="1" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-6.9295246,-7.4098469)">
+    <g
+       aria-label="A"
+       transform="scale(0.92933651,1.0760365)"
+       id="text5595"
+       style="font-size:87.4982px;line-height:1.25;stroke-width:2.18746">
+      <path
+         d="m 58.189826,73.450618 c -8.573229,0 -17.146457,0 -25.719686,0 -1.352918,3.873618 -2.705836,7.747236 -4.058754,11.620854 -5.511361,0 -11.022723,0 -16.534084,0 7.875408,-21.262176 15.750815,-42.524353 23.626223,-63.786529 6.536731,0 13.073461,0 19.610192,0 7.875408,21.262176 15.750815,42.524353 23.626223,63.786529 -5.511361,0 -11.022723,0 -16.534084,0 -1.338677,-3.873618 -2.677353,-7.747236 -4.01603,-11.620854 z M 36.571618,61.616144 c 5.824669,0 11.649337,0 17.474006,0 -2.905214,-8.459298 -5.810427,-16.918597 -8.715641,-25.377895 -2.919455,8.459298 -5.83891,16.918597 -8.758365,25.377895 z"
+         style="font-weight:bold"
+         id="path28597"
+         sodipodi:nodetypes="ccccccccccccc" />
+    </g>
+    <g
+       aria-label="#"
+       transform="scale(0.94467365,1.0585666)"
+       id="text25663"
+       style="font-size:52.5324px;line-height:1.25;stroke-width:1.31332">
+      <path
+         d="m 92.01667,35.893471 -2.462456,9.875475 h 6.771754 l 2.488107,-9.875475 h 5.668775 l -2.4881,9.875475 h 7.10521 v 5.463574 h -8.46469 l -1.769894,7.028261 h 7.284764 v 5.514876 h -8.618594 l -2.462457,9.824174 H 89.40031 l 2.462456,-9.824174 h -6.771754 l -2.462456,9.824174 h -5.720081 l 2.462456,-9.824174 h -7.156513 v -5.514876 h 8.413392 l 1.795541,-7.028261 h -7.259116 v -5.463574 h 8.669898 l 2.462456,-9.875475 z m 2.898516,15.339049 h -6.771755 l -1.79554,7.028261 h 6.771754 z"
+         style="font-weight:bold"
+         id="path28600" />
+    </g>
+  </g>
+</svg>
