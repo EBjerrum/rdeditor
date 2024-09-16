@@ -16,7 +16,7 @@ from rdkit.Chem import rdDepictor
 from rdkit.Chem.Draw import rdMolDraw2D
 from rdkit.Geometry.rdGeometry import Point2D
 
-from rdeditor.utilities import validate_rgb
+from .utilities import validate_rgb
 
 
 # The Viewer Class

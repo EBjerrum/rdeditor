@@ -17,12 +17,12 @@ from rdkit.Geometry.rdGeometry import Point2D, Point3D
 
 # from rdkit.Chem.AllChem import GenerateDepictionMatching3DStructure
 
-from rdeditor.molViewWidget import MolWidget
-from rdeditor.templatehandler import TemplateHandler
+from .molViewWidget import MolWidget
+from .templatehandler import TemplateHandler
 
 # from types import *
 
-from rdeditor.ptable import symboltoint
+from .ptable import symboltoint
 
 debug = True
 
