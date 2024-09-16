@@ -67,6 +67,8 @@ From left to right
 - E/Z: Change E/Z stereo of double bonds
 - Increase/Decrease charge: Will increase or decrease the charge of the atom clicked
 - Set atommap or R-group number: Will set the atommap or R-group number of the atom clicked
+- clean up coordinates: recalculate coordinates disregarding existing coordinates.
+- clean up chemistry. Sanitize and/or Kekulize the molecule.
 - Delete atom/bond:
 - Clear Canvas
 - Undo.
@@ -75,7 +77,7 @@ From left to right
 
 ![top menu of rdeditor, the RDKit molecule editor](https://github.com/EBjerrum/rdeditor/blob/master/Screenshots/Side_bar.png?raw=true)
 
-Most commonly used bond types, and atom types can be selected. A Periodic table is accessible for exotic atom types.
+Most commonly used bond types, and atom types can be selected. Templates and R-group (dummy atoms) are also accessible. A Periodic table is accessible for exotic atom types.
 
 #### Dropdown menus
 
