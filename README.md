@@ -24,14 +24,14 @@ A launch script will also be added so that it can be started from the command li
 Can be started from the command line with `rdEditor` or `rdEditor your_molecule.mol` to start edit an existing molecule.
 Interactions with the molecule are done via clicking and dragging on the canvas, atoms or bonds. A choice of tools is available.
 
-To edit a molecule, select the pen tool, and atom, bond or template and click on the canvas to add it.
+To edit a molecule, select the pen tool, and an atom, bond or template type and click on the canvas to add it.
 
 Clicking:
 
 - When clicking existing atoms or bonds, the clicked atom or bond will be modified, depending on the atom or bond type selected.
 - If a bondtype is selected, the bond will be added to the clicked atom with a carbon atom at the other end.
 - If a bondtype is selected and a bond is clicked, the bond will be changed to that type if different.
-- If you click multiple times on a bond with an atom type selected, the bondtype will cycle between single, double and triple bonds. This makes it fast to quickly create carbon skeletons and adjust the bond order without having to select the bond types.
+- If you click multiple times on a bond with an atomtype selected, the bondtype will cycle between single, double and triple bond.
 
 Dragging:
 
@@ -42,14 +42,14 @@ Dragging:
 
 Templates:
 
-- Templates work kind of like atoms, so if you click on an atom, the template will be added directly to that atom, but if you click and drag from that atom, the template will be added with a single bond to that atom.
+- Templates work kind of like atoms, so if you click on an atom, the template will be added directly to that atom.
 - If a template is selected and dragged from an atom, the template will be added with a single bond to the clicked atom.
 - Some templates can also be added to bonds by clicking on the middle of the bond.
 - Dragging on a canvas with a template will add a carbon atom and a single bond to the template.
 
 Other actions:
 
-- most other actions (R/S, E/Z, Increase/Decrease charge, adjust number) works by clikcing on existing atoms.
+- most other actions (R/S, E/Z, Increase/Decrease charge, Adjust atom number) works by clikcing on existing atoms.
 
 #### Top Menu:
 
