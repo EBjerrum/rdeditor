@@ -174,6 +174,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.toolMenu.addAction(self.ezAction)
         self.toolMenu.addAction(self.increaseChargeAction)
         self.toolMenu.addAction(self.decreaseChargeAction)
+        self.toolMenu.addAction(self.numberAtom)
 
         self.toolMenu.addSeparator()
         self.toolMenu.addAction(self.cleanCoordinatesAction)
@@ -262,6 +263,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolBar.addAction(self.ezAction)
         self.mainToolBar.addAction(self.increaseChargeAction)
         self.mainToolBar.addAction(self.decreaseChargeAction)
+        self.mainToolBar.addAction(self.numberAtom)
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.cleanCoordinatesAction)
         self.mainToolBar.addAction(self.cleanupMolAction)
@@ -281,6 +283,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sideToolBar.addSeparator()
         self.sideToolBar.addAction(self.templateActions["benzene"])
         self.sideToolBar.addAction(self.templateActions["cyclohexane"])
+        self.sideToolBar.addSeparator()
+        self.sideToolBar.addAction(self.ptable.atomActions["R"])
         self.sideToolBar.addSeparator()
         for action in self.atomActions:
             self.sideToolBar.addAction(action)
@@ -706,6 +710,16 @@ Version: {__version__}
             checkable=True,
         )
         self.actionActionGroup.addAction(self.decreaseChargeAction)
+
+        self.numberAtom = QAction(
+            "A#",
+            self,
+            statusTip="Number Atom",
+            triggered=self.setAction,
+            objectName="Number Atom",
+            checkable=True,
+        )
+        self.actionActionGroup.addAction(self.numberAtom)
         self.addAction.setChecked(True)
 
         # BondTypeActions
