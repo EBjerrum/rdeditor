@@ -92,6 +92,15 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
             if self._mol is not None:
                 self._prevmol = copy.deepcopy(self._mol)  # Chem.Mol(self._mol.ToBinary())  # Copy
 
+            # Fix pseudo atoms
+            atom: Chem.Atom
+            for atom in mol.GetAtoms():
+                if atom.GetAtomicNum() == 0:
+                    if not atom.HasProp("dummyLabel") or atom.GetProp("dummyLabel") == "*":
+                        atom.SetProp("dummyLabel", "R")
+                    else:
+                        print(atom.GetPropsAsDict())
+
             # # TODO make this failsafe
             # if self._updatepropertycache:
             #     try:

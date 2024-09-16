@@ -123,6 +123,7 @@ ptable = {
 }
 
 symboltoint = {
+    "R": 0,
     "Ac": 89,
     "Ag": 47,
     "Al": 13,
