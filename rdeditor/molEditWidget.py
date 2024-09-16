@@ -321,9 +321,11 @@ class MolEditWidget(MolWidget):
         if event.button() is QtCore.Qt.LeftButton:
             end_mol_object = self.get_molobject(event)
             if self.is_same_object(self.start_molobject, end_mol_object):
-                self.clicked_handler(self.start_molobject)
+                self.event_handler(self.start_molobject, None)  # Click events has None as second object
             else:
-                self.drag_handler(self.start_molobject, end_mol_object)
+                self.event_handler(
+                    self.start_molobject, end_mol_object
+                )  # Drag events has different objects as start and end
             self.start_molobject = None
 
             self.is_dragging = False
@@ -351,21 +353,22 @@ class MolEditWidget(MolWidget):
                 return True
         return False
 
-    def clicked_handler(self, clicked):
-        try:
-            self.event_handler(clicked, None)
-        except Exception as e:
-            self.logger.error(f"Error in clicked_handler: {e}")
+    # def clicked_handler(self, clicked):
+    #     try:
+    #         self.event_handler(clicked, None)
+    #     except Exception as e:
+    #         self.logger.error(f"Error in clicked_handler: {e}")
 
-    def drag_handler(self, object1, object2):
-        try:
-            self.event_handler(object1, object2)
-        except Exception as e:
-            self.logger.error(f"Error in drag_handler: {e}")
+    # def drag_handler(self, object1, object2):
+    #     try:
+    #         self.event_handler(object1, object2)
+    #     except Exception as e:
+    #         self.logger.error(f"Error in drag_handler: {e}")
 
     def event_handler(self, object1, object2):
         # Matches which objects are clicked/dragged and what chemical type and action is selected
         # With click events, the second object is None
+        # Canvas clicks and drags are Point2D objects
         match (object1, object2, self.chemEntityType, self.action):
             # Atom click events
             # different enitity types
@@ -376,13 +379,11 @@ class MolEditWidget(MolWidget):
             case (Chem.rdchem.Atom(), None, "bond", "Add"):
                 self.add_bond_to_atom(object1)
 
-            # Different atom click actions
+            # Atom click with differentactions
             case (Chem.rdchem.Atom(), None, _, "Remove"):
                 self.remove_atom(object1)
             case (Chem.rdchem.Atom(), None, _, "Select"):
                 self.select_atom_add(object1)
-            # case (Chem.rdchem.Atom(), None, _, "Add Bond"):
-            #     self.add_bond_to_last_selected(object1)
             case (Chem.rdchem.Atom(), None, _, "Increase Charge"):
                 self.increase_charge(object1)
             case (Chem.rdchem.Atom(), None, _, "Decrease Charge"):
@@ -395,8 +396,6 @@ class MolEditWidget(MolWidget):
             # Bond click events
             case (Chem.rdchem.Bond(), None, _, "Add"):
                 self.add_to_bond(object1)
-            # case (Chem.rdchem.Bond(), None, _, "Add Bond"):
-            #     self.replace_bond(object1)
             case (Chem.rdchem.Bond(), None, _, "Remove"):
                 self.remove_bond(object1)
             case (Chem.rdchem.Bond(), None, _, "Select"):
@@ -415,8 +414,6 @@ class MolEditWidget(MolWidget):
             # Drag events
             case (Chem.rdchem.Atom(), Chem.rdchem.Atom(), _, "Add"):
                 self.add_bond_between_atoms(object1, object2)
-            # case (Chem.rdchem.Atom(), Point2D(), _, "Add"):
-            #     self.atom_drag(object1)
             case (Chem.rdchem.Atom(), Point2D(), "atom", "Add"):
                 self.add_atom_to_atom(object1)
             case (Chem.rdchem.Atom(), Point2D(), "ring", "Add"):
@@ -425,9 +422,7 @@ class MolEditWidget(MolWidget):
                 self.add_bond_to_atom(object1)
             # Drag on canvas
             case (Point2D(), Point2D(), _, "Add"):
-                self.canvas_drag(
-                    object1, object2
-                )  # TODO add canvas drag, creating two atoms with a single bond in between
+                self.canvas_drag(object1, object2)
 
             # Default case for undefined actions
             case _:
@@ -436,115 +431,20 @@ class MolEditWidget(MolWidget):
                     f"{(type(object1), type(object2), self.chemEntityType, self.action)}"
                 )
 
-    # def drag_handler(self, object1, object2):
-    #     self.logger.debug(f"Drag Event {object1} -> {object2}")
-    #     if isinstance(object1, Chem.rdchem.Atom) and isinstance(
-    #         object2, Point2D
-    #     ):  # TODO, this could potentially be used for creating bonds from the atom.
-    #         self.atom_drag(object1)
-    #     elif isinstance(object1, Chem.rdchem.Bond) and isinstance(object2, Point2D):
-    #         self.bond_click(object1)
-    #     elif isinstance(object1, Point2D) and isinstance(object2, Point2D):
-    #         self.canvas_click(object1)  # TODO, maybe a canvas click with a bond can set a direction for coords?
-    #     elif isinstance(object1, Chem.rdchem.Atom) and isinstance(object2, Chem.rdchem.Atom):
-    #         # self.logger.debug("These two atoms should be bonded")
-    #         self.add_bond_between_atoms(object1, object2)
-    #     else:
-    #         self.logger.info(f"Unhandled drag event between {object1} -> {object2}")
-
-    # Lookup tables to relate actions to context type with action type #TODO more clean to use Dictionaries?? Or a switch statement??
     def atom_click(self, atom):
         self.logger.warn("atom_click is deprecated. Use event_handler instead.", DeprecationWarning, stacklevel=2)
-        # if self.action == "Add":
-        #     # self.add_to_atom(atom)
-        #     if self.chemEntityType == "atom":
-        #         self.replace_on_atom(atom)
-        #     if self.chemEntityType == "ring":
-        #         self.add_ring_to_atom(atom)
-        #     if self.chemEntityType == "bond":
-        #         self.add_bond_to_atom(atom)
-        # elif self.action == "Remove":
-        #     self.remove_atom(atom)
-        # elif self.action == "Select":
-        #     self.select_atom_add(atom)
-        # # elif self.action == "Replace":
-        # #     self.replace_on_atom(atom)
-        # elif self.action == "Add Bond":
-        #     self.add_bond_to_last_selected(atom)
-        # elif self.action == "Increase Charge":
-        #     self.increase_charge(atom)
-        # elif self.action == "Decrease Charge":
-        #     self.decrease_charge(atom)
-        # elif self.action == "Number Atom":
-        #     self.number_atom(atom)
-        # elif self.action == "RStoggle":
-        #     self.toogleRS(atom)
-        # else:
-        #     self.logger.warning("The combination of Atom click and Action %s undefined" % self.action)
 
     def atom_drag(self, atom):
         self.logger.warn("atom_drag is deprecated. Use event_handler instead.", DeprecationWarning, stacklevel=2)
-        # if self.action == "Add":
-        #     self.add_to_atom(atom)
-        # elif self.action == "Remove":
-        #     self.remove_atom(atom)
-        # elif self.action == "Select":
-        #     self.select_atom_add(atom)
-        # elif self.action == "Replace":
-        #     self.replace_on_atom(atom)
-        # elif self.action == "Add Bond":
-        #     self.add_bond_to_last_selected(atom)
-        # elif self.action == "Increase Charge":
-        #     self.increase_charge(atom)
-        # elif self.action == "Decrease Charge":
-        #     self.decrease_charge(atom)
-        # elif self.action == "RStoggle":
-        #     self.toogleRS(atom)
-        # else:
-        #     self.logger.warning("The combination of Atom click and drag and Action %s undefined" % self.action)
 
     def bond_click(self, bond):
         self.logger.warn("bond_click is deprecated. Use event_handler instead.", DeprecationWarning, stacklevel=2)
 
-    # def bond_click(self, bond):
-    #     if self.action == "Add":
-    #         self.add_to_bond(bond)
-    #     elif self.action == "Add Bond":
-    #         self.replace_bond(bond)
-    #     elif self.action == "Remove":
-    #         self.remove_bond(bond)
-    #     elif self.action == "Select":
-    #         self.select_bond(bond)
-    #     elif self.action == "Replace":
-    #         self.replace_on_bond(bond)
-    #     elif self.action == "EZtoggle":
-    #         self.toogleEZ(bond)
-    #     else:
-    #         self.logger.warning("The combination of Bond click and Action %s undefined" % self.action)
-
     def canvas_click(self, point):
         self.logger.warn("canvas_click is deprecated. Use event_handler instead.", DeprecationWarning, stacklevel=2)
 
-        # if self.action == "Add":
-        #     self.add_canvas_entity(point)
-
-        # elif self.action == "Select":
-        #     # Click on canvas
-        #     # Unselect any selected
-        #     if len(self.selectedAtoms) > 0:
-        #         self.clearAtomSelection()
-        # else:
-        #     self.logger.warning("The combination of Canvas click and Action %s undefined" % self.action)
-
     def add_to_atom(self, atom):
         self.logger.warn("add_to_atom is deprecated. Use event_handler instead.", DeprecationWarning, stacklevel=2)
-        #  if self.chemEntityType == "atom":
-        #     return self.add_atom_to_atom(atom)
-        # if self.chemEntityType == "ring":
-        #     new_atom = self.add_atom_to_atom(atom, chemEntity="C")
-        #     self.add_ring_to_atom(new_atom)
-        # if self.chemEntityType == "bond":
-        #     self.add_bond_to_atom(atom)
 
     def getNewAtom(self, chemEntity):
         newatom = Chem.rdchem.Atom(chemEntity)
@@ -597,12 +497,14 @@ class MolEditWidget(MolWidget):
         if self.chemEntityType == "bond":
             self.add_canvas_bond(point)
 
-    def add_canvas_atom(self, point):
+    def add_canvas_atom(self, point, chemEntity=None):
+        if chemEntity is None:
+            chemEntity = self.chemEntity
         rwmol = Chem.rdchem.RWMol(self.mol)
         if rwmol.GetNumAtoms() == 0:
             point.x = 0.0
             point.y = 0.0
-        newatom = self.getNewAtom(self.chemEntity)
+        newatom = self.getNewAtom(chemEntity)
         newidx = rwmol.AddAtom(newatom)
         # This should only trigger if we have an empty canvas
         if not rwmol.GetNumConformers():
@@ -611,8 +513,9 @@ class MolEditWidget(MolWidget):
         p3 = Point3D(point.x, point.y, 0)
         conf.SetAtomPosition(newidx, p3)
         self.mol = rwmol
+        return self.mol.GetAtomWithIdx(newidx)
 
-    def add_canvas_bond(self, point):
+    def add_canvas_bond(self, point, point2=None):
         rwmol = Chem.rdchem.RWMol(self.mol)
         if rwmol.GetNumAtoms() == 0:
             point.x = 0.0
@@ -620,7 +523,6 @@ class MolEditWidget(MolWidget):
 
         atom_0 = rwmol.AddAtom(Chem.rdchem.Atom(6))
         atom_1 = rwmol.AddAtom(Chem.rdchem.Atom(6))
-        print(self.chemEntity)
         newidx = rwmol.AddBond(atom_0, atom_1, order=self.chemEntity)
 
         # This should only trigger if we have an empty canvas
@@ -628,7 +530,10 @@ class MolEditWidget(MolWidget):
             rdDepictor.Compute2DCoords(rwmol)
         conf = rwmol.GetConformer(0)
         p3 = Point3D(point.x, point.y, 0)
-        conf.SetAtomPosition(self.mol.GetNumAtoms(), p3)
+        conf.SetAtomPosition(atom_0, p3)
+        if point2:
+            p3 = Point3D(point2.x, point2.y, 0)
+            conf.SetAtomPosition(atom_1, p3)
         self.mol = rwmol
 
     def add_canvas_ring(self, point):
@@ -669,17 +574,6 @@ class MolEditWidget(MolWidget):
         self.logger.warn(
             "add_bond_to_last_selected is deprecated. Use event_handler instead.", DeprecationWarning, stacklevel=2
         )
-        # if len(self.selectedAtoms) > 0:
-        #     selected = self.selectedAtoms[-1]
-        #     rwmol = Chem.rdchem.RWMol(self.mol)
-        #     neighborIdx = [atm.GetIdx() for atm in self.mol.GetAtomWithIdx(selected).GetNeighbors()]
-        #     if atom.GetIdx() not in neighborIdx:  # check if bond already exists
-        #         bondType = self.chemEntity if self.chemEntityType == "bond" else Chem.rdchem.BondType.SINGLE
-        #         rwmol.AddBond(selected, atom.GetIdx(), order=bondType)
-        #     self.mol = rwmol
-        #     self.selectedAtoms = []
-        # else:
-        #     self.select_atom(atom)
 
     def add_bond_between_atoms(self, atom1, atom2):
         rwmol = Chem.rdchem.RWMol(self.mol)
@@ -688,6 +582,32 @@ class MolEditWidget(MolWidget):
             bondType = self.chemEntity if self.chemEntityType == "bond" else Chem.rdchem.BondType.SINGLE
             rwmol.AddBond(atom1.GetIdx(), atom2.GetIdx(), order=bondType)
         self.mol = rwmol
+
+    def canvas_drag(self, point1, point2):
+        if self.chemEntityType == "atom":
+            self.canvas_drag_atom(point1, point2)
+        if self.chemEntityType == "ring":
+            self.canvas_drag_ring(point1, point2)
+        if self.chemEntityType == "bond":
+            self.canvas_drag_bond(point1, point2)
+
+    def canvas_drag_atom(self, point1, point2):
+        # In essence adding a bond, but can be between non-carbon atoms, and make behaviour more consistent (i.e. if drag-drawing)
+        rwmol = Chem.rdchem.RWMol(self.mol)
+        newatom = self.getNewAtom(self.chemEntity)
+        newatom2 = self.getNewAtom(self.chemEntity)
+        newidx = rwmol.AddAtom(newatom)
+        newidx2 = rwmol.AddAtom(newatom2)
+        newbond = rwmol.AddBond(newidx, newidx2, Chem.rdchem.BondType.SINGLE)
+        self.mol = rwmol
+
+    def canvas_drag_ring(self, point1, point2):
+        # TODO, in principle to be consistent we should be adding a two templates with a bond in between??
+        newatom = self.add_canvas_atom(point1, chemEntity="C")
+        self.add_bonded_ring_to_atom(newatom)
+
+    def canvas_drag_bond(self, point1, point2):
+        self.add_canvas_bond(point1, point2)
 
     def toogleRS(self, atom):
         self.backupMol()
