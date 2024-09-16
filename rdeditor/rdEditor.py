@@ -712,9 +712,10 @@ Version: {__version__}
         self.actionActionGroup.addAction(self.decreaseChargeAction)
 
         self.numberAtom = QAction(
-            "A#",
+            QIcon.fromTheme("atommapnumber"),
+            "Set atommap or R-group number",
             self,
-            statusTip="Number Atom",
+            statusTip="Set atommap or R-group number",
             triggered=self.setAction,
             objectName="Number Atom",
             checkable=True,
