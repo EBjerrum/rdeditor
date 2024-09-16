@@ -33,7 +33,7 @@ from .templatehandler import TemplateHandler
 from .ptable import symboltoint
 
 
-debug = True
+debug = True  # TODO is this still used?
 
 
 # The Molblock editor class
@@ -412,8 +412,11 @@ class MolEditWidget(MolWidget):
                 self.clearAtomSelection()
 
             # Drag events
+            # Atom to Atom
             case (Chem.rdchem.Atom(), Chem.rdchem.Atom(), _, "Add"):
                 self.add_bond_between_atoms(object1, object2)
+
+            # Atom to Canvas actions
             case (Chem.rdchem.Atom(), Point2D(), "atom", "Add"):
                 self.add_atom_to_atom(object1)
             case (Chem.rdchem.Atom(), Point2D(), "ring", "Add"):
