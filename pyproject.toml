@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "rdeditor"
 description = "An RDKit based molecule editor using PySide"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = {text = "LGPL"}
 authors = [
     {name = "Esben Jannik Bjerrum", email = "esbenjannik@rocketmail.com"},
