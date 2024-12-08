@@ -750,7 +750,9 @@ class MolEditWidget(MolWidget):
 
     def number_atom(self, atom: Chem.Atom):
         atomMapNumber = atom.GetIntProp("molAtomMapNumber") if atom.HasProp("molAtomMapNumber") else 0
-        (atomMapNumber, ok) = QtWidgets.QInputDialog.getInt(self, "Number Atom", "Atom number", value=atomMapNumber)
+        (atomMapNumber, ok) = QtWidgets.QInputDialog.getInt(
+            self, "Number Atom", "Atom number", value=atomMapNumber, minValue=0
+        )
 
         if not ok:
             return
