@@ -310,6 +310,7 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
             # Chiral tags on R/S
             # chiraltags = Chem.FindMolChiralCenters(self._drawmol)
             opts = self.drawer.drawOptions()
+            opts.fixedBondLength = 15.0
             if self._darkmode:
                 rdMolDraw2D.SetDarkMode(opts)
             if (not self.molecule_sanitizable) and self.unsanitizable_background_colour:
