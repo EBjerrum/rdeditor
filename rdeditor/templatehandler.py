@@ -3,6 +3,8 @@ from rdkit.Chem import AllChem
 from rdkit.Geometry.rdGeometry import Point2D, Point3D
 from rdkit.Chem import rdDepictor
 
+from .reaction import ProductTemplate
+
 
 class TemplateHandler:
     reverse = False
@@ -68,33 +70,34 @@ class TemplateHandler:
         # },
     }
 
+    def __init__(self):
+        templates = {
+            "benzene": "*[C:1]1=[C:2]C=CC=C1",
+            "cyclohexane": "*[C:1]1[C:2]CCCC1",
+            "cyclopentane": "*[C:1]1[C:2]CCC1",
+            "cyclobutane": "*[C:1]1[C:2]CC1",
+            "cyclopropane": "*[C:1]1[C:2]C1",
+            "carboxylic acid": "*[C:1](=O)[O]",
+        }
+        self.productTemplates = {}
+
+        for templateName, template in templates.items():
+            self.productTemplates[templateName] = ProductTemplate(template)
+
     @property
     def templateslabels(self):
         return tuple(self.templates.keys())
 
     def apply_template_to_atom(self, beginatom: Chem.rdchem.Atom, templatelabel: str) -> Chem.Mol:
         """Apply to an atom"""
-        beginisotope = beginatom.GetIsotope()
+        productTemplate = self.productTemplates[templatelabel]
 
-        # TODO assert that the molecule doesnt have this isotope numbers!
-        beginatom.SetIsotope(998)
+        newmol = productTemplate.apply(beginatom.GetOwningMol(), [beginatom], order=1)
 
-        template_set = self.templates[templatelabel]
-
-        if "atom" not in template_set:
-            raise ValueError(f"Template {templatelabel} not supported by atom click")
-
-        template = template_set["atom"]
-
-        template = template.replace("beginisotope", str(beginisotope))
-
-        templateaddition = AllChem.ReactionFromSmarts(template)
-
-        newmol = self.react_and_keep_fragments(beginatom.GetOwningMol(), templateaddition)
-
-        beginatom.SetIsotope(beginisotope)
-
-        return newmol
+        if newmol:
+            return newmol
+        else:
+            raise RuntimeWarning(f"Applying template returned no molecule!")
 
     def apply_template_to_bond(self, bond: Chem.rdchem.Bond, templatelabel: str) -> Chem.Mol:
         """Apply to a bond"""
@@ -107,49 +110,9 @@ class TemplateHandler:
         endatom = bond.GetBeginAtom() if self.reverse else bond.GetEndAtom()
         self.reverse = not self.reverse
 
-        beginisotope = (
-            beginatom.GetIsotope()
-        )  # TODO, we are in principle manipulating the parent molecule here. Can it be avoided?
-        endisotope = endatom.GetIsotope()
+        productTemplate = self.productTemplates[templatelabel]
 
-        # TODO assert that the molecule doesnt have these isotope numbers!
-        beginatom.SetIsotope(998)
-        endatom.SetIsotope(999)
-
-        bondtype = bond.GetBondType()
-
-        # TODO, what if we encounter Chem.rdchem.HybridizationType.SP2D, SP3D or Other. When do we have these?
-        if bondtype == Chem.BondType.AROMATIC:
-            templatesubtype = "aromatic"
-        elif Chem.rdchem.HybridizationType.SP2 in (
-            bond.GetBeginAtom().GetHybridization(),
-            bond.GetEndAtom().GetHybridization(),
-        ):
-            templatesubtype = "sp2"
-        elif (bond.GetBeginAtom().GetHybridization() == Chem.rdchem.HybridizationType.SP3) and (
-            bond.GetEndAtom().GetHybridization() == Chem.rdchem.HybridizationType.SP3
-        ):
-            templatesubtype = "sp3"
-        else:
-            raise ValueError(
-                f"""Bondtype {bondtype} or Atomhybridizations {
-                    (bond.GetBeginAtom().GetHybridization(), bond.GetEndAtom().GetHybridization())
-                    } not supported"""
-            )
-
-        template_set = self.templates[templatelabel]
-        template = template_set[templatesubtype]
-
-        template = template.replace("beginisotope", str(beginisotope)).replace("endisotope", str(endisotope))
-
-        templateaddition = AllChem.ReactionFromSmarts(template)
-
-        mol = bond.GetOwningMol()
-
-        newmol = self.react_and_keep_fragments(mol, templateaddition)
-
-        beginatom.SetIsotope(beginisotope)
-        endatom.SetIsotope(endisotope)
+        newmol = productTemplate.apply(mol, [beginatom, endatom], order=2)
 
         if newmol:
             return newmol
@@ -158,20 +121,14 @@ class TemplateHandler:
 
     def apply_template_to_canvas(self, mol: Chem.Mol, point: Point2D, templatelabel: str) -> Chem.Mol:
         """Apply to canvas"""
-        template = Chem.MolFromSmiles(self.templates[templatelabel]["canvas"], sanitize=False)
+        productTemplate = self.productTemplates[templatelabel]
 
-        if mol.GetNumAtoms() == 0:
-            point.x = 0.0
-            point.y = 0.0
+        newmol = productTemplate.apply(mol, [], order=0)
 
-        combined = Chem.rdchem.RWMol(Chem.CombineMols(mol, template))
-        # This should only trigger if we have an empty canvas
-        if not combined.GetNumConformers():
-            rdDepictor.Compute2DCoords(combined)
-        conf = combined.GetConformer(0)
-        p3 = Point3D(point.x, point.y, 0)
-        conf.SetAtomPosition(mol.GetNumAtoms(), p3)
-        return combined
+        if newmol:
+            return newmol
+        else:
+            raise RuntimeWarning(f"Applying template returned no molecule!")
 
     def react_and_keep_fragments(self, mol, rxn):
         """RDKit only returns the fragment of Mol object that is reacted,
