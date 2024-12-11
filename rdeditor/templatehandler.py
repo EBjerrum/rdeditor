@@ -160,10 +160,6 @@ class TemplateHandler:
         """Apply to canvas"""
         template = Chem.MolFromSmiles(self.templates[templatelabel]["canvas"], sanitize=False)
 
-        if mol.GetNumAtoms() == 0:
-            point.x = 0.0
-            point.y = 0.0
-
         combined = Chem.rdchem.RWMol(Chem.CombineMols(mol, template))
         # This should only trigger if we have an empty canvas
         if not combined.GetNumConformers():
