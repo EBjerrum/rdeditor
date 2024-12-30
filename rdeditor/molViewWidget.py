@@ -316,6 +316,7 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
                 opts.setBackgroundColour(self.unsanitizable_background_colour)
             opts.prepareMolsBeforeDrawing = False
             opts.addStereoAnnotation = True  # Show R/S and E/Z
+            opts.unspecifiedStereoIsUnknown = True  # Show wiggly bond at undefined stereo centre
             # for tag in chiraltags:
             #     idx = tag[0]
             #     opts.atomLabels[idx] = self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
