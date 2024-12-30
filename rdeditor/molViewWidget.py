@@ -314,7 +314,7 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
                 rdMolDraw2D.SetDarkMode(opts)
             if (not self.molecule_sanitizable) and self.unsanitizable_background_colour:
                 opts.setBackgroundColour(self.unsanitizable_background_colour)
-            opts.prepareMolsBeforeDrawing = False
+            opts.prepareMolsBeforeDrawing = True
             opts.addStereoAnnotation = True  # Show R/S and E/Z
             opts.unspecifiedStereoIsUnknown = True  # Show wiggly bond at undefined stereo centre
             # for tag in chiraltags:
