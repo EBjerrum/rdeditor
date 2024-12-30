@@ -33,16 +33,18 @@ class MainWindow(QtWidgets.QMainWindow):
             [os.path.abspath(os.path.dirname(__file__)) + "/icon_themes/"]
         )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
+        # RDKit draw options, tooltip, default value is read from molViewWidget
         self._drawopts_actions = [
             (
                 "prepareMolsBeforeDrawing",
-                True,
                 "Prepare molecules before drawing (i.e. fix stereochemistry and annotations)",
             ),
-            ("addStereoAnnotation", True, "Add stereo annotation (R/S and E/Z)"),
+            (
+                "addStereoAnnotation",
+                "Add stereo annotation (R/S and E/Z)",
+            ),
             (
                 "unspecifiedStereoIsUnknown",
-                False,
                 "Show wiggly bond at potentialundefined chiral stereo centres and cross bonds for undefined doublebonds",
             ),
         ]
@@ -146,6 +148,14 @@ class MainWindow(QtWidgets.QMainWindow):
         kekulize_on_cleanup = self.settings.value("kekulize_on_cleanup", True, type=bool)
         self.editor.kekulize_on_cleanup = kekulize_on_cleanup
         self.cleanupSettingActions["kekulize_on_cleanup"].setChecked(kekulize_on_cleanup)
+
+        # Draw options
+        for key, value, statusTip in self._drawopts_actions:
+            viewer_value = self.editor.getDrawOption(key)
+            settings_value = self.settings.value(f"drawoptions/{key}", viewer_value, type=bool)
+            if settings_value != viewer_value:
+                self.editor.setDrawOption(key, settings_value)
+            self.drawOptionsActions[key].setChecked(settings_value)
 
     # Function to setup status bar, central widget, menu bar, tool bar
     def SetupComponents(self):
@@ -473,6 +483,8 @@ Version: {__version__}
         sender = self.sender()
         option = sender.objectName()
         self.editor.setDrawOption(option, sender.isChecked())
+        self.settings.setValue(f"drawoptions/{option}", sender.isChecked())
+        self.settings.sync()
 
     def setTheme(self):
         sender = self.sender()
