@@ -86,14 +86,14 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         self.draw()
 
     @property
-    def drawOptions(self):
+    def moldrawoptions(self):
         """Returns the current drawing options.
         If settings aremanipulated directly, a drawSettingsChanged signal is not emitted,
         consider using setDrawOption instead."""
         return self._moldrawoptions
 
-    @drawOptions.setter
-    def drawOptions(self, value):
+    @moldrawoptions.setter
+    def moldrawoptions(self, value):
         self._moldrawoptions = value
         self.drawSettingsChanged.emit()
 

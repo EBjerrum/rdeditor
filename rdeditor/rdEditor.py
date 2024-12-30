@@ -33,6 +33,20 @@ class MainWindow(QtWidgets.QMainWindow):
             [os.path.abspath(os.path.dirname(__file__)) + "/icon_themes/"]
         )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
+        self._drawopts_actions = [
+            (
+                "prepareMolsBeforeDrawing",
+                True,
+                "Prepare molecules before drawing (i.e. fix stereochemistry and annotations)",
+            ),
+            ("addStereoAnnotation", True, "Add stereo annotation (R/S and E/Z)"),
+            (
+                "unspecifiedStereoIsUnknown",
+                False,
+                "Show wiggly bond at potentialundefined chiral stereo centres and cross bonds for undefined doublebonds",
+            ),
+        ]
+
         self.editor = MolEditWidget()
         self.chemEntityActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.ptable = PTable(self.chemEntityActionGroup)
@@ -218,6 +232,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cleanupMenu = self.settingsMenu.addMenu("Cleanup")
         for key, action in self.cleanupSettingActions.items():
             self.cleanupMenu.addAction(action)
+        self.drawOptionsMenu = self.settingsMenu.addMenu("Drawing Options")
+        for key, value, statusTip in self._drawopts_actions:
+            self.drawOptionsMenu.addAction(self.drawOptionsActions[key])
 
         # Help menu
         self.helpMenu.addAction(self.aboutAction)
@@ -451,6 +468,11 @@ Version: {__version__}
         self.editor.logger.log(self.editor.logger.getEffectiveLevel(), f"loglevel set to {loglevel}")
         self.settings.setValue("loglevel", loglevel)
         self.settings.sync()
+
+    def setDrawOption(self):
+        sender = self.sender()
+        option = sender.objectName()
+        self.editor.setDrawOption(option, sender.isChecked())
 
     def setTheme(self):
         sender = self.sender()
@@ -913,6 +935,13 @@ Version: {__version__}
                 checkable=True,
             )
             self.loglevelActionGroup.addAction(self.loglevelactions[key])
+
+        self.drawOptionsActions = {}
+        for key, value, statusTip in self._drawopts_actions:
+            self.drawOptionsActions[key] = QAction(
+                key, self, statusTip=statusTip, triggered=self.setDrawOption, objectName=key, checkable=True
+            )
+            # self.drawOptionsActionGroup.addAction(self.drawOptionsActions[key])
 
         self.openChemRxiv = QAction(
             QIcon.fromTheme("icons8-Exit"),
