@@ -21,7 +21,7 @@ from .utilities import validate_rgb
 
 # The Viewer Class
 class MolWidget(QtSvgWidgets.QSvgWidget):
-    def __init__(self, mol=None, parent=None):
+    def __init__(self, mol=None, parent=None, moldrawoptions: rdMolDraw2D.MolDrawOptions = None):
         # Also init the super class
         super(MolWidget, self).__init__(parent)
 
@@ -49,6 +49,15 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         self._sanitize = False
         self._updatepropertycache = False
 
+        # Draw options
+        if moldrawoptions is None:
+            self._moldrawoptions = rdMolDraw2D.MolDraw2DSVG(300, 300).drawOptions()
+            self._moldrawoptions.prepareMolsBeforeDrawing = True
+            self._moldrawoptions.addStereoAnnotation = True
+            self._moldrawoptions.unspecifiedStereoIsUnknown = False
+        else:
+            self._moldrawoptions = moldrawoptions
+
         # Bind signales to slots for automatic actions
         self.molChanged.connect(self.sanitize_draw)
         self.selectionChanged.connect(self.draw)
@@ -75,6 +84,25 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
     def darkmode(self, value: bool):
         self._darkmode = bool(value)
         self.draw()
+
+    @property
+    def drawOptions(self):
+        """Returns the current drawing options.
+        If settings aremanipulated directly, a drawSettingsChanged signal is not emitted,
+        consider using setDrawOption instead."""
+        return self._moldrawoptions
+
+    @drawOptions.setter
+    def drawOptions(self, value):
+        self._moldrawoptions = value
+        self.drawSettingsChanged.emit()
+
+    def getDrawOption(self, attribute):
+        return getattr(self._moldrawoptions, attribute)
+
+    def setDrawOption(self, attribute, value):
+        setattr(self._moldrawoptions, attribute, value)
+        self.drawSettingsChanged.emit()
 
     # Getter and setter for mol
     molChanged = QtCore.Signal(name="molChanged")
@@ -309,14 +337,15 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         if self._drawmol is not None:
             # Chiral tags on R/S
             # chiraltags = Chem.FindMolChiralCenters(self._drawmol)
+            self.drawer.SetDrawOptions(self._moldrawoptions)
             opts = self.drawer.drawOptions()
             if self._darkmode:
                 rdMolDraw2D.SetDarkMode(opts)
             if (not self.molecule_sanitizable) and self.unsanitizable_background_colour:
                 opts.setBackgroundColour(self.unsanitizable_background_colour)
-            opts.prepareMolsBeforeDrawing = True
-            opts.addStereoAnnotation = True  # Show R/S and E/Z
-            opts.unspecifiedStereoIsUnknown = True  # Show wiggly bond at undefined stereo centre
+            # opts.prepareMolsBeforeDrawing = True
+            # opts.addStereoAnnotation = True  # Show R/S and E/Z
+            # opts.unspecifiedStereoIsUnknown = True  # Show wiggly bond at undefined stereo centre
             # for tag in chiraltags:
             #     idx = tag[0]
             #     opts.atomLabels[idx] = self._drawmol.GetAtomWithIdx(idx).GetSymbol() + ":" + tag[1]
