@@ -158,6 +158,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.editor.setDrawOption(key, settings_value)
             self.drawOptionsActions[key].setChecked(settings_value)
 
+        if self.settings.contains("drawoptions/fixedBondLength"):
+            fixedBondLength = self.settings.value("drawoptions/fixedBondLength", 15, type=int)
+            self.editor.setDrawOption("fixedBondLength", fixedBondLength)
+
     # Function to setup status bar, central widget, menu bar, tool bar
     def SetupComponents(self):
         self.myStatusBar = QStatusBar()

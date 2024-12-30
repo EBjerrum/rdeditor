@@ -55,6 +55,7 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
             self._moldrawoptions.prepareMolsBeforeDrawing = True
             self._moldrawoptions.addStereoAnnotation = True
             self._moldrawoptions.unspecifiedStereoIsUnknown = False
+            self._moldrawoptions.fixedBondLength = 25
         else:
             self._moldrawoptions = moldrawoptions
 
