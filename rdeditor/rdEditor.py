@@ -45,7 +45,8 @@ class MainWindow(QtWidgets.QMainWindow):
             ),
             (
                 "unspecifiedStereoIsUnknown",
-                "Show wiggly bond at potentialundefined chiral stereo centres and cross bonds for undefined doublebonds",
+                "Show wiggly bond at potential undefined chiral stereo centres "
+                + "and cross bonds for undefined doublebonds",
             ),
         ]
 
@@ -150,7 +151,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cleanupSettingActions["kekulize_on_cleanup"].setChecked(kekulize_on_cleanup)
 
         # Draw options
-        for key, value, statusTip in self._drawopts_actions:
+        for key, statusTip in self._drawopts_actions:
             viewer_value = self.editor.getDrawOption(key)
             settings_value = self.settings.value(f"drawoptions/{key}", viewer_value, type=bool)
             if settings_value != viewer_value:
@@ -243,7 +244,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for key, action in self.cleanupSettingActions.items():
             self.cleanupMenu.addAction(action)
         self.drawOptionsMenu = self.settingsMenu.addMenu("Drawing Options")
-        for key, value, statusTip in self._drawopts_actions:
+        for key, statusTip in self._drawopts_actions:
             self.drawOptionsMenu.addAction(self.drawOptionsActions[key])
 
         # Help menu
@@ -949,7 +950,7 @@ Version: {__version__}
             self.loglevelActionGroup.addAction(self.loglevelactions[key])
 
         self.drawOptionsActions = {}
-        for key, value, statusTip in self._drawopts_actions:
+        for key, statusTip in self._drawopts_actions:
             self.drawOptionsActions[key] = QAction(
                 key, self, statusTip=statusTip, triggered=self.setDrawOption, objectName=key, checkable=True
             )
