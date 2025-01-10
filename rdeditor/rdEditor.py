@@ -33,6 +33,23 @@ class MainWindow(QtWidgets.QMainWindow):
             [os.path.abspath(os.path.dirname(__file__)) + "/icon_themes/"]
         )
         self.loglevels = ["Critical", "Error", "Warning", "Info", "Debug", "Notset"]
+        # RDKit draw options, tooltip, default value is read from molViewWidget
+        self._drawopts_actions = [
+            (
+                "prepareMolsBeforeDrawing",
+                "Prepare molecules before drawing (i.e. fix stereochemistry and annotations)",
+            ),
+            (
+                "addStereoAnnotation",
+                "Add stereo annotation (R/S and E/Z)",
+            ),
+            (
+                "unspecifiedStereoIsUnknown",
+                "Show wiggly bond at potential undefined chiral stereo centres "
+                + "and cross bonds for undefined doublebonds",
+            ),
+        ]
+
         self.editor = MolEditWidget()
         self.chemEntityActionGroup = QtGui.QActionGroup(self, exclusive=True)
         self.ptable = PTable(self.chemEntityActionGroup)
@@ -133,6 +150,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.editor.kekulize_on_cleanup = kekulize_on_cleanup
         self.cleanupSettingActions["kekulize_on_cleanup"].setChecked(kekulize_on_cleanup)
 
+        # Draw options
+        for key, statusTip in self._drawopts_actions:
+            viewer_value = self.editor.getDrawOption(key)
+            settings_value = self.settings.value(f"drawoptions/{key}", viewer_value, type=bool)
+            if settings_value != viewer_value:
+                self.editor.setDrawOption(key, settings_value)
+            self.drawOptionsActions[key].setChecked(settings_value)
+
+        if self.settings.contains("drawoptions/fixedBondLength"):
+            fixedBondLength = self.settings.value("drawoptions/fixedBondLength", 15, type=int)
+            self.editor.setDrawOption("fixedBondLength", fixedBondLength)
+
     # Function to setup status bar, central widget, menu bar, tool bar
     def SetupComponents(self):
         self.myStatusBar = QStatusBar()
@@ -218,6 +247,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cleanupMenu = self.settingsMenu.addMenu("Cleanup")
         for key, action in self.cleanupSettingActions.items():
             self.cleanupMenu.addAction(action)
+        self.drawOptionsMenu = self.settingsMenu.addMenu("Drawing Options")
+        for key, statusTip in self._drawopts_actions:
+            self.drawOptionsMenu.addAction(self.drawOptionsActions[key])
 
         # Help menu
         self.helpMenu.addAction(self.aboutAction)
@@ -450,6 +482,13 @@ Version: {__version__}
         self.editor.logger.setLevel(loglevel.upper())
         self.editor.logger.log(self.editor.logger.getEffectiveLevel(), f"loglevel set to {loglevel}")
         self.settings.setValue("loglevel", loglevel)
+        self.settings.sync()
+
+    def setDrawOption(self):
+        sender = self.sender()
+        option = sender.objectName()
+        self.editor.setDrawOption(option, sender.isChecked())
+        self.settings.setValue(f"drawoptions/{option}", sender.isChecked())
         self.settings.sync()
 
     def setTheme(self):
@@ -913,6 +952,13 @@ Version: {__version__}
                 checkable=True,
             )
             self.loglevelActionGroup.addAction(self.loglevelactions[key])
+
+        self.drawOptionsActions = {}
+        for key, statusTip in self._drawopts_actions:
+            self.drawOptionsActions[key] = QAction(
+                key, self, statusTip=statusTip, triggered=self.setDrawOption, objectName=key, checkable=True
+            )
+            # self.drawOptionsActionGroup.addAction(self.drawOptionsActions[key])
 
         self.openChemRxiv = QAction(
             QIcon.fromTheme("icons8-Exit"),
