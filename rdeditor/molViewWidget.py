@@ -333,13 +333,19 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
     finishedDrawing = QtCore.Signal(name="finishedDrawing")
 
     def getMolSvg(self):
-        self.drawer = rdMolDraw2D.MolDraw2DSVG(300, 300)
+        height = 300
+        width = 300
+        self.drawer = rdMolDraw2D.MolDraw2DSVG(width, height)
         # TODO, what if self._drawmol doesn't exist?
         if self._drawmol is not None:
             # Chiral tags on R/S
             # chiraltags = Chem.FindMolChiralCenters(self._drawmol)
             self.drawer.SetDrawOptions(self._moldrawoptions)
             opts = self.drawer.drawOptions()
+            opts.fixedBondLength = 15.0
+            maxv = Point2D(0.5 * width / opts.scalingFactor, 0.5 * height / opts.scalingFactor)
+            minv = Point2D(-maxv.x, -maxv.y)
+            self.drawer.SetScale(width, height, minv, maxv)
             if self._darkmode:
                 rdMolDraw2D.SetDarkMode(opts)
             if (not self.molecule_sanitizable) and self.unsanitizable_background_colour:
