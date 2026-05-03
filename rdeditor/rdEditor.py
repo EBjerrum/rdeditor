@@ -77,7 +77,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setGeometry(100, 100, 200, 150)
 
         self.center = self.editor
-        self.center.setFixedSize(650, 650)
         self.setCentralWidget(self.center)
         self.fileName = fileName
 
@@ -288,6 +287,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.mainToolBar.addAction(self.openAction)
         self.mainToolBar.addAction(self.saveAction)
         self.mainToolBar.addAction(self.saveAsAction)
+        self.mainToolBar.addSeparator()
+        self.scalewidget = QtWidgets.QComboBox()
+        self.scalewidget.addItems(["75%", "100%", "125%", "150%", "175%", "200%"])
+        self.scalewidget.setCurrentIndex(1)
+        self.scalewidget.currentIndexChanged.connect(lambda: self.editor.setScale(float(self.scalewidget.currentText().strip('%'))/100))
+        self.mainToolBar.addWidget(self.scalewidget)
         self.mainToolBar.addSeparator()
         self.mainToolBar.addAction(self.selectAction)
         self.mainToolBar.addAction(self.addAction)

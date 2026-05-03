@@ -66,7 +66,9 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         self.sanitizeSignal.connect(self.changeSanitizeStatus)
 
         # Initialize class with the mol passed
+        self.scale = 1
         self.mol = mol
+        self.setMinimumSize(300, 300)
 
     ##Properties and their wrappers
     @property
@@ -241,6 +243,14 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
         else:
             self.molecule_sanitizable = False
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.draw()
+
+    def setScale(self, scale):
+        self.scale = scale
+        self.draw()
+
     def computeNewCoords(self, ignoreExisting=False, canonOrient=False):
         """Computes new coordinates for the molecule taking into account all
         existing positions (feeding these to the rdkit coordinate generation as
@@ -333,7 +343,8 @@ class MolWidget(QtSvgWidgets.QSvgWidget):
     finishedDrawing = QtCore.Signal(name="finishedDrawing")
 
     def getMolSvg(self):
-        self.drawer = rdMolDraw2D.MolDraw2DSVG(300, 300)
+        width, height = int(self.width() / self.scale), int(self.height() / self.scale)
+        self.drawer = rdMolDraw2D.MolDraw2DSVG(width, height)
         # TODO, what if self._drawmol doesn't exist?
         if self._drawmol is not None:
             # Chiral tags on R/S
